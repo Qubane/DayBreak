@@ -100,6 +100,16 @@ class Client(commands.Bot):
                     await member.add_roles(guild.get_role(role_id))
                     self.logger.info(f"Added membership to user '{member.display_name}' [{member.id}]")
 
+    async def on_member_join(self, member: discord.Member):
+        """
+        When a new user joins
+        """
+
+        if member.guild.id not in self.memberships_config:
+            return
+        role_id = self.memberships_config[member.guild.id]
+        await member.add_roles(member.guild.get_role(role_id))
+
 
 def main():
     """
