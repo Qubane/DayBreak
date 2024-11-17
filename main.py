@@ -3,6 +3,7 @@ import sys
 import json
 import discord
 import logging
+import source.settings
 from discord.ext import commands
 
 
@@ -76,7 +77,7 @@ def main():
               "Please report any issues to 'https://github.com/UltraQbik/daybreak/issues'\n\n")
 
     client = Client()
-    client.run(sys.argv[1])
+    client.run(sys.argv[1], root_logger=True, log_handler=None)
 
 
 if __name__ == '__main__':
