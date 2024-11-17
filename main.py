@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import asyncio
 import discord
 import logging
 import source.settings
@@ -26,9 +27,13 @@ class Client(commands.Bot):
         self.modules_queued: list[str] = list()
         self.modules_running: list[str] = list()
 
+        # "guild_id": "role_id"
+        self.memberships_config: dict[int, int] | None = None
+
+        self._load_configs()
         self._load_modules()
 
-    def _load_modules(self):
+    def _load_modules(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
         """
@@ -51,9 +56,18 @@ class Client(commands.Bot):
                 continue
             self.modules_queued.append(queued_module)
 
+    def _load_configs(self) -> None:
+        """
+        Loads configs
+        """
+
+        with open(f"{CONFIGS_DIRECTORY}/memberships.json", "r", encoding="ascii") as f:
+            self.memberships_config: dict = json.loads(f.read())
+        self.memberships_config = {int(x): int(y) for x, y in self.memberships_config.items()}
+
     async def setup_hook(self) -> None:
         """
-        Module loading after the client's successful connection
+        Module loading after the client's successful login
         """
 
         for queued_module in self.modules_queued:
@@ -64,6 +78,27 @@ class Client(commands.Bot):
                 continue
             self.modules_running.append(queued_module)
             self.modules_queued.remove(queued_module)
+
+    async def on_ready(self) -> None:
+        """
+        Things that happen after bot connects to gateway
+        """
+
+        self.logger.info("Bot connected.")
+        asyncio.create_task(self.change_presence(activity=discord.Game("Taking a DayBreak")))
+        # await self.tree.sync()
+        # self.logger.info("Command tree synced")
+
+        # membership test
+        for guild in self.guilds:
+            if guild.id not in self.memberships_config:
+                self.logger.warning(f"Memberships not configured for '{guild.name}' [{guild.id}]")
+                continue
+            role_id = self.memberships_config[guild.id]
+            for member in guild.members:
+                if role_id not in member._roles:
+                    await member.add_roles(guild.get_role(role_id))
+                    self.logger.info(f"Added membership to user '{member.display_name}' [{member.id}]")
 
 
 def main():
