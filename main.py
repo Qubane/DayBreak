@@ -1,15 +1,16 @@
+"""
+Main DayBreak bot file.
+This is what you run to start the bot
+"""
+
+
 import os
-import sys
 import json
 import asyncio
 import discord
 import logging
 import source.settings
 from discord.ext import commands
-
-
-MODULES_DIRECTORY = "modules"
-CONFIGS_DIRECTORY = "configs"
 
 
 class Client(commands.Bot):
