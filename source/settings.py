@@ -26,9 +26,7 @@ def init():
                 encoding="utf-8",
                 maxBytes=2**20 * 32,  # 32 MiB
                 backupCount=5),
-            logging.StreamHandler()]
-    )
-
+            logging.StreamHandler()])
 
     # create 'var' directory
     # 'var' directory is used for storing data for modules
