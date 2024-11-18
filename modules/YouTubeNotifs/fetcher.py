@@ -119,32 +119,51 @@ class Fetcher:
 
         # fetch upload list id
         if channel_id not in cls.channel_upload_playlists:
-            content_details = requests.get(
-                f"https://www.googleapis.com/youtube/v3/channels?"
-                f"part=contentDetails&"
-                f"id={channel_id}&"
-                f"key={YOUTUBE_API_KEY}",
-                headers={"Accept-Encoding": "gzip,deflate"}).json()
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                        f"https://www.googleapis.com/youtube/v3/channels?"
+                        f"part=contentDetails&"
+                        f"id={channel_id}&"
+                        f"key={YOUTUBE_API_KEY}",
+                        headers={"Accept-Encoding": "gzip,deflate"}) as resp:
+                    content_details = await resp.json()
             uploads_id = content_details["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
             cls.channel_upload_playlists[channel_id] = uploads_id
         else:
             uploads_id = cls.channel_upload_playlists[channel_id]
 
         # fetch last {amount} videos
-        playlist = await requests.get(
-            f"https://www.googleapis.com/youtube/v3/playlistItems?"
-            f"part=snippet%2CcontentDetails&"
-            f"maxResults={amount}&"
-            f"playlistId={uploads_id}&"
-            f"key={YOUTUBE_API_KEY}",
-            headers={"Accept-Encoding": "gzip,deflate"}).json()
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                    f"https://www.googleapis.com/youtube/v3/playlistItems?"
+                    f"part=snippet%2CcontentDetails&"
+                    f"maxResults={amount}&"
+                    f"playlistId={uploads_id}&"
+                    f"key={YOUTUBE_API_KEY}",
+                    headers={"Accept-Encoding": "gzip,deflate"}) as resp:
+                playlist = await resp.json()
 
         return playlist["items"]
 
 
 async def test():
-    # print(Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 10))
-    print(json.dumps(await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ"), indent=2))
+    """
+    Very cool test thingy. runs only when file is run as main
+    """
+
+    # response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 10)
+    # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
+    # response = json.dumps(response, indent=2)
+    # print(response)
+
+    channels = [
+        "UCL-8FVaefmqox59LpOJxnOQ",
+        "UCXuqSBlHAE6Xw-yeJA0Tunw",
+        "UCiER8p540j2SosO7OX7E0VA",
+    ]
+
+    responses = await asyncio.gather(*[Fetcher.fetch_videos(x, 2) for x in channels])
+    print(responses)
 
 
 if __name__ == '__main__':
