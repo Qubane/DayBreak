@@ -18,7 +18,7 @@ class Fetcher:
     channel_upload_playlists: dict[str, str] = {}
 
     @staticmethod
-    async def fetch_channel_info(channel_id: str):
+    async def fetch_channel_info(channel_id: str) -> dict[str, str | dict]:
         """
         Fetches information about a given channel.
         :param channel_id: channel id
