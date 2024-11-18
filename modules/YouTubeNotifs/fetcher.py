@@ -8,6 +8,33 @@ import aiohttp
 from source.settings import YOUTUBE_API_KEY
 
 
+class Channel:
+    """
+    Channel class that stores information about videos released
+    """
+
+    FETCH_AMOUNT: int = 5
+
+    def __init__(self, channel_id: str):
+        self.channel_id: str = channel_id
+        self.latest_videos: set[str] = set()
+
+    async def fetch_changes(self) -> list[str]:
+        """
+        Fetches latest videos, compares with old one, and returns a difference
+        :return: new videos
+        """
+
+        video_ids = set()
+        for video in (await Fetcher.fetch_videos(self.channel_id, self.FETCH_AMOUNT)):
+            video_ids.add(video["snippet"]["resourceId"]["videoId"])
+
+        diff = list(video_ids.difference(self.latest_videos))
+        self.latest_videos = video_ids
+
+        return diff
+
+
 class Fetcher:
     """
     Fetching class
@@ -84,7 +111,7 @@ class Fetcher:
         return response["items"][0]["snippet"]
 
     @classmethod
-    async def fetch_videos(cls, channel_id: str, amount: int) -> dict[str, str | dict]:
+    async def fetch_videos(cls, channel_id: str, amount: int) -> list[dict[str, str | dict]]:
         """
         Returns a list of videos on the channel.
         :param channel_id: channel id
@@ -151,19 +178,24 @@ async def test():
     Very cool test thingy. runs only when file is run as main
     """
 
+    channel = Channel("UCL-8FVaefmqox59LpOJxnOQ")
+    print(await channel.fetch_changes())
+    await asyncio.sleep(1)
+    print(await channel.fetch_changes())
+
     # response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 10)
     # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
     # response = json.dumps(response, indent=2)
     # print(response)
 
-    channels = [
-        "UCL-8FVaefmqox59LpOJxnOQ",
-        "UCXuqSBlHAE6Xw-yeJA0Tunw",
-        "UCiER8p540j2SosO7OX7E0VA",
-    ]
-
-    responses = await asyncio.gather(*[Fetcher.fetch_videos(x, 2) for x in channels])
-    print(responses)
+    # channels = [
+    #     "UCL-8FVaefmqox59LpOJxnOQ",
+    #     "UCXuqSBlHAE6Xw-yeJA0Tunw",
+    #     "UCiER8p540j2SosO7OX7E0VA",
+    # ]
+    #
+    # responses = await asyncio.gather(*[Fetcher.fetch_videos(x, 2) for x in channels])
+    # print(responses)
 
 
 if __name__ == '__main__':
