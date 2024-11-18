@@ -1,7 +1,14 @@
+"""
+Generic settings for the bot
+"""
+
+
+import os
 import logging
 import logging.handlers
 
 
+# setup logging
 logging.basicConfig(
     level=logging.INFO,
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -15,3 +22,9 @@ logging.basicConfig(
             backupCount=5),
         logging.StreamHandler()]
 )
+
+
+# create 'var' directory
+# 'var' directory is used for storing data for modules
+if not os.path.isdir("var"):
+    os.mkdir("var")
