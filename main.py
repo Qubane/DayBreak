@@ -122,8 +122,9 @@ def main():
               "Please report any issues to 'https://github.com/UltraQbik/daybreak/issues'\n\n")
 
     client = Client()
-    client.run(sys.argv[1], root_logger=True, log_handler=None)
+    client.run(source.settings.DISCORD_API_KEY, root_logger=True, log_handler=None)
 
 
 if __name__ == '__main__':
+    source.settings.init()
     main()
