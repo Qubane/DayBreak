@@ -12,6 +12,11 @@ import logging.handlers
 DISCORD_API_KEY = os.getenv("DISCORD_API_KEY")  # bot auth token
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")  # YouTube Data API key
 
+# paths
+MODULES_DIRECTORY = "modules"
+CONFIGS_DIRECTORY = "configs"
+VARS_DIRECTORY = "var"
+
 
 def init():
     # setup logging

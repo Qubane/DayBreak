@@ -10,6 +10,7 @@ import asyncio
 import discord
 import logging
 import source.settings
+from source.settings import MODULES_DIRECTORY, CONFIGS_DIRECTORY
 from discord.ext import commands
 
 
