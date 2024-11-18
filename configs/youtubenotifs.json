@@ -1,0 +1,10 @@
+[
+  {
+    "guild_id": 1031161207291392000,
+    "notifs_id": 1032546102676815922,
+    "format": "@everyone\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
+    "channels": [
+      "UCL-8FVaefmqox59LpOJxnOQ"
+    ]
+  }
+]

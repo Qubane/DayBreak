@@ -7,6 +7,7 @@ about new videos/streams made by different authors.
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
+from modules.YouTubeNotifs.fetcher import Fetcher
 
 
 class YouTubeNotifsModule(commands.Cog):
@@ -17,10 +18,17 @@ class YouTubeNotifsModule(commands.Cog):
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
 
+        self.yt_notifs_config: list[dict[str, str | int | list]] | None = None
+
         self.check.start()
 
+    def load_configs(self) -> None:
+        """
+        Loads 'youtubenotifs.json' config file
+        """
+
     @tasks.loop(minutes=10)
-    async def check(self):
+    async def check(self) -> None:
         """
         Checks every 10 minutes for a new video/stream
         """
