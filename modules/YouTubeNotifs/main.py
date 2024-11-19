@@ -24,6 +24,7 @@ class YouTubeNotifsModule(commands.Cog):
         self.guild_config: list[dict[str, str | int | list]] | None = None
 
         self.channels: dict[str, Channel] | None = None
+        self.channels_fetched: bool = False
 
         self.load_configs()
         self.check.start()
@@ -35,7 +36,7 @@ class YouTubeNotifsModule(commands.Cog):
 
         with open(self.config_path, "r", encoding="utf-8") as file:
             config = json.loads(file.read())
-            self.module_config = config["config"]
+            self.module_config = config["configs"]
             self.guild_config = config["guild_configs"]
 
         self.check.change_interval(seconds=self.module_config["update_interval"])
@@ -47,20 +48,25 @@ class YouTubeNotifsModule(commands.Cog):
                     channel_ids.append(channel_id)
         self.channels = {x: Channel(x) for x in channel_ids}
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=10)
     async def check(self) -> None:
         """
         Checks every 10 minutes for a new video/stream
         """
 
+        # first time run. This is awful, I hate this so much
+        if not self.channels_fetched:
+            await asyncio.gather(*[x.fetch_changes() for x in self.channels.values()])
+            self.channels_fetched = True
+
         for guild in self.guild_config:
             news_channel = self.client.get_channel(guild["notifs_id"])
-            channels_changes = await asyncio.gather(
+            changes_list = await asyncio.gather(
                 *[self.fetch_channel_changes(channel_id) for channel_id in guild["channels"]])
 
-            for channel_change in channels_changes:
-                channel_id = channel_change[0]
-                channel_changes = channel_change[1]
+            for change in changes_list:
+                channel_id = change[0]
+                channel_changes = change[1]
                 for video_id in channel_changes:
                     message = guild["format"].format(
                         role_mention=f"<@&{guild['video_role']}>",
