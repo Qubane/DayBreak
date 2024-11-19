@@ -87,7 +87,7 @@ class Client(commands.Bot):
         """
 
         self.logger.info("Bot connected.")
-        asyncio.create_task(self.change_presence(activity=discord.Game("Taking a DayBreak")))
+        asyncio.create_task(self.change_presence(activity=discord.Game("A DayBreak")))
         # await self.tree.sync()
         # self.logger.info("Command tree synced")
 
