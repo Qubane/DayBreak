@@ -17,13 +17,17 @@ class Channel:
 
     def __init__(self, channel_id: str):
         self.channel_id: str = channel_id
+        self.channel_name: str | None = None
         self.latest_videos: set[str] = set()
 
     async def fetch_changes(self) -> list[str]:
         """
-        Fetches latest videos, compares with old one, and returns a difference
+        Fetches latest videos, compares with old one, and returns a difference. Fetch changes.
         :return: new videos
         """
+
+        if self.channel_name is None:
+            self.channel_name = (await Fetcher.fetch_channel_info(self.channel_id))["title"]
 
         video_ids = set()
         for video in (await Fetcher.fetch_videos(self.channel_id, self.FETCH_AMOUNT)):
@@ -49,7 +53,7 @@ class Fetcher:
         """
         Fetches information about a given channel.
         :param channel_id: channel id
-        :return: channel information dictionary. Direct API response
+        :return: channel information dictionary. Snippet port of API response
         """
 
         """
