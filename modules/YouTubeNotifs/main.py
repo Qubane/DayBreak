@@ -20,7 +20,8 @@ class YouTubeNotifsModule(commands.Cog):
         self.client = client
 
         self.config_path: str = f"{CONFIGS_DIRECTORY}/youtubenotifs.json"
-        self.config: list[dict[str, str | int | list]] | None = None
+        self.module_config: dict[str, str | int] | None = None
+        self.guild_config: list[dict[str, str | int | list]] | None = None
 
         self.channels: dict[str, Channel] | None = None
 
@@ -33,22 +34,26 @@ class YouTubeNotifsModule(commands.Cog):
         """
 
         with open(self.config_path, "r", encoding="utf-8") as file:
-            self.config = json.loads(file.read())
+            config = json.loads(file.read())
+            self.module_config = config["config"]
+            self.guild_config = config["guild_configs"]
+
+        self.check.change_interval(seconds=self.module_config["update_interval"])
 
         channel_ids = []
-        for guild in self.config:
+        for guild in self.guild_config:
             for channel_id in guild["channels"]:
                 if channel_id not in channel_ids:
                     channel_ids.append(channel_id)
         self.channels = {x: Channel(x) for x in channel_ids}
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(minutes=1)
     async def check(self) -> None:
         """
         Checks every 10 minutes for a new video/stream
         """
 
-        for guild in self.config:
+        for guild in self.guild_config:
             news_channel = self.client.get_channel(guild["notifs_id"])
             channels_changes = await asyncio.gather(
                 *[self.fetch_channel_changes(channel_id) for channel_id in guild["channels"]])
