@@ -1,6 +1,6 @@
 {
   "configs": {
-    "update_interval": 60
+    "update_interval": 600
   },
   "guild_configs": [
     {
@@ -10,7 +10,8 @@
       "stream_role": 1190415930086395974,
       "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
       "channels": [
-        "UCL-8FVaefmqox59LpOJxnOQ"
+        "UCL-8FVaefmqox59LpOJxnOQ",
+        "UCOML6poYH8HL9yMM98DKqHw"
       ]
     }
   ]

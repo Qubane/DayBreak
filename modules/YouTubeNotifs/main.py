@@ -67,10 +67,11 @@ class YouTubeNotifsModule(commands.Cog):
             for change in changes_list:
                 channel_id = change[0]
                 channel_changes = change[1]
+                # TODO: add different pings, depending on uploaded content (video or stream)
                 for video_id in channel_changes:
                     message = guild["format"].format(
                         role_mention=f"<@&{guild['video_role']}>",
-                        channel_name=self.channels[channel_id],
+                        channel_name=self.channels[channel_id].channel_name,
                         video_url=f"https://www.youtube.com/watch?v={video_id}")
                     await news_channel.send(message)
 
