@@ -45,19 +45,28 @@ class YouTubeNotifsModule(commands.Cog):
 
         self.check.change_interval(seconds=self.module_config["update_interval"])
 
-    async def initialize_channels(self) -> None:
+    async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Video]]:
         """
-        Initializes channels dictionary 'self.channels'
+        Fetches videos from all configured to be logged YT channels
+        :param amount: amount of videos to fetch (default - config.fetching_window)
+        :return: dict of channel_id -> list of videos by that channel
         """
 
-        # fetch all logged yt channels
+        if amount is None:
+            amount = self.module_config["fetching_window"]
+
+        # fetch all logged YT channels
         channel_ids = set()
         for guild_config in self.guild_config:
-            channel_ids.update(guild_config["channels"])
+            channel_ids.update(guild_config["youtube_channels"])
 
-        # initialize all yt channels with videos
+        # fetch videos from all configured YT channels
+        channel_dict = dict()
         for channel_id in channel_ids:
-            self.channels[channel_id] = await Fetcher.fetch_videos(channel_id, self.module_config["fetching_window"])
+            channel_dict[channel_id] = await Fetcher.fetch_videos(channel_id, amount)
+
+        # return channel dict
+        return channel_dict
 
     @tasks.loop(minutes=10)
     async def check(self) -> None:
@@ -68,7 +77,33 @@ class YouTubeNotifsModule(commands.Cog):
         # if channels list is not init, initialize it
         if not self.channels_init:
             self.channels_init = True
-            await self.initialize_channels()
+            self.channels = await self.retrieve_channel_videos()
+
+            # no need to continue, because we just fetched 'the newest' videos
+            return
+
+        # new channels dictionary
+        new_channels = await self.retrieve_channel_videos()
+
+        # check every guild
+        for guild_config in self.guild_config:
+            notification_channel = self.client.get_channel(guild_config["notifications_channel_id"])
+            notification_format = guild_config["format"]
+            video_role_ping = f"<@&{guild_config['video_role_id']}>"
+            stream_role_ping = f"<@&{guild_config['stream_role_id']}>"
+
+            # check every YT channel
+            for channel_id in guild_config["youtube_channels"]:
+                # check every new video against old videos
+                # don't check last new video to prevent old videos to be considered new (ex. deleted video)
+                for new_video in new_channels[channel_id][:-1]:
+                    # if new video is not in old videos, then make an announcement
+                    if new_video.id not in self.channels[channel_id]:
+                        # TODO: make announcement
+                        break
+
+        # reassign new_channels to self.channels
+        self.channels = new_channels
 
 
 async def setup(client: commands.Bot) -> None:
