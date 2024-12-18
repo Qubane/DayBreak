@@ -1,6 +1,7 @@
 {
   "configs": {
-    "update_interval": 600
+    "update_interval": 600,
+    "fetching_window": 3
   },
   "guild_configs": [
     {
