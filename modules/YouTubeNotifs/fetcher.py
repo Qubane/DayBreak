@@ -6,7 +6,7 @@ YouTube's videos and streams fetching
 import asyncio
 import aiohttp
 from datetime import datetime
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from source.settings import YOUTUBE_API_KEY
 
 
@@ -19,6 +19,14 @@ class Thumbnail:
     url: str
     width: int
     height: int
+
+    @staticmethod
+    def from_response(**kwargs):
+        """
+        Generates 'self' from API response
+        """
+
+        return Thumbnail(**kwargs)
 
 
 @dataclass
@@ -45,7 +53,7 @@ class Video:
             title=kwargs["title"],
             description=kwargs["description"],
             published_at=kwargs["publishedAt"],
-            thumbnails={key: Thumbnail(**value) for key, value in kwargs["thumbnails"].items()},
+            thumbnails={key: Thumbnail.from_response(**value) for key, value in kwargs["thumbnails"].items()},
             position=kwargs["position"])
 
 
