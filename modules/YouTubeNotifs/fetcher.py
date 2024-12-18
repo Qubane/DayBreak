@@ -35,7 +35,7 @@ class Video:
     Class containing video information
     """
 
-    video_id: str
+    id: str
     title: str
     description: str
     published_at: datetime
@@ -49,7 +49,7 @@ class Video:
         """
 
         return Video(
-            video_id=kwargs["resourceId"]["videoId"],
+            id=kwargs["resourceId"]["videoId"],
             title=kwargs["title"],
             description=kwargs["description"],
             published_at=datetime.fromisoformat(kwargs["publishedAt"]),
