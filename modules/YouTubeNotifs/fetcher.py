@@ -52,7 +52,7 @@ class Video:
             video_id=kwargs["resourceId"]["videoId"],
             title=kwargs["title"],
             description=kwargs["description"],
-            published_at=kwargs["publishedAt"],
+            published_at=datetime.fromisoformat(kwargs["publishedAt"]),
             thumbnails={key: Thumbnail.from_response(**value) for key, value in kwargs["thumbnails"].items()},
             position=kwargs["position"])
 
