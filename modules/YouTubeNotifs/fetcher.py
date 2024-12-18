@@ -2,10 +2,51 @@
 YouTube's videos and streams fetching
 """
 
-import json
+
 import asyncio
 import aiohttp
+from datetime import datetime
+from dataclasses import dataclass, field
 from source.settings import YOUTUBE_API_KEY
+
+
+@dataclass
+class Thumbnail:
+    """
+    Class containing thumbnail data
+    """
+
+    url: str
+    width: int
+    height: int
+
+
+@dataclass
+class Video:
+    """
+    Class containing video information
+    """
+
+    video_id: str
+    title: str
+    description: str
+    published_at: datetime
+    thumbnails: dict[str, Thumbnail]
+    position: int
+
+    @staticmethod
+    def from_response(**kwargs):
+        """
+        Generates 'self' from API response
+        """
+
+        return Video(
+            video_id=kwargs["resourceId"]["videoId"],
+            title=kwargs["title"],
+            description=kwargs["description"],
+            published_at=kwargs["publishedAt"],
+            thumbnails={key: Thumbnail(**value) for key, value in kwargs["thumbnails"].items()},
+            position=kwargs["position"])
 
 
 class Fetcher:
@@ -84,7 +125,7 @@ class Fetcher:
         return response["items"][0]["snippet"]
 
     @classmethod
-    async def fetch_videos(cls, channel_id: str, amount: int) -> list[dict[str, str | dict]]:
+    async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
         """
         Returns a list of videos on the channel.
         :param channel_id: channel id
@@ -150,26 +191,10 @@ class Fetcher:
                   "width": 120,
                   "height": 90
                 },
-                "medium": {
-                  "url": "https://i.ytimg.com/vi/KOufsvwqt-M/mqdefault.jpg",
-                  "width": 320,
-                  "height": 180
-                },
-                "high": {
-                  "url": "https://i.ytimg.com/vi/KOufsvwqt-M/hqdefault.jpg",
-                  "width": 480,
-                  "height": 360
-                },
-                "standard": {
-                  "url": "https://i.ytimg.com/vi/KOufsvwqt-M/sddefault.jpg",
-                  "width": 640,
-                  "height": 480
-                },
-                "maxres": {
-                  "url": "https://i.ytimg.com/vi/KOufsvwqt-M/maxresdefault.jpg",
-                  "width": 1280,
-                  "height": 720
-                }
+                "medium": {...},
+                "high": {...},
+                "standard": {...},
+                "maxres": {...}
               },
               "channelTitle": "Qubik",
               "playlistId": "UUL-8FVaefmqox59LpOJxnOQ",
@@ -184,108 +209,6 @@ class Fetcher:
             "contentDetails": {
               "videoId": "KOufsvwqt-M",
               "videoPublishedAt": "2024-08-26T12:00:31Z"
-            }
-          },
-          {
-            "kind": "youtube#playlistItem",
-            "etag": "4mscx-jC4FjxhbnBz1b4fU4C4Ss",
-            "id": "VVVMLThGVmFlZm1xb3g1OUxwT0p4bk9RLi01VGFKWG9HNHBv",
-            "snippet": {
-              "publishedAt": "2024-07-28T15:45:22Z",
-              "channelId": "UCL-8FVaefmqox59LpOJxnOQ",
-              "title": "...",
-              "description": "...",
-              "thumbnails": {
-                "default": {
-                  "url": "https://i.ytimg.com/vi/-5TaJXoG4po/default.jpg",
-                  "width": 120,
-                  "height": 90
-                },
-                "medium": {
-                  "url": "https://i.ytimg.com/vi/-5TaJXoG4po/mqdefault.jpg",
-                  "width": 320,
-                  "height": 180
-                },
-                "high": {
-                  "url": "https://i.ytimg.com/vi/-5TaJXoG4po/hqdefault.jpg",
-                  "width": 480,
-                  "height": 360
-                },
-                "standard": {
-                  "url": "https://i.ytimg.com/vi/-5TaJXoG4po/sddefault.jpg",
-                  "width": 640,
-                  "height": 480
-                },
-                "maxres": {
-                  "url": "https://i.ytimg.com/vi/-5TaJXoG4po/maxresdefault.jpg",
-                  "width": 1280,
-                  "height": 720
-                }
-              },
-              "channelTitle": "Qubik",
-              "playlistId": "UUL-8FVaefmqox59LpOJxnOQ",
-              "position": 1,
-              "resourceId": {
-                "kind": "youtube#video",
-                "videoId": "-5TaJXoG4po"
-              },
-              "videoOwnerChannelTitle": "Qubik",
-              "videoOwnerChannelId": "UCL-8FVaefmqox59LpOJxnOQ"
-            },
-            "contentDetails": {
-              "videoId": "-5TaJXoG4po",
-              "videoPublishedAt": "2024-07-28T15:45:22Z"
-            }
-          },
-          {
-            "kind": "youtube#playlistItem",
-            "etag": "mfx697vD6gDvlnMU5MRiwwP7utk",
-            "id": "VVVMLThGVmFlZm1xb3g1OUxwT0p4bk9RLkZyUEVKcVdxU3JN",
-            "snippet": {
-              "publishedAt": "2024-07-26T11:00:13Z",
-              "channelId": "UCL-8FVaefmqox59LpOJxnOQ",
-              "title": "...",
-              "description": "...",
-              "thumbnails": {
-                "default": {
-                  "url": "https://i.ytimg.com/vi/FrPEJqWqSrM/default.jpg",
-                  "width": 120,
-                  "height": 90
-                },
-                "medium": {
-                  "url": "https://i.ytimg.com/vi/FrPEJqWqSrM/mqdefault.jpg",
-                  "width": 320,
-                  "height": 180
-                },
-                "high": {
-                  "url": "https://i.ytimg.com/vi/FrPEJqWqSrM/hqdefault.jpg",
-                  "width": 480,
-                  "height": 360
-                },
-                "standard": {
-                  "url": "https://i.ytimg.com/vi/FrPEJqWqSrM/sddefault.jpg",
-                  "width": 640,
-                  "height": 480
-                },
-                "maxres": {
-                  "url": "https://i.ytimg.com/vi/FrPEJqWqSrM/maxresdefault.jpg",
-                  "width": 1280,
-                  "height": 720
-                }
-              },
-              "channelTitle": "Qubik",
-              "playlistId": "UUL-8FVaefmqox59LpOJxnOQ",
-              "position": 2,
-              "resourceId": {
-                "kind": "youtube#video",
-                "videoId": "FrPEJqWqSrM"
-              },
-              "videoOwnerChannelTitle": "Qubik",
-              "videoOwnerChannelId": "UCL-8FVaefmqox59LpOJxnOQ"
-            },
-            "contentDetails": {
-              "videoId": "FrPEJqWqSrM",
-              "videoPublishedAt": "2024-07-26T11:00:13Z"
             }
           }
         ]
@@ -302,7 +225,7 @@ class Fetcher:
                     headers={"Accept-Encoding": "gzip,deflate"}) as resp:
                 playlist = await resp.json()
 
-        return playlist["items"]
+        return [Video.from_response(**(x["snippet"])) for x in playlist["items"]]
 
 
 async def test():
@@ -312,8 +235,8 @@ async def test():
 
     response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 3)
     # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
-    response = json.dumps(response, indent=2)
-    print(response)
+    # response = json.dumps(response, indent=2)
+    print('\n'.join([str(x) for x in response]))
 
     # channels = [
     #     "UCL-8FVaefmqox59LpOJxnOQ",
