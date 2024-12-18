@@ -107,7 +107,7 @@ class Fetcher:
     channel_upload_playlists: dict[str, str] = {}
 
     @staticmethod
-    async def fetch_channel_info(channel_id: str) -> dict[str, str | dict]:
+    async def fetch_channel_info(channel_id: str) -> Channel:
         """
         Fetches information about a given channel.
         :param channel_id: channel id
@@ -170,7 +170,7 @@ class Fetcher:
                     headers={"Accept-Encoding": "gzip,deflate"}) as resp:
                 response = await resp.json()
 
-        return response["items"][0]
+        return Channel.from_response(**(response["items"][0]))
 
     @classmethod
     async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
