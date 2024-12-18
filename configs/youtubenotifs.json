@@ -6,11 +6,11 @@
   "guild_configs": [
     {
       "guild_id": 1031161207291392000,
-      "notifs_id": 1032546102676815922,
-      "video_role": 1145094047824891906,
-      "stream_role": 1190415930086395974,
+      "notifications_channel_id": 1032546102676815922,
+      "video_role_id": 1145094047824891906,
+      "stream_role_id": 1190415930086395974,
       "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
-      "channels": [
+      "youtube_channels": [
         "UCL-8FVaefmqox59LpOJxnOQ",
         "UCOML6poYH8HL9yMM98DKqHw"
       ]
