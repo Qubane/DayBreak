@@ -52,6 +52,11 @@ class Video:
     thumbnails: dict[str, Thumbnail]
     position: int
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.id == other.id
+        return False
+
     @staticmethod
     def from_response(**kwargs):
         """
@@ -80,6 +85,11 @@ class Channel:
     published_at: datetime
     thumbnails: dict[str, Thumbnail]
     country: str
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.id == other.id
+        return False
 
     @staticmethod
     def from_response(**kwargs):
