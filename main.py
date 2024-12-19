@@ -87,29 +87,42 @@ class Client(commands.Bot):
         """
 
         self.logger.info("Bot connected.")
-        asyncio.create_task(self.change_presence(activity=discord.Game("A DayBreak")))
+        await self.change_presence(activity=discord.Game("A DayBreak"))
         await self.tree.sync()
         self.logger.info("Command tree synced")
 
         # membership test
         for guild in self.guilds:
+            # skip guild if membership is not configured
             if guild.id not in self.memberships_config:
                 self.logger.warning(f"Memberships not configured for '{guild.name}' [{guild.id}]")
                 continue
-            role_id = self.memberships_config[guild.id]
             for member in guild.members:
-                if role_id not in member._roles:
-                    await member.add_roles(guild.get_role(role_id))
-                    self.logger.info(f"Added membership to user '{member.display_name}' [{member.id}]")
+                await self.add_membership(member)
 
     async def on_member_join(self, member: discord.Member) -> None:
         """
         When a new user joins
         """
 
+        await self.add_membership(member)
+
+    async def add_membership(self, member: discord.Member) -> None:
+        """
+        Adds membership to user
+        :param member: discord guild member
+        """
+
+        # check if guild is configured
         if member.guild.id not in self.memberships_config:
             return
+
+        # check if user has the role
         role_id = self.memberships_config[member.guild.id]
+        if role_id in member._roles:
+            return
+
+        # add role, if missing
         await member.add_roles(member.guild.get_role(role_id))
 
 
