@@ -28,7 +28,7 @@ class UtilsModule(commands.Cog):
 
         embed = discord.Embed(
             title="Latency",
-            description=f"Bots latency is {self.client.latency}",
+            description=f"Bots latency is {self.client.latency * 1000:.4f} ms",
             color=discord.Color.brand_green())
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
