@@ -79,7 +79,7 @@ class Client(commands.Bot):
                 self.logger.warning(f"Module '{queued_module}' failure", exc_info=e)
                 continue
             self.modules_running.append(queued_module)
-            self.modules_queued.remove(queued_module)
+        self.modules_queued.clear()
 
     async def on_ready(self) -> None:
         """
@@ -88,8 +88,8 @@ class Client(commands.Bot):
 
         self.logger.info("Bot connected.")
         asyncio.create_task(self.change_presence(activity=discord.Game("A DayBreak")))
-        # await self.tree.sync()
-        # self.logger.info("Command tree synced")
+        await self.tree.sync()
+        self.logger.info("Command tree synced")
 
         # membership test
         for guild in self.guilds:
