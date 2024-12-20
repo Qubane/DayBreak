@@ -14,6 +14,26 @@
         "UCL-8FVaefmqox59LpOJxnOQ",
         "UCOML6poYH8HL9yMM98DKqHw"
       ]
+    },
+    {
+      "guild_id": 860450204000059412,
+      "notifications_channel_id": 860730818581364796,
+      "video_role_id": 860801537005453322,
+      "stream_role_id": 860801537005453322,
+      "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
+      "youtube_channels": [
+        "UCOML6poYH8HL9yMM98DKqHw"
+      ]
+    },
+    {
+      "guild_id": 863390692591665152,
+      "notifications_channel_id": 863394227655933994,
+      "video_role_id": 1110299526721449984,
+      "stream_role_id": 1089955742662000641,
+      "format": "{role_mention}\n# :fire: Вышло новое видео {channel_name}! :fire:\n-# {video_url}",
+      "youtube_channels": [
+        "UCL-8FVaefmqox59LpOJxnOQ"
+      ]
     }
   ]
 }
