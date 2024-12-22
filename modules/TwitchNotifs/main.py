@@ -37,10 +37,10 @@ class TwitchNotifsModule(commands.Cog):
 
         self.check.change_interval(seconds=self.module_config["update_interval"])
 
-    @tasks.loop(minutes=1)
-    async def check(self) -> None:
+    async def fetch_channel_states(self) -> dict[str, bool]:
         """
-        Check every 'update_interval' for a new stream
+        Checks all channels for their current state (live / offline)
+        :return: 'name': True/False
         """
 
         # fetch all channels
@@ -59,8 +59,16 @@ class TwitchNotifsModule(commands.Cog):
         response = await asyncio.gather(
             *[check_coro(channel) for channel in channels])
 
-        # zip 'channel': 'isLive?' together
-        channels_live = {name: live for name, live in zip(channels, response)}
+        # zip 'channel': 'isLive?' together & return
+        return {name: live for name, live in zip(channels, response)}
+
+    @tasks.loop(minutes=1)
+    async def check(self) -> None:
+        """
+        Check every 'update_interval' for a new stream
+        """
+
+        channels_live = await self.fetch_channel_states()
 
         # go through all guilds
         for guild_config in self.guild_config:
