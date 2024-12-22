@@ -51,6 +51,7 @@ class TwitchNotifsModule(commands.Cog):
         # limit concurrency
         sem = asyncio.Semaphore(self.module_config["threads"])
 
+        # checking coroutine
         async def check_coro(channel_name):
             async with sem:
                 return await check_live(channel_name)
@@ -58,8 +59,24 @@ class TwitchNotifsModule(commands.Cog):
         response = await asyncio.gather(
             *[check_coro(channel) for channel in channels])
 
+        # zip 'channel': 'isLive?' together
         channels_live = {name: live for name, live in zip(channels, response)}
 
+        # go through all guilds
+        for guild_config in self.guild_config:
+            notification_channel = self.client.get_channel(guild_config["notifications_channel_id"])
+            notification_format = guild_config["format"]
+            role_ping = f"<@&{guild_config["role_id"]}>"
+
+            # check every configured twitch channel
+            for channel in guild_config["channels"]:
+                # if channel is live -> make a notification
+                if channels_live[channel]:
+                    msg = notification_format.format(
+                        role_mention=role_ping,
+                        channel_name=channel,  # so convenient, thx twitch
+                        stream_url=f"https://www.twitch.tv/{channel}")
+                    await notification_channel.send(msg)
 
 
 async def setup(client: commands.Bot) -> None:
