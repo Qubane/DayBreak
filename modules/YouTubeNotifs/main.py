@@ -74,7 +74,7 @@ class YouTubeNotifsModule(commands.Cog):
     @tasks.loop(minutes=1)
     async def check(self) -> None:
         """
-        Checks every 10 minutes for a new video/stream
+        Checks every 'update_interval' for a new video/stream
         """
 
         # if channels list is not init, initialize it
