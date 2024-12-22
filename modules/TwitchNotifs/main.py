@@ -1,13 +1,13 @@
 """
 This is a module that checks if some Twitch streamer is live.
 """
-
-
+import asyncio
 import json
 import discord
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.settings import CONFIGS_DIRECTORY
+from modules.TwitchNotifs.fetcher import check_live
 
 
 class TwitchNotifsModule(commands.Cog):
@@ -23,6 +23,7 @@ class TwitchNotifsModule(commands.Cog):
         self.guild_config: list[dict[str, str | int | list]] | None = None
 
         self.load_configs()
+        self.check.start()
 
     def load_configs(self) -> None:
         """
@@ -41,6 +42,24 @@ class TwitchNotifsModule(commands.Cog):
         """
         Check every 'update_interval' for a new stream
         """
+
+        # fetch all channels
+        channels = set()
+        for guild_config in self.guild_config:
+            channels.update(guild_config["channels"])
+
+        # limit concurrency
+        sem = asyncio.Semaphore(self.module_config["threads"])
+
+        async def check_coro(channel_name):
+            async with sem:
+                return await check_live(channel_name)
+
+        response = await asyncio.gather(
+            *[check_coro(channel) for channel in channels])
+
+        channels_live = {name: live for name, live in zip(channels, response)}
+
 
 
 async def setup(client: commands.Bot) -> None:
