@@ -22,6 +22,9 @@ class TwitchNotifsModule(commands.Cog):
         self.module_config: dict[str, int] | None = None
         self.guild_config: list[dict[str, str | int | list]] | None = None
 
+        self.channels_live: dict[str, bool] = dict()
+        self.channels_init: bool = False
+
         self.load_configs()
         self.check.start()
 
@@ -68,6 +71,13 @@ class TwitchNotifsModule(commands.Cog):
         Check every 'update_interval' for a new stream
         """
 
+        # check if we initialized current state of channels
+        if not self.channels_init:
+            self.channels_init = True
+            self.channels_live = await self.fetch_channel_states()
+            return
+
+        # fetch current state
         channels_live = await self.fetch_channel_states()
 
         # go through all guilds
