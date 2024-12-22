@@ -1,9 +1,9 @@
 {
-  "configs": {
+  "config": {
     "update_interval": 600,
     "fetching_window": 3
   },
-  "guild_configs": [
+  "guild_config": [
     {
       "guild_id": 1031161207291392000,
       "notifications_channel_id": 1032546102676815922,

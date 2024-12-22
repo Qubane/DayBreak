@@ -43,8 +43,8 @@ class YouTubeNotifsModule(commands.Cog):
 
         with open(self.config_path, "r", encoding="utf-8") as file:
             config = json.loads(file.read())
-            self.module_config = config["configs"]
-            self.guild_config = config["guild_configs"]
+            self.module_config = config["config"]
+            self.guild_config = config["guild_config"]
 
         self.check.change_interval(seconds=self.module_config["update_interval"])
 
