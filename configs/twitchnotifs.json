@@ -1,0 +1,16 @@
+{
+  "config": {
+    "update_interval": 60
+  },
+  "guild_config": [
+    {
+      "guild_id": 1031161207291392000,
+      "notifications_channel_id": 1032546102676815922,
+      "role_id": 1190415930086395974,
+      "format": "{role_mention}\n# :fire: Check out {channel_name}'s stream :fire:\n-# {stream_url}",
+      "channels": [
+        "pewdiepie"
+      ]
+    }
+  ]
+}
