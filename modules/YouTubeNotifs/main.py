@@ -61,7 +61,7 @@ class YouTubeNotifsModule(commands.Cog):
         # fetch all logged YT channels
         channel_ids = set()
         for guild_config in self.guild_config:
-            channel_ids.update(guild_config["youtube_channels"])
+            channel_ids.update(guild_config["channels"])
 
         # fetch videos from all configured YT channels
         channel_dict = dict()
@@ -98,7 +98,7 @@ class YouTubeNotifsModule(commands.Cog):
             # stream_role_ping = f"<@&{guild_config['stream_role_id']}>"  # unused
 
             # check every YT channel
-            for channel_id in guild_config["youtube_channels"]:
+            for channel_id in guild_config["channels"]:
                 # check every new video against old videos
                 # don't check last new video to prevent old videos to be considered new (ex. deleted video)
                 for new_video in new_channels[channel_id][:-1]:

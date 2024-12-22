@@ -10,7 +10,7 @@
       "video_role_id": 1145094047824891906,
       "stream_role_id": 1190415930086395974,
       "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
-      "youtube_channels": [
+      "channels": [
         "UCL-8FVaefmqox59LpOJxnOQ",
         "UCOML6poYH8HL9yMM98DKqHw"
       ]
@@ -21,7 +21,7 @@
       "video_role_id": 860801537005453322,
       "stream_role_id": 860801537005453322,
       "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
-      "youtube_channels": [
+      "channels": [
         "UCOML6poYH8HL9yMM98DKqHw"
       ]
     },
@@ -31,7 +31,7 @@
       "video_role_id": 1110299526721449984,
       "stream_role_id": 1089955742662000641,
       "format": "{role_mention}\n# :fire: Вышло новое видео {channel_name}! :fire:\n-# {video_url}",
-      "youtube_channels": [
+      "channels": [
         "UCL-8FVaefmqox59LpOJxnOQ"
       ]
     }
