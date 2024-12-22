@@ -78,7 +78,7 @@ class TwitchNotifsModule(commands.Cog):
             return
 
         # fetch current state
-        channels_live = await self.fetch_channel_states()
+        new_channels_live = await self.fetch_channel_states()
 
         # go through all guilds
         for guild_config in self.guild_config:
@@ -88,13 +88,16 @@ class TwitchNotifsModule(commands.Cog):
 
             # check every configured twitch channel
             for channel in guild_config["channels"]:
-                # if channel is live -> make a notification
-                if channels_live[channel]:
+                # if a channel is live, and it wasn't before -> make a notification
+                if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel] is True:
                     msg = notification_format.format(
                         role_mention=role_ping,
                         channel_name=channel,  # so convenient, thx twitch
                         stream_url=f"https://www.twitch.tv/{channel}")
                     await notification_channel.send(msg)
+
+        # update channel states
+        self.channels_live = new_channels_live
 
 
 async def setup(client: commands.Bot) -> None:
