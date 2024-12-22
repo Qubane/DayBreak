@@ -4,6 +4,7 @@ This is an example module for DayBreak bot
 
 
 import discord
+import logging
 from discord import app_commands
 from discord.ext import commands
 
@@ -15,6 +16,10 @@ class ExampleModule(commands.Cog):
 
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
+
+        # logging
+        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger.info("Module loaded")
 
         # here's an example variable
         self.example = "example"

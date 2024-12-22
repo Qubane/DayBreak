@@ -1,9 +1,10 @@
 """
 This is a module that checks if some Twitch streamer is live.
 """
-import asyncio
 import json
+import asyncio
 import discord
+import logging
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.settings import CONFIGS_DIRECTORY
@@ -18,10 +19,17 @@ class TwitchNotifsModule(commands.Cog):
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
 
+        # logging
+        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger.info("Module loaded")
+
+        # configs
         self.config_path: str = f"{CONFIGS_DIRECTORY}/twitchnotifs.json"
         self.module_config: dict[str, int] | None = None
         self.guild_config: list[dict[str, str | int | list]] | None = None
 
+        # channels
+        # 'channel_name': True/False (live/offline)
         self.channels_live: dict[str, bool] = dict()
         self.channels_init: bool = False
 

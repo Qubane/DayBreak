@@ -7,6 +7,7 @@ Code is taken from 'UltraQbik/MightyOmegaBot' repo path 'client_cogs/RoflCommand
 
 
 import discord
+import logging
 from discord.ext import commands
 from discord import app_commands
 
@@ -14,6 +15,10 @@ from discord import app_commands
 class MiscModule(commands.Cog):
     def __init__(self, client: commands.Bot):
         self.client = client
+
+        # logging
+        self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger.info("Module loaded")
 
     @app_commands.command(name="bk", description="boykisser")
     async def boy_kisser(self, interaction: discord.Interaction):

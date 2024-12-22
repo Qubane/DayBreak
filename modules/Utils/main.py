@@ -19,7 +19,9 @@ class UtilsModule(commands.Cog):
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
 
+        # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
+        self.logger.info("Module loaded")
 
     @app_commands.command(name="latency", description="shows bots latency")
     async def latency(
