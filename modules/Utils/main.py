@@ -136,6 +136,8 @@ class UtilsModule(commands.Cog):
 
         if not silent:
             await ctx.send(embed=embed)
+        else:
+            await ctx.message.delete()
 
 
 async def setup(client: commands.Bot) -> None:
