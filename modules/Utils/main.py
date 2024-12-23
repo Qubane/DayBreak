@@ -4,6 +4,7 @@ Commands such as: latency; reload_cog; etc
 """
 
 
+import asyncio
 import discord
 import logging
 from datetime import timedelta
@@ -41,6 +42,7 @@ class UtilsModule(commands.Cog):
 
     @app_commands.command(name="btimeout", description="timeouts a user")
     @app_commands.checks.has_permissions(moderate_members=True)
+    @app_commands.guild_only()
     @app_commands.describe(
         user="User to timeout",
         seconds="how many seconds to timeout for",
@@ -100,6 +102,40 @@ class UtilsModule(commands.Cog):
         # if something else failed, print a message
         except Exception as e:
             self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+
+    @commands.command(name="exec")
+    @commands.has_permissions(administrator=True)
+    @commands.is_owner()
+    async def exec(
+            self,
+            ctx: commands.Context,
+            *,
+            code: str = ""
+    ) -> None:
+        """
+        Executes python code
+        """
+
+        embed = discord.Embed()
+
+        # silent mode (don't print anything in response)
+        silent = False
+        if code[0] == "s":
+            silent = True
+
+        code = code[code.find("\n"):-3].replace("\n", f"\n{' ' * 4}")
+        try:
+            exec(f"async def __ex(self, ctx): {code}")
+            result = str(await locals()["__ex"](self, ctx))
+
+            embed.title = "Success!"
+            embed.description = result if len(result) <= 1990 else result[:1990]
+        except Exception as e:
+            embed.title = f"Error: {e.__class__.__name__}"
+            embed.description = e.__str__()
+
+        if not silent:
+            await ctx.send(embed=embed)
 
 
 async def setup(client: commands.Bot) -> None:
