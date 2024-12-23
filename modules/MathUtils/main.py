@@ -39,7 +39,7 @@ class MathUtilsModule(commands.Cog):
                 f"$${text}$$",
                 output="png",
                 viewer="file",
-                filename="image.png",
+                filename=self.image_path,
                 euler=False,
                 dvioptions=['-D', '400'])
         except RuntimeError as exc:
@@ -48,9 +48,9 @@ class MathUtilsModule(commands.Cog):
             out = out[:out.find('\n')]
             await interaction.response.send_message(out, ephemeral=True)
         else:
-            with Image.open("image.png") as img:
+            with Image.open(self.image_path) as img:
                 img_borders = ImageOps.expand(img, border=20, fill='white')
-                img_borders.save("image.png")
+                img_borders.save(self.image_path)
             with open(self.image_path, "rb") as image:
                 await interaction.response.send_message(file=discord.File(image))
 
