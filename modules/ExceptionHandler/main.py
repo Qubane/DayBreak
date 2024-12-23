@@ -33,15 +33,20 @@ class ExceptionHandlerModule(commands.Cog):
         Global exception handler
         """
 
+        common_errors = (
+            commands.CommandNotFound, app_commands.CommandNotFound,
+            commands.NotOwner
+        )
+
         embed = discord.Embed(color=discord.Color.red())
         if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             embed.title = error.__class__.__name__
             embed.description = "List of missing permissions"
             for permission in error.missing_permissions:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
-        elif isinstance(error, commands.CommandNotFound):
+        elif isinstance(error, common_errors):
             embed.title = error.__class__.__name__
-            embed.description = "Command that you have entered does not exist"
+            embed.description = error.args[0]
         else:
             self.logger.warning("An error had occurred while handling another error", exc_info=error)
             embed.title = "Unexpected error!"
