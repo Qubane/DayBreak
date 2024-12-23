@@ -34,15 +34,15 @@ class ExceptionHandlerModule(commands.Cog):
         """
 
         embed = discord.Embed(color=discord.Color.red())
-        if isinstance(error, app_commands.MissingPermissions):      # missing permissions
+        if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             embed.title = error.__class__.__name__
             embed.description = "List of missing permissions"
             for permission in error.missing_permissions:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
-        elif isinstance(error, commands.CommandNotFound):           # command not found
+        elif isinstance(error, commands.CommandNotFound):
             embed.title = error.__class__.__name__
             embed.description = "Command that you have entered does not exist"
-        else:                                                       # unhandled exception
+        else:
             self.logger.warning("An error had occurred while handling another error", exc_info=error)
             embed.title = "Unexpected error!"
             embed.description = "Unhandled exception had occurred, please contact @qubane"
