@@ -101,18 +101,6 @@ class UtilsModule(commands.Cog):
         except Exception as e:
             self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
 
-    @better_timeout.error
-    async def better_timeout_handler(self, interaction: discord.Interaction, error: discord.DiscordException):
-        """
-        Error handler for better timeout app command
-        """
-
-        if isinstance(error, app_commands.CommandInvokeError):
-            await interaction.response.send_message("User has more permissions than the bot", ephemeral=True)
-        else:
-            self.logger.warning("An error had occurred while handling another error", exc_info=error)
-            await interaction.response.send_message("Unexpected error, check logs for more info", ephemeral=True)
-
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(UtilsModule(client))
