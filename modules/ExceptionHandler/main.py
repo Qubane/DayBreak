@@ -55,7 +55,7 @@ class ExceptionHandlerModule(commands.Cog):
         if isinstance(interaction, discord.Interaction):
             await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
-            await interaction.send(embed=embed, ephemeral=True)
+            await interaction.send(embed=embed, reference=interaction.message)
 
 
 async def setup(client: commands.Bot) -> None:
