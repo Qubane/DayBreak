@@ -1,6 +1,6 @@
 {
   "config": {
-    "update_interval": 60,
+    "update_interval": 300,
     "threads": 3
   },
   "guild_config": [
