@@ -7,6 +7,7 @@ For example, it adds LaTeX formula rendering
 import sympy
 import discord
 import logging
+from io import BytesIO
 from PIL import Image, ImageOps
 from discord import app_commands
 from discord.ext import commands
@@ -25,8 +26,6 @@ class MathUtilsModule(commands.Cog):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
-        self.image_path: str = f"{VARS_DIRECTORY}/image.png"
-
     @app_commands.command(name="latex", description="converts LaTeX formula to image")
     @app_commands.describe(text="LaTeX formatted formula")
     async def render_latex_formula(self, interaction: discord.Interaction, text: str):
@@ -34,25 +33,26 @@ class MathUtilsModule(commands.Cog):
         Command that adds LaTeX rendering
         """
 
+        img = BytesIO()
         try:
             sympy.preview(
                 f"$${text}$$",
                 output="png",
-                viewer="file",
-                filename=self.image_path,
+                viewer="BytesIO",
+                outputbuffer=img,
                 euler=False,
                 dvioptions=['-D', '400'])
         except RuntimeError as exc:
-            text = str(exc).replace('\\n', '\n')
-            out = text[text.find('! '):]
-            out = out[:out.find('\n')]
-            await interaction.response.send_message(out, ephemeral=True)
+            error = exc.__str__()
+            error = error[error.find("! ")+2:]
+            error = error[:error.find("\\r")]
+            await interaction.response.send_message(error, ephemeral=True)
         else:
-            with Image.open(self.image_path) as img:
-                img_borders = ImageOps.expand(img, border=20, fill='white')
-                img_borders.save(self.image_path)
-            with open(self.image_path, "rb") as image:
-                await interaction.response.send_message(file=discord.File(image))
+            pil_image = ImageOps.expand(Image.open(img), border=20, fill='white')
+            img.seek(0)
+            pil_image.save(img, "PNG")
+            img.seek(0)
+            await interaction.response.send_message(file=discord.File(img, filename="result.png"))
 
 
 async def setup(client: commands.Bot) -> None:
