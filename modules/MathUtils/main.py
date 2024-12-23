@@ -10,6 +10,7 @@ import logging
 from PIL import Image, ImageOps
 from discord import app_commands
 from discord.ext import commands
+from source.settings import VARS_DIRECTORY
 
 
 class MathUtilsModule(commands.Cog):
@@ -23,6 +24,8 @@ class MathUtilsModule(commands.Cog):
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
+
+        self.image_path: str = f"{VARS_DIRECTORY}/image.png"
 
     @app_commands.command(name="latex", description="converts LaTeX formula to image")
     @app_commands.describe(text="LaTeX formatted formula")
@@ -48,8 +51,8 @@ class MathUtilsModule(commands.Cog):
             with Image.open("image.png") as img:
                 img_borders = ImageOps.expand(img, border=20, fill='white')
                 img_borders.save("image.png")
-            with open("image.png", "rb") as image:
-                await interaction.response.send_message(file=discord.File(image.read()))
+            with open(self.image_path, "rb") as image:
+                await interaction.response.send_message(file=discord.File(image))
 
 
 async def setup(client: commands.Bot) -> None:
