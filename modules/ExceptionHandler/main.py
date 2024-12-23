@@ -25,7 +25,10 @@ class ExceptionHandlerModule(commands.Cog):
         self.client.tree.error(coro=self.on_command_error)
 
     @commands.Cog.listener()
-    async def on_command_error(self, interaction: discord.Interaction, error: commands.ExtensionError):
+    async def on_command_error(
+            self,
+            interaction: commands.Context | discord.Interaction,
+            error: commands.ExtensionError):
         """
         Global exception handler
         """
@@ -36,11 +39,18 @@ class ExceptionHandlerModule(commands.Cog):
             embed.description = "List of missing permissions"
             for permission in error.missing_permissions:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
+        elif isinstance(error, commands.CommandNotFound):           # command not found
+            embed.title = error.__class__.__name__
+            embed.description = "Command that you have entered does not exist"
         else:                                                       # unhandled exception
             self.logger.warning("An error had occurred while handling another error", exc_info=error)
             embed.title = "Unexpected error!"
             embed.description = "Unhandled exception had occurred, please contact @qubane"
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        if isinstance(interaction, discord.Interaction):
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+        else:
+            await interaction.send(embed=embed, ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
