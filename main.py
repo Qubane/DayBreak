@@ -10,8 +10,8 @@ import asyncio
 import discord
 import logging
 import source.settings
-from source.settings import MODULES_DIRECTORY, CONFIGS_DIRECTORY
 from discord.ext import commands
+from source.settings import MODULES_DIRECTORY, CONFIGS_DIRECTORY
 
 
 class Client(commands.Bot):
@@ -23,15 +23,21 @@ class Client(commands.Bot):
         super(Client, self).__init__(command_prefix="!", intents=discord.Intents.all(),
                                      help_command=None)
 
+        # logger
         self.logger: logging.Logger = logging.getLogger(__name__)
 
+        # modules
         self.modules_present: list[str] = list()
         self.modules_queued: list[str] = list()
         self.modules_running: list[str] = list()
 
+        # important modules
+        self.modules_queued.append("ExceptionHandler")
+
         # "guild_id": "role_id"
         self.memberships_config: dict[int, int] | None = None
 
+        # config and module loading
         self._load_configs()
         self._load_modules()
 
