@@ -116,8 +116,6 @@ class UtilsModule(commands.Cog):
         Executes python code
         """
 
-        embed = discord.Embed()
-
         # silent mode (don't print anything in response)
         silent = False
         if code[0] == "s":
@@ -128,11 +126,15 @@ class UtilsModule(commands.Cog):
             exec(f"async def __ex(self, ctx): {code}")
             result = str(await locals()["__ex"](self, ctx))
 
-            embed.title = "Success!"
-            embed.description = result if len(result) <= 1990 else result[:1990]
+            embed = discord.Embed(
+                title="Success!",
+                description=result if len(result) <= 1990 else result[:1990],
+                color=discord.Color.green())
         except Exception as e:
-            embed.title = f"Error: {e.__class__.__name__}"
-            embed.description = e.__str__()
+            embed = discord.Embed(
+                title=f"Error: {e.__class__.__name__}",
+                description=e.__str__(),
+                color=discord.Color.red())
 
         if not silent:
             await ctx.send(embed=embed)
