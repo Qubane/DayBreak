@@ -150,7 +150,7 @@ class Fetcher:
 
         _headers = dict()
         if cached is not None:  # cache hit
-            _headers["etag"] = cached["etag"]
+            _headers["If-None-Match"] = cached["etag"]
         if headers is not None:  # added headers
             _headers.update(headers)
 
