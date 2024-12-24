@@ -121,7 +121,7 @@ class Fetcher:
     channel_upload_playlists: dict[str, str] = {}
 
     @classmethod
-    async def fetch_api(cls, url: str, headers: dict[str, Any]) -> aiohttp.ClientResponse:
+    async def fetch_api(cls, url: str, headers: dict[str, Any] | None = None):
         """
         Fetches response using given URL and HEADERS
         :param url: api link
@@ -130,12 +130,13 @@ class Fetcher:
         """
 
         _headers = dict()
-        _headers.update(headers)
+        if headers is not None:
+            _headers.update(headers)
         _headers.update({"Accept-Encoding": "gzip,deflate,br"})
 
         async with aiohttp.ClientSession(headers=_headers) as session:
             async with session.get(url) as resp:
-                return resp
+                return await resp.json()
 
     @classmethod
     async def fetch_channel_info(cls, channel_id: str) -> Channel:
@@ -192,14 +193,11 @@ class Fetcher:
         }
         """
 
-        async with aiohttp.ClientSession(
-                headers={"Accept-Encoding": "gzip,deflate,br"}) as session:
-            async with session.get(
-                    f"https://www.googleapis.com/youtube/v3/channels?"
-                    f"part=snippet&"
-                    f"id={channel_id}&"
-                    f"key={YOUTUBE_API_KEY}") as resp:
-                response = await resp.json()
+        response = await cls.fetch_api(
+            f"https://www.googleapis.com/youtube/v3/channels?"
+            f"part=snippet&"
+            f"id={channel_id}&"
+            f"key={YOUTUBE_API_KEY}")
 
         return Channel.from_response(response["items"][0])
 
@@ -239,14 +237,11 @@ class Fetcher:
 
         # fetch upload list id
         if channel_id not in cls.channel_upload_playlists:
-            async with aiohttp.ClientSession(
-                    headers={"Accept-Encoding": "gzip,deflate,br"}) as session:
-                async with session.get(
-                        f"https://www.googleapis.com/youtube/v3/channels?"
-                        f"part=contentDetails&"
-                        f"id={channel_id}&"
-                        f"key={YOUTUBE_API_KEY}") as resp:
-                    content_details = await resp.json()
+            content_details = await cls.fetch_api(
+                f"https://www.googleapis.com/youtube/v3/channels?"
+                f"part=contentDetails&"
+                f"id={channel_id}&"
+                f"key={YOUTUBE_API_KEY}")
             uploads_id = content_details["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
             cls.channel_upload_playlists[channel_id] = uploads_id
         else:
@@ -294,15 +289,12 @@ class Fetcher:
         """
 
         # fetch last {amount} videos
-        async with aiohttp.ClientSession(
-                headers={"Accept-Encoding": "gzip,deflate,br"}) as session:
-            async with session.get(
-                    f"https://www.googleapis.com/youtube/v3/playlistItems?"
-                    f"part=snippet%2CcontentDetails&"
-                    f"maxResults={amount}&"
-                    f"playlistId={uploads_id}&"
-                    f"key={YOUTUBE_API_KEY}") as resp:
-                playlist = await resp.json()
+        playlist = await cls.fetch_api(
+            f"https://www.googleapis.com/youtube/v3/playlistItems?"
+            f"part=snippet%2CcontentDetails&"
+            f"maxResults={amount}&"
+            f"playlistId={uploads_id}&"
+            f"key={YOUTUBE_API_KEY}")
 
         return [Video.from_response(x["snippet"]) for x in playlist["items"]]
 
