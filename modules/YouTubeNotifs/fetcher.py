@@ -5,6 +5,7 @@ YouTube's videos and streams fetching
 
 import asyncio
 import aiohttp
+from typing import Any
 from datetime import datetime
 from dataclasses import dataclass
 from source.settings import YOUTUBE_API_KEY
@@ -119,8 +120,17 @@ class Fetcher:
     # "channel_id": "upload_id"
     channel_upload_playlists: dict[str, str] = {}
 
-    @staticmethod
-    async def fetch_channel_info(channel_id: str) -> Channel:
+    @classmethod
+    async def fetch_api(cls, url: str, headers: dict[str, Any]) -> dict:
+        """
+        Fetches data using given URL and HEADERS
+        :param url: api link
+        :param headers: headers to use
+        :return: response
+        """
+
+    @classmethod
+    async def fetch_channel_info(cls, channel_id: str) -> Channel:
         """
         Fetches information about a given channel.
         :param channel_id: channel id
