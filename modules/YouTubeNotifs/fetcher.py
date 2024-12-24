@@ -125,24 +125,45 @@ class Fetcher:
     cached: dict[str, dict[str, Any]] = dict()
 
     @classmethod
+    def update_cache(cls, url: str, etag: str, data: Any) -> None:
+        """
+        Updates cache
+        :param url: url request
+        :param etag: API etag
+        :param data: data
+        """
+
+        cls.cached[url] = {
+            "etag": etag,
+            "data": data}
+
+    @classmethod
     async def fetch_api(cls, url: str, headers: dict[str, Any] | None = None):
         """
         Fetches response using given URL and HEADERS
-        :param url: api link
+        :param url: url request
         :param headers: headers to use
         :return: response
         """
 
-        print(cls.cached)
+        cached = cls.cached.get(url)
 
         _headers = dict()
-        if headers is not None:
+        if cached is not None:  # cache hit
+            _headers["etag"] = cached["etag"]
+        if headers is not None:  # added headers
             _headers.update(headers)
-        _headers.update({"Accept-Encoding": "gzip,deflate,br"})
 
         async with aiohttp.ClientSession(headers=_headers) as session:
             async with session.get(url) as resp:
-                return await resp.json()
+                if resp.status == 304:  # cache is unchanged
+                    return cached["data"]
+                elif resp.status == 200:  # cache is changed / new entry
+                    response = await resp.json()
+                    cls.update_cache(url, response["etag"], response)
+                    return response
+                else:  # error
+                    return None
 
     @classmethod
     async def fetch_channel_info(cls, channel_id: str) -> Channel:
@@ -310,10 +331,11 @@ async def test():
     Very cool test thingy. runs only when file is run as main
     """
 
-    response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 3)
-    # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
-    # response = json.dumps(response, indent=2)
-    print('\n'.join([str(x) for x in response]))
+    for _ in range(2):
+        response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 3)
+        # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
+        # response = json.dumps(response, indent=2)
+        print('\n'.join([str(x) for x in response]))
 
     # channels = [
     #     "UCL-8FVaefmqox59LpOJxnOQ",
