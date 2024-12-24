@@ -121,13 +121,21 @@ class Fetcher:
     channel_upload_playlists: dict[str, str] = {}
 
     @classmethod
-    async def fetch_api(cls, url: str, headers: dict[str, Any]) -> dict:
+    async def fetch_api(cls, url: str, headers: dict[str, Any]) -> aiohttp.ClientResponse:
         """
-        Fetches data using given URL and HEADERS
+        Fetches response using given URL and HEADERS
         :param url: api link
         :param headers: headers to use
         :return: response
         """
+
+        _headers = dict()
+        _headers.update(headers)
+        _headers.update({"Accept-Encoding": "gzip,deflate,br"})
+
+        async with aiohttp.ClientSession(headers=_headers) as session:
+            async with session.get(url) as resp:
+                return resp
 
     @classmethod
     async def fetch_channel_info(cls, channel_id: str) -> Channel:
