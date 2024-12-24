@@ -120,6 +120,10 @@ class Fetcher:
     # "channel_id": "upload_id"
     channel_upload_playlists: dict[str, str] = {}
 
+    # cached requests
+    # "request_url": {"etag": "current_etag", "data": ...}
+    cached: dict[str, dict[str, Any]] = dict()
+
     @classmethod
     async def fetch_api(cls, url: str, headers: dict[str, Any] | None = None):
         """
@@ -128,6 +132,8 @@ class Fetcher:
         :param headers: headers to use
         :return: response
         """
+
+        print(cls.cached)
 
         _headers = dict()
         if headers is not None:
