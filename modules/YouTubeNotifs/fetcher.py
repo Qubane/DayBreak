@@ -21,12 +21,15 @@ class Thumbnail:
     height: int
 
     @staticmethod
-    def from_response(**kwargs):
+    def from_response(response: dict):
         """
         Generates 'self' from API response
         """
 
-        return Thumbnail(**kwargs)
+        return Thumbnail(
+            url=response["url"],
+            width=response["width"],
+            height=response["height"])
 
     @staticmethod
     def dict_from_response(thumbnails: dict[str, dict]):
@@ -36,7 +39,7 @@ class Thumbnail:
         :return: dict of thumbnails
         """
 
-        return {key: Thumbnail.from_response(**value) for key, value in thumbnails.items()}
+        return {key: Thumbnail.from_response(value) for key, value in thumbnails.items()}
 
 
 @dataclass
@@ -58,18 +61,18 @@ class Video:
         return False
 
     @staticmethod
-    def from_response(**kwargs):
+    def from_response(response: dict):
         """
         Generates 'self' from API response
         """
 
         return Video(
-            id=kwargs["resourceId"]["videoId"],
-            title=kwargs["title"],
-            description=kwargs["description"],
-            published_at=datetime.fromisoformat(kwargs["publishedAt"]),
-            thumbnails=Thumbnail.dict_from_response(kwargs["thumbnails"]),
-            position=kwargs["position"])
+            id=response["resourceId"]["videoId"],
+            title=response["title"],
+            description=response["description"],
+            published_at=datetime.fromisoformat(response["publishedAt"]),
+            thumbnails=Thumbnail.dict_from_response(response["thumbnails"]),
+            position=response["position"])
 
 
 @dataclass
@@ -92,19 +95,19 @@ class Channel:
         return False
 
     @staticmethod
-    def from_response(**kwargs):
+    def from_response(response: dict):
         """
         Generates 'self' from API response
         """
 
         return Channel(
-            id=kwargs["id"],
-            title=kwargs["snippet"]["title"],
-            description=kwargs["snippet"]["description"],
-            custom_url=kwargs["snippet"]["customUrl"],
-            published_at=datetime.fromisoformat(kwargs["snippet"]["publishedAt"]),
-            thumbnails=Thumbnail.dict_from_response(kwargs["snippet"]["thumbnails"]),
-            country=kwargs["snippet"]["country"])
+            id=response["id"],
+            title=response["snippet"]["title"],
+            description=response["snippet"]["description"],
+            custom_url=response["snippet"]["customUrl"],
+            published_at=datetime.fromisoformat(response["snippet"]["publishedAt"]),
+            thumbnails=Thumbnail.dict_from_response(response["snippet"]["thumbnails"]),
+            country=response["snippet"]["country"])
 
 
 class Fetcher:
@@ -180,7 +183,7 @@ class Fetcher:
                     f"key={YOUTUBE_API_KEY}") as resp:
                 response = await resp.json()
 
-        return Channel.from_response(**(response["items"][0]))
+        return Channel.from_response(response["items"][0])
 
     @classmethod
     async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
@@ -283,7 +286,7 @@ class Fetcher:
                     f"key={YOUTUBE_API_KEY}") as resp:
                 playlist = await resp.json()
 
-        return [Video.from_response(**(x["snippet"])) for x in playlist["items"]]
+        return [Video.from_response(x["snippet"]) for x in playlist["items"]]
 
 
 async def test():
