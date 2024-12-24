@@ -171,13 +171,13 @@ class Fetcher:
         }
         """
 
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+                headers={"Accept-Encoding": "gzip,deflate,br"}) as session:
             async with session.get(
                     f"https://www.googleapis.com/youtube/v3/channels?"
                     f"part=snippet&"
                     f"id={channel_id}&"
-                    f"key={YOUTUBE_API_KEY}",
-                    headers={"Accept-Encoding": "gzip,deflate"}) as resp:
+                    f"key={YOUTUBE_API_KEY}") as resp:
                 response = await resp.json()
 
         return Channel.from_response(**(response["items"][0]))
@@ -218,13 +218,13 @@ class Fetcher:
 
         # fetch upload list id
         if channel_id not in cls.channel_upload_playlists:
-            async with aiohttp.ClientSession() as session:
+            async with aiohttp.ClientSession(
+                    headers={"Accept-Encoding": "gzip,deflate,br"}) as session:
                 async with session.get(
                         f"https://www.googleapis.com/youtube/v3/channels?"
                         f"part=contentDetails&"
                         f"id={channel_id}&"
-                        f"key={YOUTUBE_API_KEY}",
-                        headers={"Accept-Encoding": "gzip,deflate"}) as resp:
+                        f"key={YOUTUBE_API_KEY}") as resp:
                     content_details = await resp.json()
             uploads_id = content_details["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
             cls.channel_upload_playlists[channel_id] = uploads_id
@@ -273,14 +273,14 @@ class Fetcher:
         """
 
         # fetch last {amount} videos
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(
+                headers={"Accept-Encoding": "gzip,deflate,br"}) as session:
             async with session.get(
                     f"https://www.googleapis.com/youtube/v3/playlistItems?"
                     f"part=snippet%2CcontentDetails&"
                     f"maxResults={amount}&"
                     f"playlistId={uploads_id}&"
-                    f"key={YOUTUBE_API_KEY}",
-                    headers={"Accept-Encoding": "gzip,deflate"}) as resp:
+                    f"key={YOUTUBE_API_KEY}") as resp:
                 playlist = await resp.json()
 
         return [Video.from_response(**(x["snippet"])) for x in playlist["items"]]
