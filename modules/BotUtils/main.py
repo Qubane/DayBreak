@@ -94,10 +94,29 @@ class BotUtilsModule(commands.Cog):
         Grants members server membership
         """
 
+        # check if user has the role
+        role_id = self.memberships_config[member.guild.id]
+        if role_id in member._roles:
+            return
+
+        # add role, if missing
+        await member.add_roles(member.guild.get_role(role_id))
+
     async def check_all_memberships(self) -> None:
         """
         Checks all users in all guilds for membership presence
         """
+
+        sem = asyncio.Semaphore(20)
+
+        async def coro(_member):
+            async with sem:
+                await self.give_membership(_member)
+        for guild in self.client.guilds:
+            if guild.id not in self.memberships_config:
+                continue
+
+            await asyncio.gather(*[coro(mem) for mem in guild.members])
 
     @app_commands.command(name="reload", description="reloads a module")
     @app_commands.describe(
