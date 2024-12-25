@@ -236,15 +236,6 @@ class Fetcher:
         :return: id of channels playlist
         """
 
-    @classmethod
-    async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
-        """
-        Returns a list of videos on the channel.
-        :param channel_id: channel id
-        :param amount: amount of videos to fetch
-        :return: list of video ids. items part of API response
-        """
-
         """
         Example response:
         {
@@ -270,7 +261,6 @@ class Fetcher:
         }
         """
 
-        # fetch upload list id
         if channel_id not in cls.channel_upload_playlists:
             content_details = await cls.fetch_api(
                 f"https://www.googleapis.com/youtube/v3/channels?"
@@ -278,9 +268,20 @@ class Fetcher:
                 f"id={channel_id}&"
                 f"key={YOUTUBE_API_KEY}")
             uploads_id = content_details["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
-            cls.channel_upload_playlists[channel_id] = uploads_id
+            cls.channel_upload_playlists[channel_id] = uploads_id  # cache result
         else:
             uploads_id = cls.channel_upload_playlists[channel_id]
+
+        return uploads_id
+
+    @classmethod
+    async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
+        """
+        Returns a list of videos on the channel.
+        :param channel_id: channel id
+        :param amount: amount of videos to fetch
+        :return: list of video ids. items part of API response
+        """
 
         """
         Example response:
@@ -324,6 +325,7 @@ class Fetcher:
         """
 
         # fetch last {amount} videos
+        uploads_id = await cls.fetch_channel_playlist_id(channel_id)
         playlist = await cls.fetch_api(
             f"https://www.googleapis.com/youtube/v3/playlistItems?"
             f"part=snippet%2CcontentDetails&"
@@ -339,7 +341,7 @@ async def test():
     Very cool test thingy. runs only when file is run as main
     """
 
-    for _ in range(2):
+    for _ in range(3):
         response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 3)
         # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
         # response = json.dumps(response, indent=2)
