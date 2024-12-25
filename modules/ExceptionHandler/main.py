@@ -34,18 +34,13 @@ class ExceptionHandlerModule(commands.Cog):
         Global exception handler
         """
 
-        common_errors = (
-            commands.CommandNotFound, app_commands.CommandNotFound,
-            commands.NotOwner
-        )
-
         embed = discord.Embed(color=discord.Color.red())
         if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             embed.title = error.__class__.__name__
             embed.description = "List of missing permissions"
             for permission in error.missing_permissions:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
-        elif isinstance(error, common_errors):
+        elif isinstance(error, (app_commands.AppCommandError, commands.CommandError)):
             embed.title = error.__class__.__name__
             embed.description = error.args[0]
         else:
