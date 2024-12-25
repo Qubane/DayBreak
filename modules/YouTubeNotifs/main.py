@@ -92,8 +92,15 @@ class YouTubeNotifsModule(commands.Cog):
         if not self.channels_init:
             self.channels_init = True
             self.channels_videos = await self.retrieve_channel_videos()
-            self.channels = {
-                channel_id: await Fetcher.fetch_channel_info(channel_id) for channel_id in self.channels_videos.keys()}
+
+            sem = asyncio.Semaphore(self.module_config["threads"])
+
+            async def coro(_channel_id):
+                async with sem:
+                    return await Fetcher.fetch_channel_info(_channel_id)
+
+            results = await asyncio.gather(*[coro(x) for x in self.channels_videos.keys()])
+            self.channels = {channel_id: channel for channel_id, channel in zip(self.channels_videos.keys(), results)}
 
             # no need to continue, because we just fetched 'the newest' videos
             return
