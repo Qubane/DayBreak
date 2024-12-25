@@ -229,6 +229,14 @@ class Fetcher:
         return Channel.from_response(response["items"][0])
 
     @classmethod
+    async def fetch_channel_playlist_id(cls, channel_id: str) -> str:
+        """
+        Fetches channel playlist id
+        :param channel_id: channel id
+        :return: id of channels playlist
+        """
+
+    @classmethod
     async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
         """
         Returns a list of videos on the channel.
