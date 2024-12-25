@@ -1,5 +1,6 @@
 """
-This is an example module for DayBreak bot
+This is a module that adds global exception handling
+Always imported, and cannot be unloaded, only reloaded
 """
 
 
@@ -11,7 +12,7 @@ from discord.ext import commands
 
 class ExceptionHandlerModule(commands.Cog):
     """
-    This is an example module
+    Exception handling module
     """
 
     def __init__(self, client: commands.Bot) -> None:
