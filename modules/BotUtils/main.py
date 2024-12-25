@@ -114,6 +114,7 @@ class BotUtilsModule(commands.Cog):
                 await self.give_membership(_member)
         for guild in self.client.guilds:
             if guild.id not in self.memberships_config:
+                self.logger.warning(f"Memberships not configured for '{guild.name}' [{guild.id}]")
                 continue
 
             await asyncio.gather(*[coro(mem) for mem in guild.members])
