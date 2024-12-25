@@ -89,6 +89,16 @@ class BotUtilsModule(commands.Cog):
         await asyncio.gather(*[coro(queued) for queued in self.modules_queued])
         self.modules_queued.clear()
 
+    async def give_membership(self, member: discord.Member) -> None:
+        """
+        Grants members server membership
+        """
+
+    async def check_all_memberships(self) -> None:
+        """
+        Checks all users in all guilds for membership presence
+        """
+
     @app_commands.command(name="reload", description="reloads a module")
     @app_commands.describe(
         module="name of the module")
