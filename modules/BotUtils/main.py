@@ -145,16 +145,43 @@ class BotUtilsModule(commands.Cog):
 
             await asyncio.gather(*[coro(mem) for mem in guild.members])
 
-    @app_commands.command(name="reload", description="reloads a module")
+    @app_commands.command(name="load", description="loads a module")
+    @commands.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
-    async def example(
+    async def load_module(
+            self,
+            interaction: discord.Interaction,
+            module: str
+    ) -> None:
+        """
+        Loads a given module
+        """
+
+    @app_commands.command(name="unload", description="unloads a module")
+    @commands.has_permissions(administrator=True)
+    @app_commands.describe(
+        module="name of the module")
+    async def unload_module(
+            self,
+            interaction: discord.Interaction,
+            module: str
+    ) -> None:
+        """
+        Unloads a given module
+        """
+
+    @app_commands.command(name="reload", description="reloads a module")
+    @commands.has_permissions(administrator=True)
+    @app_commands.describe(
+        module="name of the module")
+    async def reload_module(
         self,
         interaction: discord.Interaction,
         module: str
     ) -> None:
         """
-        This is an example slash command
+        Reloads a given module
         """
 
 
