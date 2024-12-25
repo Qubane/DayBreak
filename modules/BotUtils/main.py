@@ -146,7 +146,7 @@ class BotUtilsModule(commands.Cog):
             await asyncio.gather(*[coro(mem) for mem in guild.members])
 
     @app_commands.command(name="load", description="loads a module")
-    @commands.has_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
     async def load_module(
@@ -159,7 +159,7 @@ class BotUtilsModule(commands.Cog):
         """
 
     @app_commands.command(name="unload", description="unloads a module")
-    @commands.has_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
     async def unload_module(
@@ -172,7 +172,7 @@ class BotUtilsModule(commands.Cog):
         """
 
     @app_commands.command(name="reload", description="reloads a module")
-    @commands.has_permissions(administrator=True)
+    @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
     async def reload_module(
