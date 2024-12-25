@@ -184,7 +184,13 @@ class BotUtilsModule(commands.Cog):
         :param module: module name
         """
 
+        if module not in self.modules_present:
+            raise commands.CommandError("Module with this name doesn't exist")
+        if module not in self.modules_running:
+            raise commands.CommandError("Module with this name is not loaded")
+
         module_path = make_module_path(module)
+        await self.client.unload_extension(module_path)
 
     async def reload_module(self, module: str) -> None:
         """
