@@ -72,8 +72,8 @@ class BotUtilsModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        await self.client.tree.sync()
-        self.logger.info("Command tree synced")
+        # await self.client.tree.sync()
+        # self.logger.info("Command tree synced")
 
     def _load_modules_config(self) -> None:
         """
@@ -154,11 +154,29 @@ class BotUtilsModule(commands.Cog):
 
             await asyncio.gather(*[coro(mem) for mem in guild.members])
 
+    async def load_module(self, module: str) -> None:
+        """
+        Loads a module
+        :param module: module name
+        """
+
+    async def unload_module(self, module: str) -> None:
+        """
+        Unloads a module
+        :param module: module name
+        """
+
+    async def reload_module(self, module: str) -> None:
+        """
+        Reloads a module
+        :param module: module name
+        """
+
     @app_commands.command(name="module-load", description="loads a module")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
-    async def load_module(
+    async def load_module_command(
             self,
             interaction: discord.Interaction,
             module: str
@@ -171,7 +189,7 @@ class BotUtilsModule(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
-    async def unload_module(
+    async def unload_module_command(
             self,
             interaction: discord.Interaction,
             module: str
@@ -184,7 +202,7 @@ class BotUtilsModule(commands.Cog):
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
         module="name of the module")
-    async def reload_module(
+    async def reload_module_command(
         self,
         interaction: discord.Interaction,
         module: str
