@@ -13,6 +13,16 @@ from discord.ext import commands
 from source.settings import MODULES_DIRECTORY, CONFIGS_DIRECTORY
 
 
+def make_module_path(module: str) -> str:
+    """
+    Makes proper paths for modules, so they could be worked with
+    :param module: module name
+    :return: module path
+    """
+
+    return f"{MODULES_DIRECTORY}.{module}.main"
+
+
 class BotUtilsModule(commands.Cog):
     """
     Bot utils module
@@ -160,17 +170,23 @@ class BotUtilsModule(commands.Cog):
         :param module: module name
         """
 
+        module_path = make_module_path(module)
+
     async def unload_module(self, module: str) -> None:
         """
         Unloads a module
         :param module: module name
         """
 
+        module_path = make_module_path(module)
+
     async def reload_module(self, module: str) -> None:
         """
         Reloads a module
         :param module: module name
         """
+
+        module_path = make_module_path(module)
 
     @app_commands.command(name="module-load", description="loads a module")
     @app_commands.checks.has_permissions(administrator=True)
