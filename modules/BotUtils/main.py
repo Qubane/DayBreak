@@ -91,8 +91,9 @@ class BotUtilsModule(commands.Cog):
         """
 
         async def coro(module):
+            module_path = f"{MODULES_DIRECTORY}.{module}.main"
             try:
-                await self.client.load_extension(module)
+                await self.client.load_extension(module_path)
             except commands.ExtensionError as e:
                 self.logger.warning(f"Module '{module}' failure", exc_info=e)
                 return
