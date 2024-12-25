@@ -29,9 +29,16 @@ class BotUtilsModule(commands.Cog):
         self.modules_present: list[str] = list()
         self.modules_queued: list[str] = list()
         self.modules_running: list[str] = list()
+        self.modules_static: list[str] = list()
 
         # important modules
-        self.modules_queued.append("ExceptionHandler")
+        self.modules_static.append("ExceptionHandler")
+
+        self.modules_queued += self.modules_static
+
+        # static BotUtils module
+        self.modules_static.append("BotUtils")
+        self.modules_running.append("BotUtils")  # already running
 
         # "guild_id": "role_id"
         self.memberships_config: dict[int, int] | None = None
@@ -58,11 +65,13 @@ class BotUtilsModule(commands.Cog):
         When the bot successfully connects to discord's websocket
         """
 
+        self.logger.info("Bot connected")
+
         await self.load_all_queued()
         self.logger.info("All modules loaded")
 
-        self.logger.info("Bot connected")
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
+
         await self.client.tree.sync()
         self.logger.info("Command tree synced")
 
