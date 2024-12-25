@@ -44,8 +44,8 @@ class BotUtilsModule(commands.Cog):
         self.memberships_config: dict[int, int] | None = None
 
         # config and module loading
-        self._load_configs()
-        self._load_modules()
+        self._load_module_configs()
+        self._load_modules_config()
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
@@ -75,7 +75,7 @@ class BotUtilsModule(commands.Cog):
         await self.client.tree.sync()
         self.logger.info("Command tree synced")
 
-    def _load_modules(self) -> None:
+    def _load_modules_config(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
         """
@@ -98,7 +98,7 @@ class BotUtilsModule(commands.Cog):
                 continue
             self.modules_queued.append(queued_module)
 
-    def _load_configs(self) -> None:
+    def _load_module_configs(self) -> None:
         """
         Loads configs
         """
