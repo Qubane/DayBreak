@@ -70,9 +70,14 @@ class YouTubeNotifsModule(commands.Cog):
             channel_ids.update(guild_config["channels"])
 
         # fetch videos from all configured YT channels
-        channel_dict = dict()
-        for channel_id in channel_ids:
-            channel_dict[channel_id] = await Fetcher.fetch_videos(channel_id, amount)
+        sem = asyncio.Semaphore(self.module_config["threads"])
+
+        async def coro(_channel_id):
+            async with sem:
+                return await Fetcher.fetch_videos(_channel_id, amount)
+
+        result = await asyncio.gather(*[coro(x) for x in channel_ids])
+        channel_dict = {cid: videos for cid, videos in zip(channel_ids, result)}
 
         # return channel dict
         return channel_dict
