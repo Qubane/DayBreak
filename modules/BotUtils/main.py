@@ -41,6 +41,18 @@ class BotUtilsModule(commands.Cog):
         self._load_configs()
         self._load_modules()
 
+    @commands.Cog.listener()
+    async def on_member_join(self, member: discord.Member) -> None:
+        """
+        Discord event, when a new member joins a guild
+        :param member: guild member
+        """
+
+        if member.guild.id not in self.memberships_config:
+            return
+
+        await self.give_membership(member)
+
     def _load_modules(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
