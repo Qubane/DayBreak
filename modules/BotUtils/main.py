@@ -73,6 +73,22 @@ class BotUtilsModule(commands.Cog):
             self.memberships_config: dict = json.loads(f.read())
         self.memberships_config = {int(x): int(y) for x, y in self.memberships_config.items()}
 
+    async def load_all_queued(self) -> None:
+        """
+        Loads all queued modules
+        """
+
+        async def coro(module):
+            try:
+                await self.client.load_extension(module)
+            except commands.ExtensionError as e:
+                self.logger.warning(f"Module '{module}' failure", exc_info=e)
+                return
+            self.modules_running.append(module)
+
+        await asyncio.gather(*[coro(queued) for queued in self.modules_queued])
+        self.modules_queued.clear()
+
     @app_commands.command(name="reload", description="reloads a module")
     @app_commands.describe(
         module="name of the module")
