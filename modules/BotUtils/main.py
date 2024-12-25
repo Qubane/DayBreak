@@ -53,6 +53,17 @@ class BotUtilsModule(commands.Cog):
 
         await self.give_membership(member)
 
+    @commands.Cog.listener()
+    async def on_ready(self) -> None:
+        """
+        When the bot successfully connects to discord's websocket
+        """
+
+        self.logger.info("Bot connected.")
+        await self.client.change_presence(activity=discord.Game("A DayBreak"))
+        await self.client.tree.sync()
+        self.logger.info("Command tree synced")
+
     def _load_modules(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
