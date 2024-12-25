@@ -59,7 +59,10 @@ class BotUtilsModule(commands.Cog):
         When the bot successfully connects to discord's websocket
         """
 
-        self.logger.info("Bot connected.")
+        await self.load_all_queued()
+        self.logger.info("All modules loaded")
+
+        self.logger.info("Bot connected")
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
         await self.client.tree.sync()
         self.logger.info("Command tree synced")
