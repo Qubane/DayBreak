@@ -31,7 +31,6 @@ class BotUtilsModule(commands.Cog):
         self.modules_running: list[str] = list()
 
         # important modules
-        self.modules_queued.append("BotUtils")
         self.modules_queued.append("ExceptionHandler")
 
         # "guild_id": "role_id"
