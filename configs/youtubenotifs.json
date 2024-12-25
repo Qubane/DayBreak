@@ -2,6 +2,7 @@
   "config": {
     "update_interval": 600,
     "fetching_window": 3,
+    "checking_window_offset": 1,
     "threads": 5
   },
   "guild_config": [

@@ -117,21 +117,23 @@ class YouTubeNotifsModule(commands.Cog):
 
             # check every YT channel
             for channel_id in guild_config["channels"]:
-                # check last first video in new list
-                new_video = new_channels[channel_id][0]
-                if new_video not in self.channels_videos[channel_id]:
-                    msg = notification_format.format(
-                        role_mention=video_role_ping,
-                        channel_name=self.channels[channel_id].title,
-                        channel_url=f"https://www.youtube.com/{self.channels[channel_id].custom_url}",
-                        channel_thumbnail_url=self.channels[channel_id].thumbnails["default"].url,
-                        channel_country=self.channels[channel_id].country,
-                        video_url=f"https://youtu.be/{new_video.id}",
-                        video_title=new_video.title,
-                        video_description=new_video.description,
-                        video_thumbnail_url=new_video.thumbnails["default"].url,
-                        video_publish_date=new_video.published_at)
-                    await notification_channel.send(msg)
+                # check every new video against old videos
+                # don't check last new video to prevent old videos to be considered new (ex. deleted video)
+                for new_video in new_channels[channel_id][:-self.module_config["checking_window_offset"]]:
+                    # if new video is not in old videos, then make an announcement
+                    if new_video not in self.channels_videos[channel_id]:
+                        msg = notification_format.format(
+                            role_mention=video_role_ping,
+                            channel_name=self.channels[channel_id].title,
+                            channel_url=f"https://www.youtube.com/{self.channels[channel_id].custom_url}",
+                            channel_thumbnail_url=self.channels[channel_id].thumbnails["default"].url,
+                            channel_country=self.channels[channel_id].country,
+                            video_url=f"https://youtu.be/{new_video.id}",
+                            video_title=new_video.title,
+                            video_description=new_video.description,
+                            video_thumbnail_url=new_video.thumbnails["default"].url,
+                            video_publish_date=new_video.published_at)
+                        await notification_channel.send(msg)
 
         # reassign new_channels to self.channels
         self.channels_videos = new_channels
