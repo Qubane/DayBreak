@@ -190,6 +190,8 @@ class BotUtilsModule(commands.Cog):
             raise commands.CommandError("Module with this name doesn't exist")
         if module not in self.modules_running:
             raise commands.CommandError("Module with this name is not loaded")
+        if module in self.modules_static:
+            raise commands.CommandError("Static modules cannot be unloaded")
 
         module_path = make_module_path(module)
         await self.client.unload_extension(module_path)
