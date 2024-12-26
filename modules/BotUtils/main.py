@@ -308,7 +308,8 @@ class BotUtilsModule(commands.Cog):
         for status in modules_status:
             embed.add_field(
                 name=status[0],
-                value="✅ active" if status[1] else "❌ inactive")
+                value="✅ active" if status[1] else "❌ inactive",
+                inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
