@@ -30,6 +30,7 @@ class BotUtilsModule(commands.Cog):
 
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
+        self.module_name: str = "BotUtils"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -46,9 +47,9 @@ class BotUtilsModule(commands.Cog):
 
         self.modules_queued += self.modules_static
 
-        # static BotUtils module
-        self.modules_static.append("BotUtils")
-        self.modules_running.append("BotUtils")  # already running
+        # static 'self.module_name' module
+        self.modules_static.append(self.module_name)
+        self.modules_running.append(self.module_name)  # already running
 
         # "guild_id": "role_id"
         self.memberships_config: dict[int, int] | None = None
@@ -204,7 +205,15 @@ class BotUtilsModule(commands.Cog):
         :param module: module name
         """
 
+        if module not in self.modules_present:
+            raise commands.CommandError("Module with this name doesn't exist")
+        if module not in self.modules_running:
+            raise commands.CommandError("Module with this name is not loaded")
+        if module == self.module_name:
+            raise commands.CommandError("Cannot reload self")
+
         module_path = make_module_path(module)
+        await self.client.reload_extension(module_path)
 
     @app_commands.command(name="module-load", description="loads a module")
     @app_commands.checks.has_permissions(administrator=True)
