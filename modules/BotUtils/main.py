@@ -288,9 +288,6 @@ class BotUtilsModule(commands.Cog):
         Lists all modules
         """
 
-        # 0 - present / inactive
-        # 1 - active
-
         # modules
         # [(name, status), (name, status), (name, status), ...]
         modules_status: list[tuple[str, str]] = list()
