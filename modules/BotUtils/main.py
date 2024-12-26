@@ -83,8 +83,8 @@ class BotUtilsModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        # await self.client.tree.sync()
-        # self.logger.info("Command tree synced")
+        await self.client.tree.sync()
+        self.logger.info("Command tree synced")
 
     def _load_modules_config(self) -> None:
         """
