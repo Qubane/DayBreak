@@ -178,6 +178,8 @@ class BotUtilsModule(commands.Cog):
         module_path = make_module_path(module)
         await self.client.load_extension(module_path)
 
+        self.modules_running.append(module)
+
     async def unload_module(self, module: str) -> None:
         """
         Unloads a module
@@ -191,6 +193,8 @@ class BotUtilsModule(commands.Cog):
 
         module_path = make_module_path(module)
         await self.client.unload_extension(module_path)
+
+        self.modules_running.remove(module)
 
     async def reload_module(self, module: str) -> None:
         """
