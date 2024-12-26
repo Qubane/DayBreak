@@ -294,6 +294,8 @@ class BotUtilsModule(commands.Cog):
         # modules
         # [(name, status), (name, status), (name, status), ...]
         modules_status: list[tuple[str, int]] = []
+        self.modules_running.sort(key=lambda x: len(x))
+        self.modules_present.sort(key=lambda x: len(x))
         for module in self.modules_running:
             modules_status.append((module, 1))
         for module in self.modules_present:
@@ -301,8 +303,6 @@ class BotUtilsModule(commands.Cog):
             if module in self.modules_running:
                 continue
             modules_status.append((module, 0))
-
-        modules_status.sort(key=lambda x: len(x[0]) * (x[1]+1), reverse=True)
 
         embed = discord.Embed(title="Module list", color=discord.Color.green())
         for status in modules_status:
