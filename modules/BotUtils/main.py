@@ -278,6 +278,40 @@ class BotUtilsModule(commands.Cog):
             color=discord.Color.green())
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    @app_commands.command(name="module-list", description="lists modules and their status")
+    @app_commands.checks.has_permissions(administrator=True)
+    async def list_modules_command(
+        self,
+        interaction: discord.Interaction
+    ) -> None:
+        """
+        Lists all modules
+        """
+
+        # 0 - present / inactive
+        # 1 - active
+
+        # modules
+        # [(name, status), (name, status), (name, status), ...]
+        modules_status: list[tuple[str, int]] = []
+        for module in self.modules_running:
+            modules_status.append((module, 1))
+        for module in self.modules_present:
+            # skip already appended modules
+            if module in self.modules_running:
+                continue
+            modules_status.append((module, 0))
+
+        modules_status.sort(key=lambda x: len(x[0]) * (x[1]+1), reverse=True)
+
+        embed = discord.Embed(title="Module list", color=discord.Color.green())
+        for status in modules_status:
+            embed.add_field(
+                name=status[0],
+                value="✅ active" if status[1] else "❌ inactive")
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(BotUtilsModule(client))
