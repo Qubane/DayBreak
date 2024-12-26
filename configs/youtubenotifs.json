@@ -7,17 +7,6 @@
   },
   "guild_config": [
     {
-      "guild_id": 1031161207291392000,
-      "notifications_channel_id": 1032546102676815922,
-      "video_role_id": 1145094047824891906,
-      "stream_role_id": 1190415930086395974,
-      "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
-      "channels": [
-        "UCL-8FVaefmqox59LpOJxnOQ",
-        "UCOML6poYH8HL9yMM98DKqHw"
-      ]
-    },
-    {
       "guild_id": 860450204000059412,
       "notifications_channel_id": 860730818581364796,
       "video_role_id": 860801537005453322,
@@ -36,6 +25,17 @@
       "channels": [
         "UCL-8FVaefmqox59LpOJxnOQ"
       ]
+    },
+    {
+      "guild_id": 772454197308031006,
+      "notifications_channel_id": 772462702500904960,
+      "video_role_id": 1320557273218547814,
+      "stream_role_id": 1293544398893748276,
+      "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
+      "channels": [
+        "UC6MYaThfTGBI2hVr-twrT4g"
+      ]
     }
+
   ]
 }
