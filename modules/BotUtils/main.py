@@ -293,23 +293,20 @@ class BotUtilsModule(commands.Cog):
 
         # modules
         # [(name, status), (name, status), (name, status), ...]
-        modules_status: list[tuple[str, int]] = []
+        modules_status: list[tuple[str, str]] = list()
         self.modules_running.sort(key=lambda x: len(x))
         self.modules_present.sort(key=lambda x: len(x))
         for module in self.modules_running:
-            modules_status.append((module, 1))
+            modules_status.append((f"{module}{' [STATIC]' if module in self.modules_static else ''}", "✅ active"))
         for module in self.modules_present:
             # skip already appended modules
             if module in self.modules_running:
                 continue
-            modules_status.append((module, 0))
+            modules_status.append((f"{module}", "❌ inactive"))
 
         embed = discord.Embed(title="Module list", color=discord.Color.green())
         for status in modules_status:
-            embed.add_field(
-                name=status[0],
-                value="✅ active" if status[1] else "❌ inactive",
-                inline=False)
+            embed.add_field(name=status[0], value=status[1], inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
