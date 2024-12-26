@@ -228,6 +228,14 @@ class BotUtilsModule(commands.Cog):
         Loads a given module
         """
 
+        await self.load_module(module)
+
+        embed = discord.Embed(
+            title="Success!",
+            description=f"Module '{module}' is now loaded",
+            color=discord.Color.green())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
     @app_commands.command(name="module-unload", description="unloads a module")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
@@ -241,6 +249,14 @@ class BotUtilsModule(commands.Cog):
         Unloads a given module
         """
 
+        await self.unload_module(module)
+
+        embed = discord.Embed(
+            title="Success!",
+            description=f"Module '{module}' was unloaded",
+            color=discord.Color.green())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
     @app_commands.command(name="module-reload", description="reloads a module")
     @app_commands.checks.has_permissions(administrator=True)
     @app_commands.describe(
@@ -253,6 +269,14 @@ class BotUtilsModule(commands.Cog):
         """
         Reloads a given module
         """
+
+        await self.reload_module(module)
+
+        embed = discord.Embed(
+            title="Success!",
+            description=f"Module '{module}' was reloaded",
+            color=discord.Color.green())
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
