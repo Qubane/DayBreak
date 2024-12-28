@@ -37,6 +37,10 @@ class Memberships(commands.Cog):
         Loads module configs
         """
 
+        with open(f"{CONFIGS_DIRECTORY}/memberships.json", "r", encoding="ascii") as f:
+            guild_config = json.loads(f.read())
+        self.guild_config = {int(x): int(y) for x, y in guild_config.items()}
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(Memberships(client))
