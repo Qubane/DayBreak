@@ -33,6 +33,9 @@ class Memberships(commands.Cog):
         # load
         self.load_config()
 
+        # check members
+        asyncio.create_task(self.check_all_memberships())
+
     def load_config(self) -> None:
         """
         Loads module configs
