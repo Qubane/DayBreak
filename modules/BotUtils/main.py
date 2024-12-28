@@ -51,24 +51,8 @@ class BotUtilsModule(commands.Cog):
         self.modules_static.append(self.module_name)
         self.modules_running.append(self.module_name)  # already running
 
-        # "guild_id": "role_id"
-        self.memberships_config: dict[int, int] | None = None
-
         # config and module loading
-        self._load_module_configs()
         self._load_modules_config()
-
-    @commands.Cog.listener()
-    async def on_member_join(self, member: discord.Member) -> None:
-        """
-        Discord event, when a new member joins a guild
-        :param member: guild member
-        """
-
-        if member.guild.id not in self.memberships_config:
-            return
-
-        await self.give_membership(member)
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -109,15 +93,6 @@ class BotUtilsModule(commands.Cog):
                 continue
             self.modules_queued.append(queued_module)
 
-    def _load_module_configs(self) -> None:
-        """
-        Loads configs
-        """
-
-        with open(f"{CONFIGS_DIRECTORY}/memberships.json", "r", encoding="ascii") as f:
-            self.memberships_config: dict = json.loads(f.read())
-        self.memberships_config = {int(x): int(y) for x, y in self.memberships_config.items()}
-
     async def load_all_queued(self) -> None:
         """
         Loads all queued modules
@@ -134,36 +109,6 @@ class BotUtilsModule(commands.Cog):
 
         await asyncio.gather(*[coro(queued) for queued in self.modules_queued])
         self.modules_queued.clear()
-
-    async def give_membership(self, member: discord.Member) -> None:
-        """
-        Grants members server membership
-        """
-
-        # check if user has the role
-        role_id = self.memberships_config[member.guild.id]
-        if role_id in member._roles:
-            return
-
-        # add role, if missing
-        await member.add_roles(member.guild.get_role(role_id))
-
-    async def check_all_memberships(self) -> None:
-        """
-        Checks all users in all guilds for membership presence
-        """
-
-        sem = asyncio.Semaphore(20)
-
-        async def coro(_member):
-            async with sem:
-                await self.give_membership(_member)
-        for guild in self.client.guilds:
-            if guild.id not in self.memberships_config:
-                self.logger.warning(f"Memberships not configured for '{guild.name}' [{guild.id}]")
-                continue
-
-            await asyncio.gather(*[coro(mem) for mem in guild.members])
 
     async def load_module(self, module: str) -> None:
         """
