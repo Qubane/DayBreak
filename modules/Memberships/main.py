@@ -14,7 +14,7 @@ from discord.ext import commands
 from source.settings import CONFIGS_DIRECTORY
 
 
-class Memberships(commands.Cog):
+class MembershipsModule(commands.Cog):
     """
     Membership module
     """
@@ -89,4 +89,4 @@ class Memberships(commands.Cog):
 
 
 async def setup(client: commands.Bot) -> None:
-    await client.add_cog(Memberships(client))
+    await client.add_cog(MembershipsModule(client))
