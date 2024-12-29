@@ -29,7 +29,7 @@ class Client(commands.Bot):
         """
 
         # load static module
-        await self.load_extension(f"{MODULES_DIRECTORY}.BotUtils.main")
+        await self.load_extension(f"{MODULES_DIRECTORY}.Core.main")
 
 
 def main():

@@ -1,5 +1,5 @@
 """
-This is bot utils module.
+Core bot module.
 Adds the ability to load, unload and reload other modules
 Always imported, and cannot be unloaded, only reloaded
 """
@@ -23,14 +23,14 @@ def make_module_path(module: str) -> str:
     return f"{MODULES_DIRECTORY}.{module}.main"
 
 
-class BotUtilsModule(commands.Cog):
+class CoreModule(commands.Cog):
     """
-    Bot utils module
+    Core module
     """
 
     def __init__(self, client: commands.Bot) -> None:
         self.client = client
-        self.module_name: str = "BotUtils"
+        self.module_name: str = "Core"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -270,4 +270,4 @@ class BotUtilsModule(commands.Cog):
 
 
 async def setup(client: commands.Bot) -> None:
-    await client.add_cog(BotUtilsModule(client))
+    await client.add_cog(CoreModule(client))

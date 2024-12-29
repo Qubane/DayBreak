@@ -6,4 +6,4 @@
   for example `Utils` module is stored in `modules/Utils` directory
 
 # Config usage
-- Config is used by static module `BotUtils`
+- Config is used by static module `Core`
