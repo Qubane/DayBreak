@@ -51,8 +51,10 @@ class BotUtilsModule(commands.Cog):
         self.modules_static.append(self.module_name)
         self.modules_running.append(self.module_name)  # already running
 
+        self.config_path: str = f"{CONFIGS_DIRECTORY}/modules.json"
+
         # config and module loading
-        self._load_modules_config()
+        self.load_config()
 
     @commands.Cog.listener()
     async def on_ready(self) -> None:
@@ -67,10 +69,10 @@ class BotUtilsModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        await self.client.tree.sync()
-        self.logger.info("Command tree synced")
+        # await self.client.tree.sync()
+        # self.logger.info("Command tree synced")
 
-    def _load_modules_config(self) -> None:
+    def load_config(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
         """
@@ -83,7 +85,7 @@ class BotUtilsModule(commands.Cog):
 
         if not os.path.isfile(f"{CONFIGS_DIRECTORY}/modules.json"):
             raise FileNotFoundError("Missing 'modules.json'")
-        with open(f"{CONFIGS_DIRECTORY}/modules.json", "r", encoding="ascii") as file:
+        with open(self.config_path, "r", encoding="ascii") as file:
             modules: list[str] = json.loads(file.read())
 
         for queued_module in modules:
@@ -116,11 +118,6 @@ class BotUtilsModule(commands.Cog):
         :param module: module name
         """
 
-        if module not in self.modules_present:
-            raise commands.CommandError("Module with this name doesn't exist")
-        if module in self.modules_running:
-            raise commands.CommandError("Module with this name is already loaded")
-
         module_path = make_module_path(module)
         await self.client.load_extension(module_path)
 
@@ -131,13 +128,6 @@ class BotUtilsModule(commands.Cog):
         Unloads a module
         :param module: module name
         """
-
-        if module not in self.modules_present:
-            raise commands.CommandError("Module with this name doesn't exist")
-        if module not in self.modules_running:
-            raise commands.CommandError("Module with this name is not loaded")
-        if module in self.modules_static:
-            raise commands.CommandError("Static modules cannot be unloaded")
 
         module_path = make_module_path(module)
         await self.client.unload_extension(module_path)
@@ -150,15 +140,21 @@ class BotUtilsModule(commands.Cog):
         :param module: module name
         """
 
-        if module not in self.modules_present:
-            raise commands.CommandError("Module with this name doesn't exist")
-        if module not in self.modules_running:
-            raise commands.CommandError("Module with this name is not loaded")
-        if module == self.module_name:
-            raise commands.CommandError("Cannot reload self")
-
         module_path = make_module_path(module)
         await self.client.reload_extension(module_path)
+
+    async def reload_self(self) -> None:
+        """
+        Reloads entire bot
+        """
+
+        # unload and clear all running modules
+        await asyncio.gather(*[self.unload_module(module) for module in self.modules_running])
+        self.modules_running.clear()
+
+        # load configs and load all modules
+        self.load_config()
+        await self.load_all_queued()
 
     @app_commands.command(name="module-load", description="loads a module")
     @app_commands.checks.has_permissions(administrator=True)
@@ -172,6 +168,11 @@ class BotUtilsModule(commands.Cog):
         """
         Loads a given module
         """
+
+        if module not in self.modules_present:
+            raise commands.CommandError("Module with this name doesn't exist")
+        if module in self.modules_running:
+            raise commands.CommandError("Module with this name is already loaded")
 
         await self.load_module(module)
 
@@ -194,6 +195,13 @@ class BotUtilsModule(commands.Cog):
         Unloads a given module
         """
 
+        if module not in self.modules_present:
+            raise commands.CommandError("Module with this name doesn't exist")
+        if module not in self.modules_running:
+            raise commands.CommandError("Module with this name is not loaded")
+        if module in self.modules_static:
+            raise commands.CommandError("Static modules cannot be unloaded")
+
         await self.unload_module(module)
 
         embed = discord.Embed(
@@ -215,7 +223,15 @@ class BotUtilsModule(commands.Cog):
         Reloads a given module
         """
 
-        await self.reload_module(module)
+        if module not in self.modules_present:
+            raise commands.CommandError("Module with this name doesn't exist")
+        if module not in self.modules_running:
+            raise commands.CommandError("Module with this name is not loaded")
+
+        if module == self.module_name:  # reload bot
+            await self.reload_self()
+        else:
+            await self.reload_module(module)
 
         embed = discord.Embed(
             title="Success!",
