@@ -44,9 +44,9 @@ class Thumbnail:
 
 
 @dataclass
-class Video:
+class Media:
     """
-    Class containing video information
+    Class containing video / stream information
     """
 
     id: str
@@ -55,6 +55,7 @@ class Video:
     published_at: datetime
     thumbnails: dict[str, Thumbnail]
     position: int
+    is_live: bool = False
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -67,7 +68,7 @@ class Video:
         Generates 'self' from API response
         """
 
-        return Video(
+        return Media(
             id=response["resourceId"]["videoId"],
             title=response["title"],
             description=response["description"],
@@ -275,7 +276,7 @@ class Fetcher:
         return uploads_id
 
     @classmethod
-    async def fetch_videos(cls, channel_id: str, amount: int) -> list[Video]:
+    async def fetch_videos(cls, channel_id: str, amount: int) -> list[Media]:
         """
         Returns a list of videos on the channel.
         :param channel_id: channel id
@@ -333,7 +334,7 @@ class Fetcher:
             f"playlistId={uploads_id}&"
             f"key={YOUTUBE_API_KEY}")
 
-        return [Video.from_response(x["snippet"]) for x in playlist["items"]]
+        return [Media.from_response(x["snippet"]) for x in playlist["items"]]
 
 
 async def test():

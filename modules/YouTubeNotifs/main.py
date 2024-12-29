@@ -11,7 +11,7 @@ import logging
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.settings import CONFIGS_DIRECTORY
-from modules.YouTubeNotifs.fetcher import Fetcher, Video, Channel
+from modules.YouTubeNotifs.fetcher import Fetcher, Media, Channel
 
 
 class YouTubeNotifsModule(commands.Cog):
@@ -33,7 +33,7 @@ class YouTubeNotifsModule(commands.Cog):
 
         # youtube channels
         # {"channel_id": [Video(...), Video(...), ...]}
-        self.channels_videos: dict[str, list[Video]] = dict()
+        self.channels_videos: dict[str, list[Media]] = dict()
 
         # "channel_id": Channel(...)
         self.channels: dict[str, Channel] = dict()
@@ -54,7 +54,7 @@ class YouTubeNotifsModule(commands.Cog):
 
         self.check.change_interval(seconds=self.module_config["update_interval"])
 
-    async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Video]]:
+    async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Media]]:
         """
         Fetches videos from all configured to be logged YT channels
         :param amount: amount of videos to fetch (default - config.fetching_window)
