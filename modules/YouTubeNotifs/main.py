@@ -133,7 +133,9 @@ class YouTubeNotifsModule(commands.Cog):
                             video_description=new_video.description,
                             video_thumbnail_url=new_video.thumbnails["default"].url,
                             video_publish_date=new_video.published_at)
-                        await notification_channel.send(msg)
+                        msg_ctx = await notification_channel.send(msg)
+                        if notification_channel.is_news():
+                            await msg_ctx.publish()
 
         # reassign new_channels to self.channels
         self.channels_videos = new_channels

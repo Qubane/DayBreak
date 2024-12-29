@@ -102,7 +102,9 @@ class TwitchNotifsModule(commands.Cog):
                         role_mention=role_ping,
                         channel_name=channel,  # so convenient, thx twitch
                         stream_url=f"https://www.twitch.tv/{channel}")
-                    await notification_channel.send(msg)
+                    msg_ctx = await notification_channel.send(msg)
+                    if notification_channel.is_news():
+                        await msg_ctx.publish()
 
         # update channel states
         self.channels_live = new_channels_live
