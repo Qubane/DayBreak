@@ -14,6 +14,7 @@
     - `role_mention` - role to ping
     - `channel_name` - channel that is now streaming
     - `stream_url` - url link to the stream
+    - `stream_description` - stream's description
   - `channels` - list of twitch channel names
 
 
