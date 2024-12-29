@@ -148,6 +148,8 @@ class CoreModule(commands.Cog):
         Reloads entire bot
         """
 
+        self.logger.info("Reloading self")
+
         # unload and clear all running modules
         await asyncio.gather(*[self.unload_module(module) for module in self.modules_running])
         self.modules_running.clear()
@@ -155,6 +157,8 @@ class CoreModule(commands.Cog):
         # load configs and load all modules
         self.load_config()
         await self.load_all_queued()
+
+        self.logger.info("Reload complete")
 
     @app_commands.command(name="module-load", description="loads a module")
     @app_commands.checks.has_permissions(administrator=True)
