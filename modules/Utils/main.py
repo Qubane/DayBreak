@@ -103,43 +103,43 @@ class UtilsModule(commands.Cog):
         except Exception as e:
             self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
 
-    @commands.command(name="exec")
-    @commands.has_permissions(administrator=True)
-    @commands.is_owner()
-    async def exec(
-            self,
-            ctx: commands.Context,
-            *,
-            code: str = ""
-    ) -> None:
-        """
-        Executes python code
-        """
-
-        # silent mode (don't print anything in response)
-        silent = False
-        if code[0] == "s":
-            silent = True
-
-        code = code[code.find("\n"):-3].replace("\n", f"\n{' ' * 4}")
-        try:
-            exec(f"async def __ex(self, ctx): {code}")
-            result = str(await locals()["__ex"](self, ctx))
-
-            embed = discord.Embed(
-                title="Success!",
-                description=result if len(result) <= 1990 else result[:1990],
-                color=discord.Color.green())
-        except Exception as e:
-            embed = discord.Embed(
-                title=f"Error: {e.__class__.__name__}",
-                description=e.__str__(),
-                color=discord.Color.red())
-
-        if not silent:
-            await ctx.send(embed=embed)
-        else:
-            await ctx.message.delete()
+    # @commands.command(name="exec")
+    # @commands.has_permissions(administrator=True)
+    # @commands.is_owner()
+    # async def exec(
+    #         self,
+    #         ctx: commands.Context,
+    #         *,
+    #         code: str = ""
+    # ) -> None:
+    #     """
+    #     Executes python code
+    #     """
+    #
+    #     # silent mode (don't print anything in response)
+    #     silent = False
+    #     if code[0] == "s":
+    #         silent = True
+    #
+    #     code = code[code.find("\n"):-3].replace("\n", f"\n{' ' * 4}")
+    #     try:
+    #         exec(f"async def __ex(self, ctx): {code}")
+    #         result = str(await locals()["__ex"](self, ctx))
+    #
+    #         embed = discord.Embed(
+    #             title="Success!",
+    #             description=result if len(result) <= 1990 else result[:1990],
+    #             color=discord.Color.green())
+    #     except Exception as e:
+    #         embed = discord.Embed(
+    #             title=f"Error: {e.__class__.__name__}",
+    #             description=e.__str__(),
+    #             color=discord.Color.red())
+    #
+    #     if not silent:
+    #         await ctx.send(embed=embed)
+    #     else:
+    #         await ctx.message.delete()
 
 
 async def setup(client: commands.Bot) -> None:
