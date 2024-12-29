@@ -8,7 +8,7 @@ import aiohttp
 from bs4 import BeautifulSoup
 
 
-async def check_live(channel_name: str) -> bool:
+async def get_live(channel_name: str) -> bool:
     """
     Return twitch channel status
     :param channel_name: name of the twitch channel

@@ -8,7 +8,7 @@ import logging
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.settings import CONFIGS_DIRECTORY
-from modules.TwitchNotifs.fetcher import check_live
+from modules.TwitchNotifs.fetcher import get_live, get_title
 
 
 class TwitchNotifsModule(commands.Cog):
@@ -65,7 +65,7 @@ class TwitchNotifsModule(commands.Cog):
         # checking coroutine
         async def check_coro(channel_name):
             async with sem:
-                return await check_live(channel_name)
+                return await get_live(channel_name)
 
         response = await asyncio.gather(
             *[check_coro(channel) for channel in channels])
@@ -98,9 +98,11 @@ class TwitchNotifsModule(commands.Cog):
             for channel in guild_config["channels"]:
                 # if a channel is live, and it wasn't before -> make a notification
                 if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel] is True:
+                    stream_description = await get_title(channel)
                     msg = notification_format.format(
                         role_mention=role_ping,
                         channel_name=channel,  # so convenient, thx twitch
+                        stream_description=stream_description,
                         stream_url=f"https://www.twitch.tv/{channel}")
                     msg_ctx = await notification_channel.send(msg)
                     if notification_channel.is_news():
