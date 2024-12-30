@@ -185,7 +185,7 @@ class TwitchNotifsModule(commands.Cog):
             description=format_string(config["embed"]["body"]["description"], **keywords),
             url=format_string(config["embed"]["body"]["url"], **keywords),
             color=discord.Color.from_str(config["embed"]["body"]["color"]))
-        embed.set_thumbnail(
+        embed.set_image(
             url=format_string(config["embed"]["thumbnail"], **keywords))
         embed.set_author(
             name=format_string(config["embed"]["author"]["name"], **keywords),
