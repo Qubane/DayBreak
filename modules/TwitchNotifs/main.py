@@ -215,9 +215,9 @@ class TwitchNotifsModule(commands.Cog):
         keywords = self.return_keywords_dict(
             role_mention="role_mention",
             channel_name="channel_name",
-            stream_url="stream_url",
+            stream_url="https://localhost/",
             stream_title="stream_title",
-            stream_thumbnail_url="stream_thumbnail_url",
+            stream_thumbnail_url="https://localhost/",
             stream_language="stream_language",
             stream_start_date="stream_start_date",
             stream_game_name="stream_game_name",
