@@ -26,7 +26,7 @@ class TwitchNotifsModule(commands.Cog):
         # configs
         self.config_path: str = f"{CONFIGS_DIRECTORY}/twitchnotifs.json"
         self.module_config: dict[str, int] | None = None
-        self.guild_config: list[dict[str, str | int | list]] | None = None
+        self.guild_config: list[dict] | None = None
 
         # channels
         # 'channel_name': True/False (live/offline)
@@ -91,20 +91,26 @@ class TwitchNotifsModule(commands.Cog):
         # go through all guilds
         for guild_config in self.guild_config:
             notification_channel = self.client.get_channel(guild_config["notifications_channel_id"])
-            notification_format = guild_config["format"]
             role_ping = f"<@&{guild_config["role_id"]}>"
 
             # check every configured twitch channel
             for channel in guild_config["channels"]:
                 # if a channel is live, and it wasn't before -> make a notification
                 if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel] is True:
-                    stream_description = await get_title(channel)
-                    msg = notification_format.format(
-                        role_mention=role_ping,
-                        channel_name=channel,  # so convenient, thx twitch
-                        stream_description=stream_description,
-                        stream_url=f"https://www.twitch.tv/{channel}")
-                    msg_ctx = await notification_channel.send(msg)
+                    kwargs = {
+                        "role_mention": role_ping,
+                        "channel_name": channel,
+                        "stream_description": await get_title(channel),
+                        "stream_url": f"https://www.twitch.tv/{channel}"}
+
+                    text = guild_config["format"]["text"].format(**kwargs)
+                    embed = discord.Embed(
+                        title=guild_config["format"]["embed"]["title"].format(**kwargs),
+                        description=guild_config["format"]["embed"]["description"].format(**kwargs),
+                        url=guild_config["format"]["embed"]["url"].format(**kwargs),
+                        color=discord.Color.from_str(guild_config["format"]["embed"]["color"]))
+
+                    msg_ctx = await notification_channel.send(content=text, embed=embed)
                     if notification_channel.is_news():
                         await msg_ctx.publish()
 
