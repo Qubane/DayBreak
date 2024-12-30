@@ -7,13 +7,55 @@ import json
 import asyncio
 import aiohttp
 from typing import Any
+from datetime import datetime
 from dataclasses import dataclass
 from source.settings import TWITCH_API_ID, TWITCH_API_KEY
 
 
 @dataclass(frozen=True)
 class Stream:
-    pass
+    """
+    Dataclass containing information about the stream
+    """
+
+    id: str
+    user_id: str
+    user_login: str
+    user_name: str
+    game_id: str
+    game_name: str
+    type: str
+    title: str
+    viewer_count: int
+    started_at: datetime
+    language: str
+    thumbnail_url: str
+    tags: list[str]
+    is_mature: bool
+
+    @staticmethod
+    def from_response(response: dict):
+        """
+        Generates self from twitch API response
+        :param response: API response
+        :return: self
+        """
+
+        return Stream(
+            id=response["id"],
+            user_id=response["user_id"],
+            user_login=response["user_login"],
+            user_name=response["user_name"],
+            game_id=response["game_id"],
+            game_name=response["game_name"],
+            type=response["type"],
+            title=response["title"],
+            viewer_count=response["viewer_count"],
+            started_at=response["started_at"],
+            language=response["language"],
+            thumbnail_url=response["thumbnail_url"],
+            tags=response["tags"],
+            is_mature=response["is_mature"])
 
 
 class Fetcher:
