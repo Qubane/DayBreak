@@ -12,7 +12,7 @@ from source.settings import TWITCH_API_ID, TWITCH_API_KEY
 
 
 @dataclass(frozen=True)
-class Streamer:
+class Stream:
     pass
 
 
@@ -65,9 +65,17 @@ class Fetcher:
             async with session.get(url) as resp:
                 return await resp.json()
 
+    @classmethod
+    async def fetch_stream_info(cls, user_login: str) -> Stream | None:
+        """
+        Fetches stream info
+        :param user_login: user login name
+        :return: Stream dataclass if is live
+        """
+
 
 async def test():
-    response = await Fetcher.fetch_api("https://api.twitch.tv/helix/users?login=twitchdev")
+    response = await Fetcher.fetch_api("https://api.twitch.tv/helix/streams?user_login=lvndmark")
     print(json.dumps(response, indent=2))
 
 
