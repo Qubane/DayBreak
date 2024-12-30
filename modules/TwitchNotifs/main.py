@@ -140,6 +140,32 @@ class TwitchNotifsModule(commands.Cog):
         :param publish: if True, and is in news channel, the message will be published
         """
 
+        # text
+        text = format_string(config["text"], **keywords)
+
+        # embed
+        embed = discord.Embed(
+            title=format_string(config["embed"]["body"]["title"], **keywords),
+            description=format_string(config["embed"]["body"]["description"], **keywords),
+            url=format_string(config["embed"]["body"]["url"], **keywords),
+            color=discord.Color.from_str(config["embed"]["body"]["color"]))
+        embed.set_thumbnail(
+            url=format_string(config["embed"]["thumbnail"], **keywords))
+        embed.set_author(
+            name=format_string(config["embed"]["author"]["name"], **keywords),
+            url=format_string(config["embed"]["author"]["url"], **keywords),
+            icon_url=format_string(config["embed"]["author"]["icon_url"], **keywords))
+        for field_config in config["embed"]["fields"]:
+            embed.add_field(
+                name=format_string(field_config["name"], **keywords),
+                value=format_string(field_config["value"], **keywords))
+
+        # sending and publishing
+        message_context = await channel.send(content=text, embed=embed)
+
+        if publish and channel.is_news():
+            await message_context.publish()
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(TwitchNotifsModule(client))
