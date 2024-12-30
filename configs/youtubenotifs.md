@@ -1,4 +1,4 @@
-# `modules.json` file configuration
+# `youtubenotifs.json` file configuration
 - Config file contains configurations for `YouTubeNotifs` module
 - The config is subdivided into 2 categories
   - `config` - global module configuration

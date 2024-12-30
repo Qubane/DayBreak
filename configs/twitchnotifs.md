@@ -1,4 +1,4 @@
-# `modules.json` file configuration
+# `twitchnotifs.json` file configuration
 - Config file contains configurations for `TwitchNotifs` module
 - The config is subdivided into 2 categories
   - `config` - global module configuration
