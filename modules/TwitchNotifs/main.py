@@ -11,7 +11,15 @@ from source.settings import CONFIGS_DIRECTORY
 from modules.TwitchNotifs.fetcher import Fetcher, Stream
 
 
-def informal_format(string: str, *args, **kwargs) -> str | None:
+def format_string(string: str | None, *args, **kwargs) -> str | None:
+    """
+    Formats a string and if the input is None -> returns
+    :param string: string to format
+    :param args: formatting arguments
+    :param kwargs: formatting keyword arguments
+    :return: formatted string or None
+    """
+
     if string is None:
         return
     return string.format(*args, **kwargs)
@@ -116,6 +124,7 @@ class TwitchNotifsModule(commands.Cog):
 
         # update channel states
         self.channels_live = new_channels_live
+
 
 
 async def setup(client: commands.Bot) -> None:
