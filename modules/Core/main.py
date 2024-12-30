@@ -156,6 +156,7 @@ class CoreModule(commands.Cog):
 
         # load configs and load all modules
         self.load_config()
+        self.modules_queued += self.modules_static
         await self.load_all_queued()
 
         self.logger.info("Reload complete")
