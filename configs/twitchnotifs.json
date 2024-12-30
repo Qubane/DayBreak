@@ -38,7 +38,7 @@
         "text": "{role_mention}",
         "embed": {
           "thumbnail": "{stream_thumbnail_url}",
-          "embed": {
+          "body": {
             "title": "{stream_title}",
             "description": null,
             "url": "{stream_url}",
