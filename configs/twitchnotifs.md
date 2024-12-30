@@ -35,7 +35,7 @@
             - `name` - author name
             - `url` - url to author
             - `icon_url` - url to icon
-          - `fields` category
+          - `fields` list category
             - `name` - field name
             - `value` - field value
   - `channels` - list of twitch channel names
