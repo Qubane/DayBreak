@@ -120,35 +120,25 @@ class TwitchNotifsModule(commands.Cog):
     @staticmethod
     async def make_announcement(
             discord_channel: discord.TextChannel,
-            role_mention: str,
-            channel_name: str,
-            stream_description: str,
-            stream_url: str,
-            formatting: dict
+            formatting: dict,
+            **kwargs
     ) -> None:
         """
         Makes an announcement
         :param discord_channel: news channel
-        :param role_mention: role to mention (from docs)
-        :param channel_name: twitch channel name (from docs)
-        :param stream_description: twitch stream description (from docs)
-        :param stream_url: twitch stream url (from docs)
         :param formatting: formatting for notification
+        :key role_mention: role to mention (from docs)
+        :key channel_name: twitch channel name (from docs)
+        :key stream_description: twitch stream description (from docs)
+        :key stream_url: twitch stream url (from docs)
         """
-
-        # keywords (from docs)
-        kwargs = {
-            "role_mention": role_mention,
-            "channel_name": channel_name,
-            "stream_description": stream_description,
-            "stream_url": stream_url}
 
         # format text and embed
         notification_text = formatting["text"].format(**kwargs)
         notification_embed = discord.Embed(
-            title=formatting["embed"]["title"],
-            description=formatting["embed"]["description"],
-            url=formatting["embed"]["url"],
+            title=formatting["embed"]["title"].format(**kwargs),
+            description=formatting["embed"]["description"].format(**kwargs),
+            url=formatting["embed"]["url"].format(**kwargs),
             color=discord.Color.from_str(formatting["embed"]["color"]))
         notification_embed.set_author(name=formatting["embed"]["author"])
 
