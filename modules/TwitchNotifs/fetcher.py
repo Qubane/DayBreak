@@ -115,10 +115,15 @@ class Fetcher:
         :return: Stream dataclass if is live
         """
 
+        response = await cls.fetch_api(f"https://api.twitch.tv/helix/streams?user_login={user_login}")
+        if len(response["data"]) > 0:
+            return Stream.from_response(response["data"][0])
+        return None
+
 
 async def test():
-    response = await Fetcher.fetch_api("https://api.twitch.tv/helix/streams?user_login=lvndmark")
-    print(json.dumps(response, indent=2))
+    response = await Fetcher.fetch_stream_info("mutzbunny")
+    print(response)
 
 
 if __name__ == '__main__':
