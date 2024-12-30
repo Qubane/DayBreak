@@ -144,6 +144,32 @@ class TwitchNotifsModule(commands.Cog):
         if discord_channel.is_news():
             await msg_ctx.publish()
 
+    @commands.command(name="test-twitch-announcement")
+    @commands.has_permissions(administrator=True)
+    async def test_twitch_announcement_command(
+            self,
+            ctx: commands.Context
+    ) -> None:
+        """
+        Executes python code
+        """
+
+        # find guild
+        for guild_config in self.guild_config:
+            if guild_config["guild_id"] == ctx.guild.id:
+                break
+        # error if not found
+        else:
+            raise commands.CommandError("Guild not configured")
+
+        await self.make_announcement(
+            ctx.channel,
+            guild_config["format"],
+            role_mention="role_mention",
+            channel_name="channel_name",
+            stream_description="stream_description",
+            stream_url="https://guthib.com/")
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(TwitchNotifsModule(client))
