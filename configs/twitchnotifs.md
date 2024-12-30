@@ -14,12 +14,18 @@
     - `role_mention` - role to ping
     - `channel_name` - channel that is now streaming
     - `stream_url` - url link to the stream
-    - `stream_description` - stream's description
+    - `stream_title` - stream's title
+    - `stream_thumbnail_url` - url to thumbnail
+    - `stream_language` - stream's language
+    - `stream_start_date` - when stream started
+    - `stream_game_name` - name of the game
+    - `stream_tags` - stream tags
+    - `stream_nsfw` - is the stream NSFW
     - There are also 2 subcategories
       - `text` - text used to make a message
       - `embed` - embed that will be sent with message
-        - `author` - [top line] embed's author
-        - `title` - embed's title
+        - `author` - embed author
+        - `title` - embed title
         - `description` - embed's description
         - `url` - makes title a clickable link
         - `color` - changes color of embed's line on the left
