@@ -6,4 +6,4 @@
 - Append another line with your own `guild_id` and `role_id` to configure memberships
 
 # Config usage
-- Config is used by static module `BotUtils`
+- Config is used by static module `Memberships`
