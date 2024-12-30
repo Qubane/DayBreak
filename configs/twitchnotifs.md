@@ -10,11 +10,19 @@
   - `guild_id` - for which guild the config is made
   - `notifications_channel_id` - notification channel id (generally news channel)
   - `role_id` - role that will be pinged when a notification is given
-  - `format`- how to format notification message string. Available keyword arguments:
+  - `format`- how to format a notification message. Available keyword arguments:
     - `role_mention` - role to ping
     - `channel_name` - channel that is now streaming
     - `stream_url` - url link to the stream
     - `stream_description` - stream's description
+    - There are also 2 subcategories
+      - `text` - text used to make a message
+      - `embed` - embed that will be sent with message
+        - `author` - [top line] embed's author
+        - `title` - embed's title
+        - `description` - embed's description
+        - `url` - makes title a clickable link
+        - `color` - changes color of embed's line on the left
   - `channels` - list of twitch channel names
 
 
