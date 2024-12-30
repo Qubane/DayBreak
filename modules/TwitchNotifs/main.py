@@ -117,6 +117,50 @@ class TwitchNotifsModule(commands.Cog):
         # update channel states
         self.channels_live = new_channels_live
 
+    @staticmethod
+    async def make_announcement(
+            discord_channel: discord.TextChannel,
+            role_mention: str,
+            channel_name: str,
+            stream_description: str,
+            stream_url: str,
+            formatting: dict
+    ) -> None:
+        """
+        Makes an announcement
+        :param discord_channel: news channel
+        :param role_mention: role to mention (from docs)
+        :param channel_name: twitch channel name (from docs)
+        :param stream_description: twitch stream description (from docs)
+        :param stream_url: twitch stream url (from docs)
+        :param formatting: formatting for notification
+        """
+
+        # keywords (from docs)
+        kwargs = {
+            "role_mention": role_mention,
+            "channel_name": channel_name,
+            "stream_description": stream_description,
+            "stream_url": stream_url}
+
+        # format text and embed
+        notification_text = formatting["text"].format(**kwargs)
+        notification_embed = discord.Embed(
+            title=formatting["embed"]["title"],
+            description=formatting["embed"]["description"],
+            url=formatting["embed"]["url"],
+            color=discord.Color.from_str(formatting["embed"]["color"]))
+        notification_embed.set_author(name=formatting["embed"]["author"])
+
+        # send message
+        msg_ctx = await discord_channel.send(
+            content=notification_text,
+            embed=notification_embed)
+
+        # publish message if inside news channel
+        if discord_channel.is_news():
+            await msg_ctx.publish()
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(TwitchNotifsModule(client))
