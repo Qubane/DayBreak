@@ -11,11 +11,19 @@
       "format": {
         "text": "{role_mention}",
         "embed": {
-          "author": "{channel_name}",
-          "title": "{stream_description}",
-          "description": null,
-          "url": "{stream_url}",
-          "color": "#00ff00"
+          "thumbnail": "{stream_thumbnail_url}",
+          "body": {
+            "title": "{stream_title}",
+            "description": null,
+            "url": "{stream_url}",
+            "color": "#00ff00"
+          },
+          "author": {
+            "name": "{channel_name}",
+            "url": null,
+            "icon_url": null
+          },
+          "fields": []
         }
       },
       "channels": [
@@ -29,11 +37,19 @@
       "format": {
         "text": "{role_mention}",
         "embed": {
-          "author": "{channel_name}",
-          "title": "{stream_description}",
-          "description": null,
-          "url": "{stream_url}",
-          "color": "#00ff00"
+          "thumbnail": "{stream_thumbnail_url}",
+          "embed": {
+            "title": "{stream_title}",
+            "description": null,
+            "url": "{stream_url}",
+            "color": "#00ff00"
+          },
+          "author": {
+            "name": "{channel_name}",
+            "url": null,
+            "icon_url": null
+          },
+          "fields": []
         }
       },
       "channels": [
