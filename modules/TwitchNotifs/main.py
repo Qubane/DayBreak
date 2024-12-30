@@ -11,6 +11,12 @@ from source.settings import CONFIGS_DIRECTORY
 from modules.TwitchNotifs.fetcher import get_live, get_title
 
 
+def informal_format(string: str, *args, **kwargs) -> str | None:
+    if string is None:
+        return
+    return string.format(*args, **kwargs)
+
+
 class TwitchNotifsModule(commands.Cog):
     """
     This is an example module
@@ -129,11 +135,11 @@ class TwitchNotifsModule(commands.Cog):
         # format text and embed
         notification_text = formatting["text"].format(**kwargs)
         notification_embed = discord.Embed(
-            title=formatting["embed"]["title"].format(**kwargs),
-            description=formatting["embed"]["description"].format(**kwargs),
-            url=formatting["embed"]["url"].format(**kwargs),
+            title=informal_format(formatting["embed"]["title"], **kwargs),
+            description=informal_format(formatting["embed"]["description"], **kwargs),
+            url=informal_format(formatting["embed"]["url"], **kwargs),
             color=discord.Color.from_str(formatting["embed"]["color"]))
-        notification_embed.set_author(name=formatting["embed"]["author"])
+        notification_embed.set_author(name=informal_format(formatting["embed"]["author"], **kwargs))
 
         # send message
         msg_ctx = await discord_channel.send(
