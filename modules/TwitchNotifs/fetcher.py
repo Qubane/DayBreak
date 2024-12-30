@@ -33,6 +33,11 @@ class Stream:
     tags: list[str]
     is_mature: bool
 
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.id == other.id
+        return False
+
     @staticmethod
     def from_response(response: dict):
         """
