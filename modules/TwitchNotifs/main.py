@@ -217,7 +217,10 @@ class TwitchNotifsModule(commands.Cog):
             channel_name="channel_name",
             stream_url="https://localhost/",
             stream_title="stream_title",
-            stream_thumbnail_url="https://localhost/",
+            stream_thumbnail_url="https://yt3.googleusercontent.com/"
+                                 "ZQIGQ0-2Iiwh6J-qCkBoxU5EJiQ9Nh1ZMF"
+                                 "bu0m62mJLZc-xdOfTHy1rtxdFDYUk7o_ON"
+                                 "HjcGmDM=s160-c-k-c0x00ffffff-no-rj",
             stream_language="stream_language",
             stream_start_date="stream_start_date",
             stream_game_name="stream_game_name",
