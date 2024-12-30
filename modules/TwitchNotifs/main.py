@@ -101,8 +101,18 @@ class TwitchNotifsModule(commands.Cog):
             # check every configured twitch channel
             for channel in guild_config["channels"]:
                 # if a channel is live, and it wasn't before -> make a notification
-                if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel] is True:
-                    pass
+                if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel]:
+                    keywords = {
+                        "role_mention": role_ping,
+                        "channel_name": new_channels_live[channel].user_name,
+                        "stream_url": f"https://twitch.tv/{new_channels_live[channel].user_login}",
+                        "stream_title": new_channels_live[channel].title,
+                        "stream_thumbnail_url": new_channels_live[channel].thumbnail(640, 360),
+                        "stream_language": new_channels_live[channel].language,
+                        "stream_start_date": new_channels_live[channel].started_at,
+                        "stream_game_name": new_channels_live[channel].game_name,
+                        "stream_tags": new_channels_live[channel].tags,
+                        "stream_nsfw": new_channels_live[channel].is_mature}
 
         # update channel states
         self.channels_live = new_channels_live
