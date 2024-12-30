@@ -24,11 +24,20 @@
     - There are also 2 subcategories
       - `text` - text used to make a message
       - `embed` - embed that will be sent with message
-        - `author` - embed author
-        - `title` - embed title
-        - `description` - embed's description
-        - `url` - makes title a clickable link
-        - `color` - changes color of embed's line on the left
+        - Contains 4 fields
+          - `thumbnail` - embed url to thumbnail
+          - `body` category
+            - `title` - embed title
+            - `description` - embed description
+            - `url` - make title a clickable link
+            - `color` - left chevron color
+          - `author` category
+            - `name` - author name
+            - `url` - url to author
+            - `icon_url` - url to icon
+          - `fields` category
+            - `name` - field name
+            - `value` - field value
   - `channels` - list of twitch channel names
 
 
