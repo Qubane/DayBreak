@@ -111,17 +111,17 @@ class TwitchNotifsModule(commands.Cog):
                 # if a channel is live, and it wasn't before -> make a notification
                 if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel]:
                     stream = new_channels_live[channel]
-                    keywords = {
-                        "role_mention": role_ping,
-                        "channel_name": stream.user_name,
-                        "stream_url": f"https://twitch.tv/{stream.user_login}",
-                        "stream_title": stream.title,
-                        "stream_thumbnail_url": stream.thumbnail(640, 360),
-                        "stream_language": stream.language,
-                        "stream_start_date": stream.started_at,
-                        "stream_game_name": stream.game_name,
-                        "stream_tags": stream.tags,
-                        "stream_nsfw": stream.is_mature}
+                    keywords = self.return_keywords_dict(
+                        role_mention=role_ping,
+                        channel_name=stream.user_name,
+                        stream_url=f"https://twitch.tv/{stream.user_login}",
+                        stream_title=stream.title,
+                        stream_thumbnail_url=stream.thumbnail(640, 360),
+                        stream_language=stream.language,
+                        stream_start_date=stream.started_at.__str__(),
+                        stream_game_name=stream.game_name,
+                        stream_tags=stream.tags,
+                        stream_nsfw=stream.is_mature)
 
                     await self.make_announcement(
                         channel=notification_channel,
@@ -130,6 +130,36 @@ class TwitchNotifsModule(commands.Cog):
 
         # update channel states
         self.channels_live = new_channels_live
+
+    @staticmethod
+    def return_keywords_dict(
+            role_mention: str,
+            channel_name: str,
+            stream_url: str,
+            stream_title: str,
+            stream_thumbnail_url: str,
+            stream_language: str,
+            stream_start_date: str,
+            stream_game_name: str,
+            stream_tags: list[str],
+            stream_nsfw: bool
+    ) -> dict[str, str]:
+        """
+        Returns a dict with filled keywords.
+        Docs found in 'configs/twitchnotifs.md'
+        """
+
+        return {
+            "role_mention": role_mention,
+            "channel_name": channel_name,
+            "stream_url": stream_url,
+            "stream_title": stream_title,
+            "stream_thumbnail_url": stream_thumbnail_url,
+            "stream_language": stream_language,
+            "stream_start_date": stream_start_date,
+            "stream_game_name": stream_game_name,
+            "stream_tags": stream_tags,
+            "stream_nsfw": stream_nsfw}
 
     @staticmethod
     async def make_announcement(
@@ -171,6 +201,34 @@ class TwitchNotifsModule(commands.Cog):
 
         if publish and channel.is_news():
             await message_context.publish()
+
+    @commands.command(name="test-twitch-announcement")
+    @commands.has_permissions(administrator=True)
+    async def debug_announcement_test(
+            self,
+            ctx: commands.Context
+    ) -> None:
+        """
+        Executes python code
+        """
+
+        keywords = self.return_keywords_dict(
+            role_mention="role_mention",
+            channel_name="channel_name",
+            stream_url="stream_url",
+            stream_title="stream_title",
+            stream_thumbnail_url="stream_thumbnail_url",
+            stream_language="stream_language",
+            stream_start_date="stream_start_date",
+            stream_game_name="stream_game_name",
+            stream_tags=["tag1", "tag2", "tag3"],
+            stream_nsfw=True)
+
+        await self.make_announcement(
+            ctx.channel,
+            self.guild_config[0]["format"],
+            keywords=keywords,
+            publish=False)
 
 
 async def setup(client: commands.Bot) -> None:
