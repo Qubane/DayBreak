@@ -97,22 +97,15 @@ class TwitchNotifsModule(commands.Cog):
             for channel in guild_config["channels"]:
                 # if a channel is live, and it wasn't before -> make a notification
                 if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel] is True:
-                    kwargs = {
-                        "role_mention": role_ping,
-                        "channel_name": channel,
-                        "stream_description": await get_title(channel),
-                        "stream_url": f"https://www.twitch.tv/{channel}"}
-
-                    text = guild_config["format"]["text"].format(**kwargs)
-                    embed = discord.Embed(
-                        title=guild_config["format"]["embed"]["title"].format(**kwargs),
-                        description=guild_config["format"]["embed"]["description"].format(**kwargs),
-                        url=guild_config["format"]["embed"]["url"].format(**kwargs),
-                        color=discord.Color.from_str(guild_config["format"]["embed"]["color"]))
-
-                    msg_ctx = await notification_channel.send(content=text, embed=embed)
-                    if notification_channel.is_news():
-                        await msg_ctx.publish()
+                    await self.make_announcement(
+                        # required args
+                        discord_channel=notification_channel,
+                        formatting=guild_config["format"],
+                        # keyword args
+                        role_mention=role_ping,
+                        channel_name=channel,
+                        stream_description=await get_title(channel),
+                        stream_url=f"https://www.twitch.tv/{channel}")
 
         # update channel states
         self.channels_live = new_channels_live
