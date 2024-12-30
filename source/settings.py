@@ -11,6 +11,7 @@ import logging.handlers
 # keys
 DISCORD_API_KEY = os.getenv("DISCORD_API_KEY")  # bot auth token
 YOUTUBE_API_KEY = os.getenv("YOUTUBE_API_KEY")  # YouTube Data API key
+TWITCH_API_KEY = os.getenv("TWITCH_API_KEY")  # Twitch API key
 
 # paths
 MODULES_DIRECTORY = "modules"
