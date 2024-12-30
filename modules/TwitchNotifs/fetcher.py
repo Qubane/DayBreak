@@ -57,6 +57,16 @@ class Stream:
             tags=response["tags"],
             is_mature=response["is_mature"])
 
+    def thumbnail(self, width: int, height: int) -> str:
+        """
+        Returns formatted URL string to stream thumbnail
+        :param width: thumbnail width
+        :param height: thumbnail height
+        :return: thumbnail URL link
+        """
+
+        return self.thumbnail_url.format(width=width, height=height)
+
 
 class Fetcher:
     """
