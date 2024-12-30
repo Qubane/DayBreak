@@ -69,14 +69,15 @@ class CoreModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        # await self.client.tree.sync()
-        # self.logger.info("Command tree synced")
+        await self.client.tree.sync()
+        self.logger.info("Command tree synced")
 
     def load_config(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
         """
 
+        self.modules_present.clear()
         for present_module in os.listdir(MODULES_DIRECTORY):
             if os.path.isfile(f"{MODULES_DIRECTORY}/{present_module}/main.py"):
                 self.modules_present.append(present_module)
@@ -150,13 +151,14 @@ class CoreModule(commands.Cog):
 
         self.logger.info("Reloading self")
 
-        # unload and clear all running modules
-        await asyncio.gather(*[self.unload_module(module) for module in self.modules_running])
-        self.modules_running.clear()
+        # unload all running modules (except Core)
+        await asyncio.gather(
+            *[self.unload_module(module) for module in self.modules_running if module != self.module_name])
 
         # load configs and load all modules
-        self.load_config()
-        self.modules_queued += self.modules_static
+        self.load_config()  # load modules from config
+        self.modules_queued += self.modules_static  # append static modules
+        self.modules_queued.remove(self.module_name)  # remove self from queued
         await self.load_all_queued()
 
         self.logger.info("Reload complete")
