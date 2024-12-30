@@ -125,6 +125,20 @@ class TwitchNotifsModule(commands.Cog):
         # update channel states
         self.channels_live = new_channels_live
 
+    @staticmethod
+    async def make_announcement(
+            channel: discord.TextChannel,
+            config: dict,
+            keywords: dict,
+            publish: bool = True
+    ) -> None:
+        """
+        Makes a formatted announcement in a given channel
+        :param channel: channel for the announcement message
+        :param config: formatting data
+        :param keywords: configured keywords
+        :param publish: if True, and is in news channel, the message will be published
+        """
 
 
 async def setup(client: commands.Bot) -> None:
