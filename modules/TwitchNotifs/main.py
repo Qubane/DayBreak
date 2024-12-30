@@ -122,6 +122,11 @@ class TwitchNotifsModule(commands.Cog):
                         "stream_tags": new_channels_live[channel].tags,
                         "stream_nsfw": new_channels_live[channel].is_mature}
 
+                    await self.make_announcement(
+                        channel=notification_channel,
+                        config=guild_config["format"],
+                        keywords=keywords)
+
         # update channel states
         self.channels_live = new_channels_live
 
