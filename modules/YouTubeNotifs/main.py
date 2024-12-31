@@ -140,12 +140,12 @@ class YouTubeNotifsModule(commands.Cog):
                             role_mention=video_role_ping,
                             channel_name=self.channels[channel_id].title,
                             channel_url=f"https://www.youtube.com/{self.channels[channel_id].custom_url}",
-                            channel_thumbnail_url=self.channels[channel_id].thumbnails["default"].url,
+                            channel_thumbnail_url=self.channels[channel_id].thumbnails.high.url,
                             channel_country=self.channels[channel_id].country,
-                            video_url=f"https://youtu.be/{new_video.id}",
+                            video_url=new_video.url,
                             video_title=new_video.title,
                             video_description=new_video.description,
-                            video_thumbnail_url=new_video.thumbnails["default"].url,
+                            video_thumbnail_url=new_video.thumbnails.high.url,
                             video_publish_date=new_video.published_at.__str__())
 
                         await self.make_announcement(
@@ -182,7 +182,7 @@ class YouTubeNotifsModule(commands.Cog):
             "channel_country": channel_country,
             "video_url": video_url,
             "video_title": video_title,
-            "video_description": video_description,
+            "video_description": f"{video_description[:60]}..." if video_description is not None else None,
             "video_thumbnail_url": video_thumbnail_url,
             "video_publish_date": video_publish_date}
 
@@ -237,20 +237,19 @@ class YouTubeNotifsModule(commands.Cog):
         Executes python code
         """
 
+        yt_video = (await Fetcher.fetch_videos(self.guild_config[0]["channels"][0], 1))[0]
+
         keywords = self.return_keywords_dict(
-            role_mention="role_mention",
-            channel_name="channel_name",
-            channel_url="channel_url",
-            channel_thumbnail_url="https://yt3.googleusercontent.com/"
-                                  "ZQIGQ0-2Iiwh6J-qCkBoxU5EJiQ9Nh1ZMF"
-                                  "bu0m62mJLZc-xdOfTHy1rtxdFDYUk7o_ON"
-                                  "HjcGmDM=s160-c-k-c0x00ffffff-no-rj",
-            channel_country="channel_country",
-            video_url="video_url",
-            video_title="video_title",
-            video_description="video_description",
-            video_thumbnail_url="video_thumbnail_url",
-            video_publish_date="video_publish_date")
+            role_mention=f"<@&{self.guild_config[0]['video_role_id']}>",
+            channel_name=yt_video.channel.title,
+            channel_url=yt_video.channel.url,
+            channel_thumbnail_url=yt_video.channel.thumbnails.high.url,
+            channel_country=yt_video.channel.country,
+            video_url=yt_video.url,
+            video_title=yt_video.title,
+            video_description=yt_video.description,
+            video_thumbnail_url=yt_video.thumbnails.high.url,
+            video_publish_date=yt_video.published_at.__str__())
 
         await self.make_announcement(
             ctx.channel,
