@@ -11,7 +11,24 @@
       "notifications_channel_id": 860730818581364796,
       "video_role_id": 860801537005453322,
       "stream_role_id": 860801537005453322,
-      "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
+      "format": {
+        "text": "{role_mention}",
+        "embed": {
+          "thumbnail": "{video_thumbnail_url}",
+          "body": {
+            "title": "{video_title}",
+            "description": "{video_description[:100]}...",
+            "url": "{video_url}",
+            "color": "#00ff00"
+          },
+          "author": {
+            "name": "{channel_name}",
+            "url": "{channel_url}",
+            "icon_url": "{channel_thumbnail_url}"
+          },
+          "fields": []
+        }
+      },
       "channels": [
         "UCOML6poYH8HL9yMM98DKqHw"
       ]
@@ -21,7 +38,24 @@
       "notifications_channel_id": 863394227655933994,
       "video_role_id": 1110299526721449984,
       "stream_role_id": 1089955742662000641,
-      "format": "{role_mention}\n# :fire: Вышло новое видео {channel_name}! :fire:\n-# {video_url}",
+      "format": {
+        "text": "{role_mention}",
+        "embed": {
+          "thumbnail": "{video_thumbnail_url}",
+          "body": {
+            "title": "{video_title}",
+            "description": "{video_description[:100]}...",
+            "url": "{video_url}",
+            "color": "#00ff00"
+          },
+          "author": {
+            "name": "{channel_name}",
+            "url": "{channel_url}",
+            "icon_url": "{channel_thumbnail_url}"
+          },
+          "fields": []
+        }
+      },
       "channels": [
         "UCL-8FVaefmqox59LpOJxnOQ"
       ]
@@ -31,7 +65,24 @@
       "notifications_channel_id": 772462702500904960,
       "video_role_id": 1320557273218547814,
       "stream_role_id": 1293544398893748276,
-      "format": "{role_mention}\n# :fire: Check out new video by {channel_name} :fire:\n-# {video_url}",
+      "format": {
+        "text": "{role_mention}",
+        "embed": {
+          "thumbnail": "{video_thumbnail_url}",
+          "body": {
+            "title": "{video_title}",
+            "description": "{video_description[:100]}...",
+            "url": "{video_url}",
+            "color": "#00ff00"
+          },
+          "author": {
+            "name": "{channel_name}",
+            "url": "{channel_url}",
+            "icon_url": "{channel_thumbnail_url}"
+          },
+          "fields": []
+        }
+      },
       "channels": [
         "UC6MYaThfTGBI2hVr-twrT4g",
         "UCWlkEGCF3nr9ogU1vQxvSug"
