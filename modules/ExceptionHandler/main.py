@@ -40,6 +40,8 @@ class ExceptionHandlerModule(commands.Cog):
             embed.description = "List of missing permissions"
             for permission in error.missing_permissions:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
+        elif isinstance(error, (app_commands.CommandInvokeError, commands.CommandInvokeError)):
+            raise error
         elif isinstance(error, (app_commands.AppCommandError, commands.CommandError)):
             embed.title = error.__class__.__name__
             embed.description = error.args[0]
