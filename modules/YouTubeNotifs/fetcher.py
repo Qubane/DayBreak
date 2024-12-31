@@ -113,6 +113,10 @@ class Media:
             position=response["position"],
             channel=await Fetcher.fetch_channel_info(response["channelId"]))
 
+    @property
+    def url(self):
+        return f"https://youtu.be/{self.id}"
+
 
 class Fetcher:
     """
