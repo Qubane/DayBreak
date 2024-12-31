@@ -146,7 +146,7 @@ class TwitchNotifsModule(commands.Cog):
     ) -> dict[str, str]:
         """
         Returns a dict with filled keywords.
-        Docs found in 'configs/twitchnotifs.md'
+        Docs found from 'configs/twitchnotifs.md'
         """
 
         return {
