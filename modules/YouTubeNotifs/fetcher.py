@@ -55,8 +55,8 @@ class Thumbnails:
             default=Thumbnail.from_response(thumbnails["default"]),
             medium=Thumbnail.from_response(thumbnails["medium"]),
             high=Thumbnail.from_response(thumbnails["high"]),
-            standard=Thumbnail.from_response(thumbnails["standard"]) if thumbnails["standard"] else None,
-            maxres=Thumbnail.from_response(thumbnails["maxres"]) if thumbnails["maxres"] else None)
+            standard=Thumbnail.from_response(thumbnails["standard"]) if "standard" in thumbnails else None,
+            maxres=Thumbnail.from_response(thumbnails["maxres"]) if "maxres" in thumbnails else None)
 
 
 @dataclass
