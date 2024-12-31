@@ -227,6 +227,37 @@ class YouTubeNotifsModule(commands.Cog):
         if publish and channel.is_news():
             await message_context.publish()
 
+    @commands.command(name="test-youtube-announcement")
+    @commands.has_permissions(administrator=True)
+    async def debug_announcement_test(
+            self,
+            ctx: commands.Context
+    ) -> None:
+        """
+        Executes python code
+        """
+
+        keywords = self.return_keywords_dict(
+            role_mention="role_mention",
+            channel_name="channel_name",
+            channel_url="channel_url",
+            channel_thumbnail_url="https://yt3.googleusercontent.com/"
+                                  "ZQIGQ0-2Iiwh6J-qCkBoxU5EJiQ9Nh1ZMF"
+                                  "bu0m62mJLZc-xdOfTHy1rtxdFDYUk7o_ON"
+                                  "HjcGmDM=s160-c-k-c0x00ffffff-no-rj",
+            channel_country="channel_country",
+            video_url="video_url",
+            video_title="video_title",
+            video_description="video_description",
+            video_thumbnail_url="video_thumbnail_url",
+            video_publish_date="video_publish_date")
+
+        await self.make_announcement(
+            ctx.channel,
+            self.guild_config[0]["format"],
+            keywords=keywords,
+            publish=False)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(YouTubeNotifsModule(client))
