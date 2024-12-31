@@ -19,7 +19,7 @@
             "title": "{video_title}",
             "description": "{video_description}",
             "url": "{video_url}",
-            "color": "#00ff00"
+            "color": "#ff0000"
           },
           "author": {
             "name": "{channel_name}",
@@ -46,7 +46,7 @@
             "title": "{video_title}",
             "description": "{video_description}",
             "url": "{video_url}",
-            "color": "#00ff00"
+            "color": "#ff0000"
           },
           "author": {
             "name": "{channel_name}",
@@ -73,7 +73,7 @@
             "title": "{video_title}",
             "description": "{video_description}",
             "url": "{video_url}",
-            "color": "#00ff00"
+            "color": "#ff0000"
           },
           "author": {
             "name": "{channel_name}",
