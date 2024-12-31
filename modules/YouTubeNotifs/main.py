@@ -182,7 +182,7 @@ class YouTubeNotifsModule(commands.Cog):
             "channel_country": channel_country,
             "video_url": video_url,
             "video_title": video_title,
-            "video_description": f"{video_description[:65]}..." if video_description is not None else None,
+            "video_description": f"{video_description[:60]}..." if video_description is not None else None,
             "video_thumbnail_url": video_thumbnail_url,
             "video_publish_date": video_publish_date}
 
