@@ -141,6 +141,36 @@ class YouTubeNotifsModule(commands.Cog):
         self.channels_videos = new_channels
 
     @staticmethod
+    def return_keywords_dict(
+            role_mention: str,
+            channel_name: str,
+            channel_url: str,
+            channel_thumbnail_url: str,
+            channel_country: str,
+            video_url: str,
+            video_title: str,
+            video_description: str,
+            video_thumbnail_url: str,
+            video_publish_date: str
+    ) -> dict:
+        """
+        Returns a dict with filled keywords.
+        Docs found from 'configs/youtubenotifs.md'
+        """
+
+        return {
+            "role_mention": role_mention,
+            "channel_name": channel_name,
+            "channel_url": channel_url,
+            "channel_thumbnail_url": channel_thumbnail_url,
+            "channel_country": channel_country,
+            "video_url": video_url,
+            "video_title": video_title,
+            "video_description": video_description,
+            "video_thumbnail_url": video_thumbnail_url,
+            "video_publish_date": video_publish_date}
+
+    @staticmethod
     async def make_announcement(
             channel: discord.TextChannel,
             config: dict,
