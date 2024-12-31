@@ -14,6 +14,20 @@ from source.settings import CONFIGS_DIRECTORY
 from modules.YouTubeNotifs.fetcher import Fetcher, Media, Channel
 
 
+def format_string(string: str | None, *args, **kwargs) -> str | None:
+    """
+    Formats a string and if the input is None -> returns
+    :param string: string to format
+    :param args: formatting arguments
+    :param kwargs: formatting keyword arguments
+    :return: formatted string or None
+    """
+
+    if string is None:
+        return
+    return string.format(*args, **kwargs)
+
+
 class YouTubeNotifsModule(commands.Cog):
     """
     This is YouTube notifications module
