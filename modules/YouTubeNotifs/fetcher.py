@@ -78,8 +78,8 @@ class Channel:
             country=response["snippet"]["country"])
 
     @property
-    def url(self):
-        return f"https://youtube/{self.custom_url}"
+    def url(self) -> str:
+        return f"https://youtube.com/{self.custom_url}"
 
 
 @dataclass
@@ -118,7 +118,7 @@ class Media:
             channel=await Fetcher.fetch_channel_info(response["channelId"]))
 
     @property
-    def url(self):
+    def url(self) -> str:
         return f"https://youtu.be/{self.id}"
 
 
