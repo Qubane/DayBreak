@@ -25,6 +25,23 @@
     - `video_description` - description of the posted video
     - `video_thumbnail_url` - url link to video's thumbnail
     - `video_publish_date` - when the video was posted
+    - There are also 2 subcategories
+      - `text` - text used to make a message
+      - `embed` - embed that will be sent with message
+        - Contains 4 fields
+          - `thumbnail` - embed url to thumbnail
+          - `body` category
+            - `title` - embed title
+            - `description` - embed description
+            - `url` - make title a clickable link
+            - `color` - left chevron color
+          - `author` category
+            - `name` - author name
+            - `url` - url to author
+            - `icon_url` - url to icon
+          - `fields` list category
+            - `name` - field name
+            - `value` - field value
   - `channels` - list of YouTube channel id's
 
 
