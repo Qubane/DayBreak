@@ -44,40 +44,6 @@ class Thumbnail:
 
 
 @dataclass
-class Media:
-    """
-    Class containing video / stream information
-    """
-
-    id: str
-    title: str
-    description: str
-    published_at: datetime
-    thumbnails: dict[str, Thumbnail]
-    position: int
-    is_live: bool = False
-
-    def __eq__(self, other):
-        if isinstance(other, self.__class__):
-            return self.id == other.id
-        return False
-
-    @staticmethod
-    def from_response(response: dict):
-        """
-        Generates 'self' from API response
-        """
-
-        return Media(
-            id=response["resourceId"]["videoId"],
-            title=response["title"],
-            description=response["description"],
-            published_at=datetime.fromisoformat(response["publishedAt"]),
-            thumbnails=Thumbnail.dict_from_response(response["thumbnails"]),
-            position=response["position"])
-
-
-@dataclass
 class Channel:
     """
     Class containing channel information
@@ -97,7 +63,7 @@ class Channel:
         return False
 
     @staticmethod
-    def from_response(response: dict):
+    async def from_response(response: dict):
         """
         Generates 'self' from API response
         """
@@ -112,14 +78,52 @@ class Channel:
             country=response["snippet"]["country"])
 
 
+@dataclass
+class Media:
+    """
+    Class containing video / stream information
+    """
+
+    id: str
+    title: str
+    description: str
+    published_at: datetime
+    thumbnails: dict[str, Thumbnail]
+    position: int
+    channel: Channel
+    is_stream: bool = False
+
+    def __eq__(self, other):
+        if isinstance(other, self.__class__):
+            return self.id == other.id
+        return False
+
+    @staticmethod
+    async def from_response(response: dict):
+        """
+        Generates 'self' from API response
+        """
+
+        return Media(
+            id=response["resourceId"]["videoId"],
+            title=response["title"],
+            description=response["description"],
+            published_at=datetime.fromisoformat(response["publishedAt"]),
+            thumbnails=Thumbnail.dict_from_response(response["thumbnails"]),
+            position=response["position"],
+            channel=await Fetcher.fetch_channel_info(response["channelId"]))
+
+
 class Fetcher:
     """
     Fetching class
     """
 
-    # cached list of channel's upload playlist ids
     # "channel_id": "upload_id"
-    channel_upload_playlists: dict[str, str] = {}
+    channels_playlists: dict[str, str] = {}
+
+    # "channel_id": Channel(...)
+    channels: dict[str, Channel] = {}
 
     # cached requests
     # "request_url": {"etag": "current_etag", "data": ...}
@@ -221,13 +225,15 @@ class Fetcher:
         }
         """
 
-        response = await cls.fetch_api(
-            f"https://www.googleapis.com/youtube/v3/channels?"
-            f"part=snippet&"
-            f"id={channel_id}&"
-            f"key={YOUTUBE_API_KEY}")
+        if channel_id not in cls.channels:
+            response = await cls.fetch_api(
+                f"https://www.googleapis.com/youtube/v3/channels?"
+                f"part=snippet&"
+                f"id={channel_id}&"
+                f"key={YOUTUBE_API_KEY}")
+            cls.channels[channel_id] = await Channel.from_response(response["items"][0])
 
-        return Channel.from_response(response["items"][0])
+        return cls.channels[channel_id]
 
     @classmethod
     async def fetch_channel_playlist_id(cls, channel_id: str) -> str:
@@ -262,21 +268,21 @@ class Fetcher:
         }
         """
 
-        if channel_id not in cls.channel_upload_playlists:
+        if channel_id not in cls.channels_playlists:
             content_details = await cls.fetch_api(
                 f"https://www.googleapis.com/youtube/v3/channels?"
                 f"part=contentDetails&"
                 f"id={channel_id}&"
                 f"key={YOUTUBE_API_KEY}")
             uploads_id = content_details["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
-            cls.channel_upload_playlists[channel_id] = uploads_id  # cache result
+            cls.channels_playlists[channel_id] = uploads_id
         else:
-            uploads_id = cls.channel_upload_playlists[channel_id]
+            uploads_id = cls.channels_playlists[channel_id]
 
         return uploads_id
 
     @classmethod
-    async def fetch_videos(cls, channel_id: str, amount: int) -> list[Media]:
+    async def fetch_videos(cls, channel_id: str, amount: int) -> tuple[Media]:
         """
         Returns a list of videos on the channel.
         :param channel_id: channel id
@@ -334,7 +340,7 @@ class Fetcher:
             f"playlistId={uploads_id}&"
             f"key={YOUTUBE_API_KEY}")
 
-        return [Media.from_response(x["snippet"]) for x in playlist["items"]]
+        return await asyncio.gather(*[Media.from_response(x["snippet"]) for x in playlist["items"]])
 
 
 async def test():
@@ -342,7 +348,7 @@ async def test():
     Very cool test thingy. runs only when file is run as main
     """
 
-    for _ in range(3):
+    for _ in range(1):
         response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 3)
         # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
         # response = json.dumps(response, indent=2)
