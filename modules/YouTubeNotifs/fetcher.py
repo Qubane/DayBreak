@@ -77,6 +77,10 @@ class Channel:
             thumbnails=Thumbnail.dict_from_response(response["snippet"]["thumbnails"]),
             country=response["snippet"]["country"])
 
+    @property
+    def url(self):
+        return f"https://youtube/{self.custom_url}"
+
 
 @dataclass
 class Media:
