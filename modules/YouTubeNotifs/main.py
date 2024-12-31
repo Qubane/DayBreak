@@ -43,7 +43,7 @@ class YouTubeNotifsModule(commands.Cog):
         # configs
         self.config_path: str = f"{CONFIGS_DIRECTORY}/youtubenotifs.json"
         self.module_config: dict[str, str | int] | None = None
-        self.guild_config: list[dict[str, str | int | list]] | None = None
+        self.guild_config: list[dict] | None = None
 
         # youtube channels
         # {"channel_id": [Video(...), Video(...), ...]}
@@ -136,7 +136,7 @@ class YouTubeNotifsModule(commands.Cog):
                 for new_video in new_channels[channel_id][:-self.module_config["checking_window_offset"]]:
                     # if new video is not in old videos, then make an announcement
                     if new_video not in self.channels_videos[channel_id]:
-                        msg = notification_format.format(
+                        keywords = self.return_keywords_dict(
                             role_mention=video_role_ping,
                             channel_name=self.channels[channel_id].title,
                             channel_url=f"https://www.youtube.com/{self.channels[channel_id].custom_url}",
@@ -146,10 +146,12 @@ class YouTubeNotifsModule(commands.Cog):
                             video_title=new_video.title,
                             video_description=new_video.description,
                             video_thumbnail_url=new_video.thumbnails["default"].url,
-                            video_publish_date=new_video.published_at)
-                        msg_ctx = await notification_channel.send(msg)
-                        if notification_channel.is_news():
-                            await msg_ctx.publish()
+                            video_publish_date=new_video.published_at.__str__())
+
+                        await self.make_announcement(
+                            channel=notification_channel,
+                            config=guild_config["format"],
+                            keywords=keywords)
 
         # reassign new_channels to self.channels
         self.channels_videos = new_channels
