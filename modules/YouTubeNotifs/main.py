@@ -140,6 +140,21 @@ class YouTubeNotifsModule(commands.Cog):
         # reassign new_channels to self.channels
         self.channels_videos = new_channels
 
+    @staticmethod
+    async def make_announcement(
+            channel: discord.TextChannel,
+            config: dict,
+            keywords: dict,
+            publish: bool = True
+    ) -> None:
+        """
+        Makes a formatted announcement in a given channel
+        :param channel: channel for the announcement message
+        :param config: formatting data
+        :param keywords: configured keywords
+        :param publish: if True, and is in news channel, the message will be published
+        """
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(YouTubeNotifsModule(client))
