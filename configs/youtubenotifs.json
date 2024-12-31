@@ -17,7 +17,7 @@
           "thumbnail": "{video_thumbnail_url}",
           "body": {
             "title": "{video_title}",
-            "description": "{video_description[:100]}...",
+            "description": "{video_description}...",
             "url": "{video_url}",
             "color": "#00ff00"
           },
@@ -44,7 +44,7 @@
           "thumbnail": "{video_thumbnail_url}",
           "body": {
             "title": "{video_title}",
-            "description": "{video_description[:100]}...",
+            "description": "{video_description}...",
             "url": "{video_url}",
             "color": "#00ff00"
           },
@@ -71,7 +71,7 @@
           "thumbnail": "{video_thumbnail_url}",
           "body": {
             "title": "{video_title}",
-            "description": "{video_description[:100]}...",
+            "description": "{video_description}...",
             "url": "{video_url}",
             "color": "#00ff00"
           },
