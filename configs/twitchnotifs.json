@@ -16,7 +16,7 @@
             "title": "{stream_title}",
             "description": null,
             "url": "{stream_url}",
-            "color": "#00ff00"
+            "color": "#6441a5"
           },
           "author": {
             "name": "{channel_name}",
@@ -42,7 +42,7 @@
             "title": "{stream_title}",
             "description": null,
             "url": "{stream_url}",
-            "color": "#00ff00"
+            "color": "#6441a5"
           },
           "author": {
             "name": "{channel_name}",
