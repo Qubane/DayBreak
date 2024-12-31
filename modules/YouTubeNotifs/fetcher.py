@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from source.settings import YOUTUBE_API_KEY
 
 
-@dataclass
+@dataclass(frozen=True)
 class Thumbnail:
     """
     Class containing thumbnail data
@@ -32,15 +32,31 @@ class Thumbnail:
             width=response["width"],
             height=response["height"])
 
+
+@dataclass(frozen=True)
+class Thumbnails:
+    """
+    Class containing Thumbnails
+    """
+
+    default: Thumbnail
+    medium: Thumbnail
+    high: Thumbnail
+    standard: Thumbnail | None = None
+    maxres: Thumbnail | None = None
+
     @staticmethod
-    def dict_from_response(thumbnails: dict[str, dict]):
+    def from_response_dict(thumbnails: dict):
         """
-        Return dictionary of 'definition': Thumbnail(...)
-        :param thumbnails: API response field
-        :return: dict of thumbnails
+        Generates 'self' from API response
         """
 
-        return {key: Thumbnail.from_response(value) for key, value in thumbnails.items()}
+        return Thumbnails(
+            default=Thumbnail.from_response(thumbnails["default"]),
+            medium=Thumbnail.from_response(thumbnails["medium"]),
+            high=Thumbnail.from_response(thumbnails["high"]),
+            standard=Thumbnail.from_response(thumbnails["standard"]) if thumbnails["standard"] else None,
+            maxres=Thumbnail.from_response(thumbnails["maxres"]) if thumbnails["maxres"] else None)
 
 
 @dataclass
@@ -54,7 +70,7 @@ class Channel:
     description: str
     custom_url: str
     published_at: datetime
-    thumbnails: dict[str, Thumbnail]
+    thumbnails: Thumbnails
     country: str
 
     def __eq__(self, other):
@@ -74,7 +90,7 @@ class Channel:
             description=response["snippet"]["description"],
             custom_url=response["snippet"]["customUrl"],
             published_at=datetime.fromisoformat(response["snippet"]["publishedAt"]),
-            thumbnails=Thumbnail.dict_from_response(response["snippet"]["thumbnails"]),
+            thumbnails=Thumbnails.from_response_dict(response["snippet"]["thumbnails"]),
             country=response["snippet"]["country"])
 
     @property
@@ -92,7 +108,7 @@ class Media:
     title: str
     description: str
     published_at: datetime
-    thumbnails: dict[str, Thumbnail]
+    thumbnails: Thumbnails
     position: int
     channel: Channel
     is_stream: bool = False
@@ -113,7 +129,7 @@ class Media:
             title=response["title"],
             description=response["description"],
             published_at=datetime.fromisoformat(response["publishedAt"]),
-            thumbnails=Thumbnail.dict_from_response(response["thumbnails"]),
+            thumbnails=Thumbnails.from_response_dict(response["thumbnails"]),
             position=response["position"],
             channel=await Fetcher.fetch_channel_info(response["channelId"]))
 
