@@ -99,7 +99,7 @@ class TwitchNotifsModule(commands.Cog):
             return
 
         # fetch current state
-        new_channels_live = await self.fetch_streams()
+        channels_live = await self.fetch_streams()
 
         # go through all guilds
         for guild_config in self.guild_config:
@@ -108,9 +108,9 @@ class TwitchNotifsModule(commands.Cog):
 
             # check every configured twitch channel
             for channel in guild_config["channels"]:
-                # if a channel is live, and it wasn't before -> make a notification
-                if new_channels_live[channel] != self.channels_live[channel] and new_channels_live[channel]:
-                    stream = new_channels_live[channel]
+                # if channel is live, and it wasn't before, make a notification
+                if channels_live[channel] is not None and self.channels_live[channel] is None:
+                    stream = channels_live[channel]
                     keywords = self.return_keywords_dict(
                         role_mention=role_ping,
                         channel_name=stream.user_name,
@@ -129,7 +129,7 @@ class TwitchNotifsModule(commands.Cog):
                         keywords=keywords)
 
         # update channel states
-        self.channels_live = new_channels_live
+        self.channels_live = channels_live
 
     @staticmethod
     def return_keywords_dict(
