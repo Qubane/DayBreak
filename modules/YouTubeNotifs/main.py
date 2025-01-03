@@ -11,21 +11,8 @@ import logging
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.settings import CONFIGS_DIRECTORY
+from source.notifications import make_announcement
 from modules.YouTubeNotifs.fetcher import Fetcher, Media, Channel
-
-
-def format_string(string: str | None, *args, **kwargs) -> str | None:
-    """
-    Formats a string and if the input is None -> returns
-    :param string: string to format
-    :param args: formatting arguments
-    :param kwargs: formatting keyword arguments
-    :return: formatted string or None
-    """
-
-    if string is None:
-        return
-    return string.format(*args, **kwargs)
 
 
 class YouTubeNotifsModule(commands.Cog):
@@ -148,7 +135,7 @@ class YouTubeNotifsModule(commands.Cog):
                             video_thumbnail_url=new_video.thumbnails.high.url,
                             video_publish_date=new_video.published_at.__str__())
 
-                        await self.make_announcement(
+                        await make_announcement(
                             channel=notification_channel,
                             config=guild_config["format"],
                             keywords=keywords)
@@ -186,47 +173,6 @@ class YouTubeNotifsModule(commands.Cog):
             "video_thumbnail_url": video_thumbnail_url,
             "video_publish_date": video_publish_date}
 
-    @staticmethod
-    async def make_announcement(
-            channel: discord.TextChannel,
-            config: dict,
-            keywords: dict,
-            publish: bool = True
-    ) -> None:
-        """
-        Makes a formatted announcement in a given channel
-        :param channel: channel for the announcement message
-        :param config: formatting data
-        :param keywords: configured keywords
-        :param publish: if True, and is in news channel, the message will be published
-        """
-
-        # text
-        text = format_string(config["text"], **keywords)
-
-        # embed
-        embed = discord.Embed(
-            title=format_string(config["embed"]["body"]["title"], **keywords),
-            description=format_string(config["embed"]["body"]["description"], **keywords),
-            url=format_string(config["embed"]["body"]["url"], **keywords),
-            color=discord.Color.from_str(config["embed"]["body"]["color"]))
-        embed.set_image(
-            url=format_string(config["embed"]["thumbnail"], **keywords))
-        embed.set_author(
-            name=format_string(config["embed"]["author"]["name"], **keywords),
-            url=format_string(config["embed"]["author"]["url"], **keywords),
-            icon_url=format_string(config["embed"]["author"]["icon_url"], **keywords))
-        for field_config in config["embed"]["fields"]:
-            embed.add_field(
-                name=format_string(field_config["name"], **keywords),
-                value=format_string(field_config["value"], **keywords))
-
-        # sending and publishing
-        message_context = await channel.send(content=text, embed=embed)
-
-        if publish and channel.is_news():
-            await message_context.publish()
-
     @commands.command(name="test-youtube-announcement")
     @commands.has_permissions(administrator=True)
     async def debug_announcement_test(
@@ -251,7 +197,7 @@ class YouTubeNotifsModule(commands.Cog):
             video_thumbnail_url=yt_video.thumbnails.high.url,
             video_publish_date=yt_video.published_at.__str__())
 
-        await self.make_announcement(
+        await make_announcement(
             ctx.channel,
             self.guild_config[0]["format"],
             keywords=keywords,
