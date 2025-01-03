@@ -154,18 +154,22 @@ class TwitchNotifsModule(commands.Cog):
             ctx: commands.Context
     ) -> None:
         """
-        Executes python code
+        Checks for properly configured announcements
         """
+
+        # test current guild config
+        for guild_config in self.guild_config:
+            if guild_config["guild_id"] == ctx.guild.id:
+                break
+        else:
+            raise commands.CommandError("this server doesn't have notifications configured")
 
         keywords = self.return_keywords_dict(
             role_mention="role_mention",
             channel_name="channel_name",
             stream_url="https://localhost/",
             stream_title="stream_title",
-            stream_thumbnail_url="https://yt3.googleusercontent.com/"
-                                 "ZQIGQ0-2Iiwh6J-qCkBoxU5EJiQ9Nh1ZMF"
-                                 "bu0m62mJLZc-xdOfTHy1rtxdFDYUk7o_ON"
-                                 "HjcGmDM=s160-c-k-c0x00ffffff-no-rj",
+            stream_thumbnail_url="https://static-cdn.jtvnw.net/previews-ttv/live_user_the_almighty_cube-640x360.jpg",
             stream_language="stream_language",
             stream_start_date="stream_start_date",
             stream_game_name="stream_game_name",
@@ -174,7 +178,7 @@ class TwitchNotifsModule(commands.Cog):
 
         await make_announcement(
             ctx.channel,
-            self.guild_config[0]["format"],
+            guild_config["format"],
             keywords=keywords,
             publish=False)
 
