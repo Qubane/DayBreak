@@ -183,7 +183,14 @@ class YouTubeNotifsModule(commands.Cog):
         Executes python code
         """
 
-        yt_video = (await Fetcher.fetch_videos(self.guild_config[0]["channels"][0], 1))[0]
+        # test current guild config
+        for guild_config in self.guild_config:
+            if guild_config["guild_id"] == ctx.guild.id:
+                break
+        else:
+            raise commands.CommandError("this server doesn't have notifications configured")
+
+        yt_video = (await Fetcher.fetch_videos(guild_config["channels"][0], 1))[0]
 
         keywords = self.return_keywords_dict(
             role_mention=f"<@&{self.guild_config[0]['video_role_id']}>",
@@ -199,7 +206,7 @@ class YouTubeNotifsModule(commands.Cog):
 
         await make_announcement(
             ctx.channel,
-            self.guild_config[0]["format"],
+            guild_config["format"],
             keywords=keywords,
             publish=False)
 
