@@ -69,31 +69,38 @@ class MathUtilsModule(commands.Cog):
         else:
             await interaction.response.send_message(file=discord.File(img, filename="result.png"))
 
+    @staticmethod
+    def make_symbols(expression: str, unknowns: str) -> tuple[sympy.Expr, list[sympy.Symbol] | None]:
+        """
+        Makes symbols
+        :param expression: string function
+        :param unknowns: string of unknowns
+        :return: tuple of expression and list of symbols
+        """
+
+        eq = sympy.parsing.sympy_parser.parse_expr(expression, evaluate=False)
+        if unknowns:
+            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
+        else:
+            symbols = None
+        return eq, symbols
+
     @app_commands.command(name="solve", description="solves equation")
     @app_commands.describe(
-        equation="an equation",
+        expression="an equation",
         unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
     async def solve_equation(
             self,
             interaction: discord.Interaction,
-            equation: str,
+            expression: str,
             unknowns: str = ''
     ) -> None:
         """
         Solves a given equation
         """
 
-        if unknowns:
-            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
-        else:
-            symbols = None
-
         try:
-            eq: sympy.Expr = sympy.parsing.sympy_parser.parse_expr(equation, evaluate=False)
-        except sympy.parsing.sympy_parser.TokenError as e:
-            raise app_commands.AppCommandError(e.__str__())
-
-        try:
+            eq, symbols = self.make_symbols(expression, unknowns)
             solutions = sympy.solvers.solvers.solve(eq, symbols=symbols)
         except Exception as e:
             raise app_commands.AppCommandError(e.__str__())
@@ -114,41 +121,31 @@ class MathUtilsModule(commands.Cog):
 
     @app_commands.command(name="diff", description="finds derivative of a given function")
     @app_commands.describe(
-        equation="a function",
+        expression="a function",
         unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
     async def find_derivative_cmd(
             self,
             interaction: discord.Interaction,
-            equation: str,
+            expression: str,
             unknowns: str = ''
     ) -> None:
         """
         Finds a derivative of a given function
         """
 
-        if unknowns:
-            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
-        else:
-            symbols = None
-
     @app_commands.command(name="int", description="finds integral of a given function")
     @app_commands.describe(
-        equation="an equation",
+        expression="an equation",
         unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
     async def find_integral_cmd(
             self,
             interaction: discord.Interaction,
-            equation: str,
+            expression: str,
             unknowns: str = ''
     ) -> None:
         """
         Finds an integral of a given function
         """
-
-        if unknowns:
-            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
-        else:
-            symbols = None
 
 
 async def setup(client: commands.Bot) -> None:
