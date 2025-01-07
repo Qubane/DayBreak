@@ -146,7 +146,7 @@ class MathUtilsModule(commands.Cog):
             eq, symbols = self.make_symbols(expression, variables)
             solution = await asyncio.wait_for(
                 coro(eq, symbols=symbols),
-                timeout=10)
+                timeout=self.calculation_timeout)
         except Exception as e:
             raise app_commands.AppCommandError(e.__str__())
 
@@ -181,11 +181,11 @@ class MathUtilsModule(commands.Cog):
             if lower_bound == '-oo' and upper_bound == 'oo':
                 solution = await asyncio.wait_for(
                     coro(eq, (sympy.Symbol(variable))),
-                    timeout=10)
+                    timeout=self.calculation_timeout)
             else:
                 solution = await asyncio.wait_for(
                     coro(eq, (sympy.Symbol(variable), lower_bound, upper_bound)),
-                    timeout=10)
+                    timeout=self.calculation_timeout)
         except asyncio.TimeoutError:
             raise app_commands.AppCommandError("Calculation time exceeded")
         except Exception as e:
