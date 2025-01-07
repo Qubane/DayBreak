@@ -123,12 +123,12 @@ class MathUtilsModule(commands.Cog):
     @app_commands.command(name="diff", description="finds derivative of a given function")
     @app_commands.describe(
         expression="a function",
-        unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
+        unknowns="list of variables [for multiple use ';', 'x;y;z']")
     async def find_derivative_cmd(
             self,
             interaction: discord.Interaction,
             expression: str,
-            unknowns: str = ''
+            variables: str = ''
     ) -> None:
         """
         Finds a derivative of a given function
@@ -136,7 +136,7 @@ class MathUtilsModule(commands.Cog):
 
         await interaction.response.defer(thinking=True)
         try:
-            eq, symbols = self.make_symbols(expression, unknowns)
+            eq, symbols = self.make_symbols(expression, variables)
             solution = sympy.diff(eq, symbols=symbols)
         except Exception as e:
             raise app_commands.AppCommandError(e.__str__())
@@ -147,12 +147,12 @@ class MathUtilsModule(commands.Cog):
     @app_commands.command(name="int", description="finds integral of a given function")
     @app_commands.describe(
         expression="an equation",
-        unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
+        unknown="list of unknown variables [for multiple use ';', 'x;y;z']")
     async def find_integral_cmd(
             self,
             interaction: discord.Interaction,
             expression: str,
-            unknowns: str = ''
+            unknown: str = ''
     ) -> None:
         """
         Finds an integral of a given function
