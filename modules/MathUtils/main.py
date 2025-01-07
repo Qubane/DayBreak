@@ -83,6 +83,35 @@ class MathUtilsModule(commands.Cog):
         Solves a given equation
         """
 
+        if unknowns:
+            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
+        else:
+            symbols = None
+
+        try:
+            eq: sympy.Expr = sympy.parsing.sympy_parser.parse_expr(equation, evaluate=False)
+        except sympy.parsing.sympy_parser.TokenError as e:
+            raise app_commands.AppCommandError(e.__str__())
+
+        try:
+            solutions = sympy.solvers.solvers.solve(eq, symbols=symbols)
+        except Exception as e:
+            raise app_commands.AppCommandError(e.__str__())
+
+        msg = f"```\nYou entered:\n{sympy.pretty(eq)}\n\nSolutions:\n"
+        for solution in solutions:
+            if isinstance(solution, dict):
+                sol = list(solution.items())
+                msg += f"{sol[0]} = {sol[1]}"
+            elif isinstance(solution, sympy.Expr):
+                msg += sympy.pretty(solution)
+            else:
+                msg += str(solution)
+            msg += "\n"
+        msg += "```"
+
+        await interaction.response.send_message(msg)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(MathUtilsModule(client))
