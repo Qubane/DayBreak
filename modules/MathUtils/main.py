@@ -147,16 +147,16 @@ class MathUtilsModule(commands.Cog):
     @app_commands.command(name="int", description="finds integral of a given function")
     @app_commands.describe(
         expression="an equation",
-        variable="integration variable",
-        lower_bound="lower integration bound",
-        upper_bound="upper integration bound")
+        variable="integration variable (default 'x')",
+        lower_bound="lower integration bound (default '-inf')",
+        upper_bound="upper integration bound (default 'inf')")
     async def find_integral_cmd(
             self,
             interaction: discord.Interaction,
             expression: str,
-            variable: str = '',
-            lower_bound: float = float("-inf"),
-            upper_bound: float = float("inf")
+            variable: str = 'x',
+            lower_bound: str = '-oo',
+            upper_bound: str = 'oo'
     ) -> None:
         """
         Finds an integral of a given function
@@ -166,7 +166,14 @@ class MathUtilsModule(commands.Cog):
         try:
             eq = sympy.parsing.sympy_parser.parse_expr(expression, evaluate=False)
 
-            solution = sympy.integrate(eq, (sympy.Symbol(variable), lower_bound, upper_bound))
+            if lower_bound == '-oo' and upper_bound == 'oo':
+                solution = sympy.integrate(eq, (sympy.Symbol(variable)))
+            else:
+                solution = sympy.integrate(
+                    eq, (
+                        sympy.Symbol(variable),
+                        lower_bound,
+                        upper_bound))
         except Exception as e:
             raise app_commands.AppCommandError(e.__str__())
 
