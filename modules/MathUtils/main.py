@@ -112,6 +112,44 @@ class MathUtilsModule(commands.Cog):
 
         await interaction.response.send_message(msg)
 
+    @app_commands.command(name="diff", description="finds derivative of a given function")
+    @app_commands.describe(
+        equation="a function",
+        unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
+    async def find_derivative_cmd(
+            self,
+            interaction: discord.Interaction,
+            equation: str,
+            unknowns: str = ''
+    ) -> None:
+        """
+        Finds a derivative of a given function
+        """
+
+        if unknowns:
+            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
+        else:
+            symbols = None
+
+    @app_commands.command(name="int", description="finds integral of a given function")
+    @app_commands.describe(
+        equation="an equation",
+        unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
+    async def find_integral_cmd(
+            self,
+            interaction: discord.Interaction,
+            equation: str,
+            unknowns: str = ''
+    ) -> None:
+        """
+        Finds an integral of a given function
+        """
+
+        if unknowns:
+            symbols = [sympy.Symbol(x) for x in unknowns.split(";")]
+        else:
+            symbols = None
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(MathUtilsModule(client))
