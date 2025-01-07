@@ -66,7 +66,7 @@ class MathUtilsModule(commands.Cog):
             error = exc.__str__()
             error = error[error.find("! ")+2:]
             error = error[:error.find("\\r")]
-            await interaction.followup.send(error, ephemeral=True)
+            await interaction.followup.send(error)
         else:
             await interaction.followup.send(file=discord.File(img, filename="result.png"))
 
