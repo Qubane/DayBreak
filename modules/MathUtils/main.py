@@ -134,6 +134,16 @@ class MathUtilsModule(commands.Cog):
         Finds a derivative of a given function
         """
 
+        await interaction.response.defer(thinking=True)
+        try:
+            eq, symbols = self.make_symbols(expression, unknowns)
+            solution = sympy.diff(eq, symbols=symbols)
+        except Exception as e:
+            raise app_commands.AppCommandError(e.__str__())
+
+        img = self.render_latex_formula(sympy.latex(solution))
+        await interaction.followup.send(file=discord.File(img, filename="result.png"))
+
     @app_commands.command(name="int", description="finds integral of a given function")
     @app_commands.describe(
         expression="an equation",
