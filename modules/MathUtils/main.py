@@ -73,7 +73,7 @@ class MathUtilsModule(commands.Cog):
     @app_commands.describe(
         equation="an equation",
         unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
-    async def solve_latex_equation(
+    async def solve_equation(
             self,
             interaction: discord.Interaction,
             equation: str,
