@@ -51,7 +51,10 @@ class ExceptionHandlerModule(commands.Cog):
             embed.description = "Unhandled exception had occurred, please contact @qubane"
 
         if isinstance(interaction, discord.Interaction):
-            await interaction.response.send_message(embed=embed, ephemeral=True)
+            if interaction.response.type is discord.InteractionResponseType.deferred_channel_message:
+                await interaction.followup.send(embed=embed)
+            else:
+                await interaction.response.send_message(embed=embed, ephemeral=True)
         else:
             await interaction.send(embed=embed, reference=interaction.message)
 
