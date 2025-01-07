@@ -5,6 +5,7 @@ For example, it adds LaTeX formula rendering
 
 
 import sympy
+import asyncio
 import discord
 import logging
 from io import BytesIO
@@ -162,18 +163,23 @@ class MathUtilsModule(commands.Cog):
         Finds an integral of a given function
         """
 
+        async def coro(*args, **kwargs):
+            return sympy.integrate(*args, **kwargs)
+
         await interaction.response.defer(thinking=True)
         try:
             eq = sympy.parsing.sympy_parser.parse_expr(expression, evaluate=False)
 
             if lower_bound == '-oo' and upper_bound == 'oo':
-                solution = sympy.integrate(eq, (sympy.Symbol(variable)))
+                solution = await asyncio.wait_for(
+                    coro(eq, (sympy.Symbol(variable))),
+                    timeout=10)
             else:
-                solution = sympy.integrate(
-                    eq, (
-                        sympy.Symbol(variable),
-                        lower_bound,
-                        upper_bound))
+                solution = await asyncio.wait_for(
+                    coro(eq, (sympy.Symbol(variable), lower_bound, upper_bound)),
+                    timeout=10)
+        except asyncio.TimeoutError:
+            raise app_commands.AppCommandError("Calculation time exceeded")
         except Exception as e:
             raise app_commands.AppCommandError(e.__str__())
 
