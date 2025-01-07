@@ -69,6 +69,20 @@ class MathUtilsModule(commands.Cog):
         else:
             await interaction.response.send_message(file=discord.File(img, filename="result.png"))
 
+    @app_commands.command(name="solve", description="solves equation")
+    @app_commands.describe(
+        equation="an equation",
+        unknowns="list of unknown variables [for multiple use ';', 'x;y;z']")
+    async def solve_latex_equation(
+            self,
+            interaction: discord.Interaction,
+            equation: str,
+            unknowns: str = ''
+    ) -> None:
+        """
+        Solves a given equation
+        """
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(MathUtilsModule(client))
