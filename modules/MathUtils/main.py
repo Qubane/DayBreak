@@ -59,15 +59,16 @@ class MathUtilsModule(commands.Cog):
         Command that adds LaTeX rendering
         """
 
+        await interaction.response.defer(thinking=True)
         try:
             img = self.render_latex_formula(text)
         except RuntimeError as exc:
             error = exc.__str__()
             error = error[error.find("! ")+2:]
             error = error[:error.find("\\r")]
-            await interaction.response.send_message(error, ephemeral=True)
+            await interaction.followup.send(error, ephemeral=True)
         else:
-            await interaction.response.send_message(file=discord.File(img, filename="result.png"))
+            await interaction.followup.send(file=discord.File(img, filename="result.png"))
 
     @staticmethod
     def make_symbols(expression: str, unknowns: str) -> tuple[sympy.Expr, list[sympy.Symbol] | None]:
