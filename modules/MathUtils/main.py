@@ -26,6 +26,9 @@ class MathUtilsModule(commands.Cog):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
+        # tiny config
+        self.calculation_timeout: float = 10
+
     @staticmethod
     def render_latex_formula(formula: str) -> BytesIO:
         """
@@ -135,10 +138,15 @@ class MathUtilsModule(commands.Cog):
         Finds a derivative of a given function
         """
 
+        async def coro(*args, **kwargs):
+            return sympy.diff(*args, **kwargs)
+
         await interaction.response.defer(thinking=True)
         try:
             eq, symbols = self.make_symbols(expression, variables)
-            solution = sympy.diff(eq, symbols=symbols)
+            solution = await asyncio.wait_for(
+                coro(eq, symbols=symbols),
+                timeout=10)
         except Exception as e:
             raise app_commands.AppCommandError(e.__str__())
 
