@@ -123,7 +123,7 @@ class MathUtilsModule(commands.Cog):
     @app_commands.command(name="diff", description="finds derivative of a given function")
     @app_commands.describe(
         expression="a function",
-        unknowns="list of variables [for multiple use ';', 'x;y;z']")
+        variables="list of variables [for multiple use ';', 'x;y;z']")
     async def find_derivative_cmd(
             self,
             interaction: discord.Interaction,
@@ -147,16 +147,31 @@ class MathUtilsModule(commands.Cog):
     @app_commands.command(name="int", description="finds integral of a given function")
     @app_commands.describe(
         expression="an equation",
-        unknown="list of unknown variables [for multiple use ';', 'x;y;z']")
+        variable="integration variable",
+        lower_bound="lower integration bound",
+        upper_bound="upper integration bound")
     async def find_integral_cmd(
             self,
             interaction: discord.Interaction,
             expression: str,
-            unknown: str = ''
+            variable: str = '',
+            lower_bound: float = float("-inf"),
+            upper_bound: float = float("inf")
     ) -> None:
         """
         Finds an integral of a given function
         """
+
+        await interaction.response.defer(thinking=True)
+        try:
+            eq = sympy.parsing.sympy_parser.parse_expr(expression, evaluate=False)
+
+            solution = sympy.integrate(eq, (sympy.Symbol(variable), lower_bound, upper_bound))
+        except Exception as e:
+            raise app_commands.AppCommandError(e.__str__())
+
+        img = self.render_latex_formula(sympy.latex(solution))
+        await interaction.followup.send(file=discord.File(img, filename="result.png"))
 
 
 async def setup(client: commands.Bot) -> None:
