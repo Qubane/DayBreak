@@ -201,7 +201,8 @@ class YouTubeNotifsModule(commands.Cog):
             video_url=yt_video.url,
             video_title=yt_video.title,
             video_description=yt_video.description,
-            video_thumbnail_url=yt_video.thumbnails.high.url,
+            video_thumbnail_url=
+            yt_video.thumbnails.maxres.url if yt_video.thumbnails.maxres else yt_video.thumbnails.high.url,
             video_publish_date=yt_video.published_at.__str__())
 
         await make_announcement(
