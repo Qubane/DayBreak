@@ -1,2 +1,2 @@
 # daybreak
-Discord bot based on UltraQbik/MightyOmegaBot project
+Discord bot based on Qubane/MightyOmegaBot project
