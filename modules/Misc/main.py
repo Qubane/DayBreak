@@ -2,7 +2,7 @@
 This is the module, that adds miscellaneous commands and features to the bot.
 These commands are not integral parts of the bot, and can be ignored for the most part.
 
-Code is taken from 'UltraQbik/MightyOmegaBot' repo path 'client_cogs/RoflCommands/main.py'
+Code is taken from 'Qubane/MightyOmegaBot' repo path 'client_cogs/RoflCommands/main.py'
 """
 
 
