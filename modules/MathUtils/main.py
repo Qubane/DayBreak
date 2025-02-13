@@ -63,7 +63,7 @@ class MathUtilsModule(commands.Cog):
         Command that adds LaTeX rendering
         """
 
-        await interaction.response.defer(ephemeral=True, thinking=True)
+        await interaction.response.defer(thinking=True)
         try:
             img = self.render_latex_formula(text)
         except RuntimeError as exc:
