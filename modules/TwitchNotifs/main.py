@@ -33,9 +33,12 @@ class TwitchNotifsModule(commands.Cog):
         self.channels_live: dict[str, Stream | None] = dict()
         self.channels_init: bool = False
 
+        # load configs
         self.load_configs()
-        self.check.start()
-        self.update_key.start()
+
+        # start routines
+        self.check_routine.start()
+        self.update_key_routine.start()
 
     def load_configs(self) -> None:
         """
@@ -47,7 +50,7 @@ class TwitchNotifsModule(commands.Cog):
             self.module_config = config["config"]
             self.guild_config = config["guild_config"]
 
-        self.check.change_interval(seconds=self.module_config["update_interval"])
+        self.check_routine.change_interval(seconds=self.module_config["update_interval"])
 
     async def fetch_streams(self) -> dict[str, Stream | None]:
         """
@@ -74,7 +77,7 @@ class TwitchNotifsModule(commands.Cog):
         return {key: val for key, val in zip(channels, response)}
 
     @tasks.loop(hours=24)
-    async def update_key(self) -> None:
+    async def update_key_routine(self) -> None:
         """
         Updates a key every 24 hours
         """
@@ -82,7 +85,7 @@ class TwitchNotifsModule(commands.Cog):
         await Fetcher.fetch_access_token()
 
     @tasks.loop(minutes=1)
-    async def check(self) -> None:
+    async def check_routine(self) -> None:
         """
         Check every 'update_interval' for a new stream
         """
