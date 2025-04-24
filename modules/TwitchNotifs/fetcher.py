@@ -82,7 +82,7 @@ class Fetcher:
     _token_type: str | None = None
 
     @classmethod
-    async def _init_access_token(cls) -> None:
+    async def fetch_access_token(cls) -> None:
         """
         Fetches twitch API access token
         """
@@ -110,7 +110,7 @@ class Fetcher:
         """
 
         if cls._access_token is None:
-            await cls._init_access_token()
+            await cls.fetch_access_token()
 
         _headers = {
             "Authorization": f"{cls._token_type} {cls._access_token}",
