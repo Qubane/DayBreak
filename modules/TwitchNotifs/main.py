@@ -35,6 +35,7 @@ class TwitchNotifsModule(commands.Cog):
 
         self.load_configs()
         self.check.start()
+        self.update_key.start()
 
     def load_configs(self) -> None:
         """
@@ -71,6 +72,14 @@ class TwitchNotifsModule(commands.Cog):
             *[check_coro(channel) for channel in channels])
 
         return {key: val for key, val in zip(channels, response)}
+
+    @tasks.loop(hours=24)
+    async def update_key(self) -> None:
+        """
+        Updates a key every 24 hours
+        """
+
+        await Fetcher.fetch_access_token()
 
     @tasks.loop(minutes=1)
     async def check(self) -> None:
