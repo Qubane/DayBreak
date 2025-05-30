@@ -1,6 +1,8 @@
 """
 This is a module that checks if some Twitch streamer is live.
 """
+
+
 import json
 import asyncio
 import logging
@@ -13,7 +15,8 @@ from modules.TwitchNotifs.fetcher import Fetcher, Stream
 
 class TwitchNotifsModule(commands.Cog):
     """
-    This is an example module
+    This is a module, that notifies configured guilds when someone starts a stream.
+    Uses a cool embed for that too
     """
 
     def __init__(self, client: commands.Bot) -> None:
