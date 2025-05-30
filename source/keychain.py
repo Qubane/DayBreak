@@ -69,6 +69,9 @@ class KeyChain:
                 # map the environment variable
                 cls._mapping[key] = env
 
+        # log info
+        LOGGER.info("KeyChain updated")
+
     @staticmethod
     def _return_file_keys(file: TextIO) -> list[str]:
         """
