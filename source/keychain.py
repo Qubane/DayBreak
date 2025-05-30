@@ -3,6 +3,11 @@ Manages API keys
 """
 
 
+import os
+from io import StringIO
+from source.settings import CONFIGS_DIRECTORY
+
+
 class KeyChain:
     """
     Manages API Keys
@@ -32,4 +37,21 @@ class KeyChain:
     def _update_keychain(cls):
         """
         Updates KeyChain class
+        """
+
+        # go through files
+        for file in os.listdir(CONFIGS_DIRECTORY):
+            # skip all non-keys files
+            if os.path.splitext(file)[1] != ".keys":
+                continue
+
+            # make filepath
+            filepath = f"{CONFIGS_DIRECTORY}/{file}"
+
+    @staticmethod
+    def _return_file_keys(file: StringIO) -> list[str]:
+        """
+        Returns keys from file
+        :param file: file handle
+        :return: list of string keys
         """
