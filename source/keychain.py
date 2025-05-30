@@ -84,3 +84,7 @@ class KeyChain:
 
         # return keys
         return keys
+
+
+# update KeyChain
+KeyChain.update_keychain()
