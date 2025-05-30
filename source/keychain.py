@@ -17,26 +17,6 @@ class KeyChain:
     Manages API Keys
     """
 
-    # keychain mapping
-    _mapping: dict[str, str] = dict()
-
-    @classmethod
-    def key(cls, name: str) -> str:
-        """
-        Returns API key.
-        :param name: API key name
-        :return: API key string
-        :raises: KeyError when key is not found
-        """
-
-        # if name is missing, try to update the keychain
-        if name not in cls._mapping:
-            cls.update_keychain()
-
-        # return the API key.
-        # raise an error if the key cannot be fetched
-        return cls._mapping[name]
-
     @classmethod
     def update_keychain(cls):
         """
@@ -66,8 +46,8 @@ class KeyChain:
                     LOGGER.error(f"Error when fetching the API environment variable: {key}")
                     continue
 
-                # map the environment variable
-                cls._mapping[key] = env
+                # set the attribute
+                setattr(cls, key, env)
 
         # log info
         LOGGER.info("KeyChain updated")
