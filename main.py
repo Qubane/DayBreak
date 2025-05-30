@@ -8,6 +8,7 @@ import discord
 import logging
 import source.settings
 from discord.ext import commands
+from source.keychain import KeyChain
 from source.settings import MODULES_DIRECTORY
 
 
@@ -43,7 +44,7 @@ def main():
               "Please report any issues to 'https://github.com/UltraQbik/daybreak/issues'\n\n")
 
     client = Client()
-    client.run(source.settings.DISCORD_API_KEY, root_logger=True, log_handler=None)
+    client.run(KeyChain.key("DISCORD_API_KEY"), root_logger=True, log_handler=None)
 
 
 if __name__ == '__main__':

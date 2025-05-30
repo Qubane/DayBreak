@@ -9,7 +9,7 @@ import aiohttp
 from typing import Any
 from datetime import datetime
 from dataclasses import dataclass
-from source.settings import TWITCH_API_ID, TWITCH_API_KEY
+from source.keychain import KeyChain
 
 
 @dataclass(frozen=True)
@@ -90,8 +90,8 @@ class Fetcher:
         async with aiohttp.ClientSession(headers={"Content-Type": "application/x-www-form-urlencoded"}) as session:
             async with session.post(
                     f"https://id.twitch.tv/oauth2/token?"
-                    f"client_id={TWITCH_API_ID}&"
-                    f"client_secret={TWITCH_API_KEY}&"
+                    f"client_id={KeyChain.key('TWITCH_API_ID')}&"
+                    f"client_secret={KeyChain.key('TWITCH_API_KEY')}&"
                     f"grant_type=client_credentials") as resp:
                 response = await resp.json()
         if resp.status != 200:
@@ -114,7 +114,7 @@ class Fetcher:
 
         _headers = {
             "Authorization": f"{cls._token_type} {cls._access_token}",
-            "Client-Id": TWITCH_API_ID}
+            "Client-Id": KeyChain.key("TWITCH_API_ID")}
         if headers is not None:
             _headers.update(headers)
 

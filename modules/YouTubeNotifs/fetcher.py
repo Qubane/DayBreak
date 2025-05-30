@@ -8,7 +8,7 @@ import aiohttp
 from typing import Any
 from datetime import datetime
 from dataclasses import dataclass
-from source.settings import YOUTUBE_API_KEY
+from source.keychain import KeyChain
 
 
 @dataclass(frozen=True)
@@ -254,7 +254,7 @@ class Fetcher:
                 f"https://www.googleapis.com/youtube/v3/channels?"
                 f"part=snippet&"
                 f"id={channel_id}&"
-                f"key={YOUTUBE_API_KEY}")
+                f"key={KeyChain.key('YOUTUBE_API_KEY')}")
             cls.channels[channel_id] = await Channel.from_response(response["items"][0])
 
         return cls.channels[channel_id]
@@ -297,7 +297,7 @@ class Fetcher:
                 f"https://www.googleapis.com/youtube/v3/channels?"
                 f"part=contentDetails&"
                 f"id={channel_id}&"
-                f"key={YOUTUBE_API_KEY}")
+                f"key={KeyChain.key('YOUTUBE_API_KEY')}")
             uploads_id = content_details["items"][0]["contentDetails"]["relatedPlaylists"]["uploads"]
             cls.channels_playlists[channel_id] = uploads_id
         else:
@@ -362,7 +362,7 @@ class Fetcher:
             f"part=snippet%2CcontentDetails&"
             f"maxResults={amount}&"
             f"playlistId={uploads_id}&"
-            f"key={YOUTUBE_API_KEY}")
+            f"key={KeyChain.key('YOUTUBE_API_KEY')}")
 
         return await asyncio.gather(*[Media.from_response(x["snippet"]) for x in playlist["items"]])
 
