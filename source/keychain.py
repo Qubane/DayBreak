@@ -31,14 +31,14 @@ class KeyChain:
 
         # if name is missing, try to update the keychain
         if name not in cls._mapping:
-            cls._update_keychain()
+            cls.update_keychain()
 
         # return the API key.
         # raise an error if the key cannot be fetched
         return cls._mapping[name]
 
     @classmethod
-    def _update_keychain(cls):
+    def update_keychain(cls):
         """
         Updates KeyChain class
         """
