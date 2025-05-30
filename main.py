@@ -44,7 +44,7 @@ def main():
               "Please report any issues to 'https://github.com/UltraQbik/daybreak/issues'\n\n")
 
     client = Client()
-    client.run(KeyChain.key("DISCORD_API_KEY"), root_logger=True, log_handler=None)
+    client.run(KeyChain.DISCORD_API_KEY, root_logger=True, log_handler=None)
 
 
 if __name__ == '__main__':
