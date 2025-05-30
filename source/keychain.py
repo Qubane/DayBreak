@@ -55,3 +55,11 @@ class KeyChain:
         :param file: file handle
         :return: list of string keys
         """
+
+        # read keys
+        keys = []
+        for key in file.readlines():
+            keys.append(key.strip())  # append stripped key
+
+        # return keys
+        return keys
