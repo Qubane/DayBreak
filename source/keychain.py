@@ -18,7 +18,7 @@ class KeyChain:
     """
 
     # keychain mapping
-    _mapping: dict[str, str]
+    _mapping: dict[str, str] = dict()
 
     @classmethod
     def key(cls, name: str) -> str:
