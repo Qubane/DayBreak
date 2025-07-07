@@ -41,7 +41,7 @@ def main():
     # Useless message at the start of the bot
     if __import__("os").name != "nt":
         print("NOTE: You are running on non-windows machine, some of the things may be buggy\n"
-              "Please report any issues to 'https://github.com/UltraQbik/daybreak/issues'\n\n")
+              "Please report any issues to 'https://github.com/Qubane/DayBreak/issues'\n\n")
 
     client = Client()
     client.run(KeyChain.DISCORD_API_KEY, root_logger=True, log_handler=None)
