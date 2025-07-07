@@ -9,7 +9,7 @@ It uses AI model to perform sentiment analysis on message, and update the leader
 import discord
 import logging
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 
 class SentimentsModule(commands.Cog):
@@ -30,6 +30,15 @@ class SentimentsModule(commands.Cog):
         # processing queue
         self.message_processing_queue: list[commands.Context] = []
 
+        # start task
+        self.process_queued.start()
+
+    @tasks.loop(minutes=5)
+    async def process_queued(self) -> None:
+        """
+        Perform sentiment analysis on queued messages
+        """
+
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
         self,
@@ -44,7 +53,7 @@ class SentimentsModule(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, ctx: commands.Context) -> None:
         """
-        Perform sentiment analysis on sent message
+        Append message for processing
         """
 
         self.message_processing_queue.append(ctx)
