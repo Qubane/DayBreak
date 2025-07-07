@@ -38,6 +38,12 @@ class SentimentsModule(commands.Cog):
 
         pass
 
+    @commands.Cog.listener()
+    async def on_message(self, ctx: commands.Context) -> None:
+        """
+        Perform sentiment analysis on sent message
+        """
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(SentimentsModule(client))
