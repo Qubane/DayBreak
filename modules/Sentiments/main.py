@@ -27,6 +27,9 @@ class SentimentsModule(commands.Cog):
         # here's an example path to the database
         self.db_path = "var/sentiments_leaderboard.json"
 
+        # processing queue
+        self.message_processing_queue: list[commands.Context] = []
+
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
         self,
@@ -43,6 +46,8 @@ class SentimentsModule(commands.Cog):
         """
         Perform sentiment analysis on sent message
         """
+
+        self.message_processing_queue.append(ctx)
 
 
 async def setup(client: commands.Bot) -> None:
