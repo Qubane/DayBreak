@@ -48,7 +48,7 @@ class SentimentsModule(commands.Cog):
         self.process_queued.start()
 
     @contextmanager
-    def use_database(self) -> dict[int, dict]:
+    def use_database(self):
         """
         User database context manager
         """
@@ -109,8 +109,9 @@ class SentimentsModule(commands.Cog):
         results = self.pipeline(messages)
 
         # update database
-        for author_id, result in zip(authors, results):
-            ...
+        with self.use_database as database:
+            for author_id, result in zip(authors, results):
+                ...
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
