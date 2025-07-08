@@ -5,13 +5,14 @@ Depending on how positive the messages are sent by user, they will be placed hig
 It uses AI model to perform sentiment analysis on message, and update the leaderboard accordingly.
 """
 
-
+import os
 import json
 import discord
 import logging
 import transformers.pipelines
 from discord import app_commands
 from transformers import pipeline
+from contextlib import contextmanager
 from discord.ext import commands, tasks
 
 
@@ -36,6 +37,9 @@ class SentimentsModule(commands.Cog):
 
         # here's an example path to the database
         self.db_path = "var/sentiments_leaderboard.json"
+        if not os.path.isfile(self.db_path):  # create file if missing
+            with open(self.db_path, "w", encoding="utf-8"):
+                pass
 
         # processing queue
         self.message_processing_queue: list[discord.Message] = []
@@ -43,28 +47,23 @@ class SentimentsModule(commands.Cog):
         # start task
         self.process_queued.start()
 
-    def update_database_user(self, user: int, **kwargs) -> None:
+    @contextmanager
+    def use_database(self) -> dict[int, dict]:
         """
-        Updates users data
-        :param user: user id
-        :param kwargs: key arguments. lambda functions that affect the given key
+        User database context manager
         """
 
         # the bot is small enough for json "databases" to be ok
         with open(self.db_path, "r", encoding="utf-8") as file:
             database: dict[int, dict] = json.load(file)
 
-        # add user if missing
-        if user not in database:
-            database[user] = dict()
-
-        # update the database user
-        for key, func in kwargs.items():
-            database[user][key] = func(database[user][key])
-
-        # store new database
-        with open(self.db_path, "w", encoding="utf-8") as file:
-            json.dump(database, file)
+        # manage context
+        try:
+            yield database
+        finally:
+            # store new database
+            with open(self.db_path, "w", encoding="utf-8") as file:
+                json.dump(database, file)
 
     @tasks.loop(seconds=30)
     async def process_queued(self) -> None:
@@ -109,10 +108,14 @@ class SentimentsModule(commands.Cog):
         # process messages
         results = self.pipeline(messages)
 
+        # update database
+        for author_id, result in zip(authors, results):
+            ...
+
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
-        self,
-        interaction: discord.Interaction
+            self,
+            interaction: discord.Interaction
     ) -> None:
         """
         Implementation for positivity leaderboard
