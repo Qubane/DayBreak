@@ -177,10 +177,10 @@ class SentimentsModule(commands.Cog):
                 users.append((user_id, user_dict["p_val"] / user_dict["msg_n"]))
 
         # sort users
-        users.sort(key=lambda x: x[1])
+        users.sort(key=lambda x: x[1], reverse=True)
 
         # make embed
-        embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.gold())
+        embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
 
         # add fields. Top 5 users
         for user in users[:5]:
