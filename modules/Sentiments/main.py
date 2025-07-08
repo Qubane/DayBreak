@@ -9,6 +9,7 @@ import os
 import json
 import discord
 import logging
+from typing import Callable
 import transformers.pipelines
 from discord import app_commands
 from transformers import pipeline
@@ -65,6 +66,24 @@ class SentimentsModule(commands.Cog):
             with open(self.db_path, "w", encoding="utf-8") as file:
                 json.dump(database, file)
 
+    @staticmethod
+    def update_user(user: int, database: dict[int, dict], **kwargs) -> None:
+        """
+        Update user from database
+        :param user: user id
+        :param database: database context
+        :param kwargs: keyword arguments. Uses lambdas to affect the user parameters, for 'set' use 'lambda x: const'
+        """
+
+        # if user is not present
+        if user not in database:
+            database[user] = dict()
+
+        # write data to user
+        for key, func in kwargs.items():
+            func: Callable
+            database[user][key] = func(database[user][key])
+
     @tasks.loop(seconds=30)
     async def process_queued(self) -> None:
         """
@@ -111,7 +130,7 @@ class SentimentsModule(commands.Cog):
         # update database
         with self.use_database as database:
             for author_id, result in zip(authors, results):
-                ...
+                database[author_id]
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
