@@ -42,6 +42,13 @@ class SentimentsModule(commands.Cog):
         # start task
         self.process_queued.start()
 
+    def update_database_user(self, user: int, **kwargs) -> None:
+        """
+        Updates users data
+        :param user: user id
+        :param kwargs: key arguments
+        """
+
     @tasks.loop(seconds=30)
     async def process_queued(self) -> None:
         """
