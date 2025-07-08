@@ -6,6 +6,7 @@ It uses AI model to perform sentiment analysis on message, and update the leader
 """
 
 
+import json
 import discord
 import logging
 import transformers.pipelines
@@ -46,8 +47,24 @@ class SentimentsModule(commands.Cog):
         """
         Updates users data
         :param user: user id
-        :param kwargs: key arguments
+        :param kwargs: key arguments. lambda functions that affect the given key
         """
+
+        # the bot is small enough for json "databases" to be ok
+        with open(self.db_path, "r", encoding="utf-8") as file:
+            database: dict[int, dict] = json.load(file)
+
+        # add user if missing
+        if user not in database:
+            database[user] = dict()
+
+        # update the database user
+        for key, func in kwargs.items():
+            database[user][key] = func(database[user][key])
+
+        # store new database
+        with open(self.db_path, "w", encoding="utf-8") as file:
+            json.dump(database, file)
 
     @tasks.loop(seconds=30)
     async def process_queued(self) -> None:
