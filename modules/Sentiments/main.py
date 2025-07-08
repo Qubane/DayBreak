@@ -55,8 +55,7 @@ class SentimentsModule(commands.Cog):
         self.pipeline: transformers.pipelines.Pipeline = pipeline(
             "text-classification",
             model="tabularisai/multilingual-sentiment-analysis",
-            truncation=True,
-            device="cuda")
+            truncation=True)
 
         # here's an example path to the database
         self.db_path = "var/sentiments_leaderboard.json"
