@@ -61,8 +61,8 @@ class SentimentsModule(commands.Cog):
         # here's an example path to the database
         self.db_path = "var/sentiments_leaderboard.json"
         if not os.path.isfile(self.db_path):  # create file if missing
-            with open(self.db_path, "w", encoding="utf-8"):
-                pass
+            with open(self.db_path, "w", encoding="utf-8") as f:
+                f.write("{}")
 
         # processing queue
         self.message_processing_queue: list[discord.Message] = []
@@ -78,7 +78,7 @@ class SentimentsModule(commands.Cog):
 
         # the bot is small enough for json "databases" to be ok
         with open(self.db_path, "r", encoding="utf-8") as file:
-            database: dict[int, dict] = json.load(file)
+            database: dict[str, dict] = json.load(file)
 
         # manage context
         try:
@@ -89,13 +89,16 @@ class SentimentsModule(commands.Cog):
                 json.dump(database, file)
 
     @staticmethod
-    def update_user(user: int, database: dict[int, dict], **kwargs) -> None:
+    def update_user(user: int | str, database: dict[str, dict], **kwargs) -> None:
         """
         Update user from database
         :param user: user id
         :param database: database context
         :param kwargs: keyword arguments. Uses lambdas to affect the user parameters, for 'set' use 'lambda x: const'
         """
+
+        # make sure id is a string
+        user = str(user)
 
         # if user is not present
         if user not in database:
@@ -104,9 +107,9 @@ class SentimentsModule(commands.Cog):
         # write data to user
         for key, func in kwargs.items():
             func: Callable
-            database[user][key] = func(database[user][key])
+            database[user][key] = func(database[user].get(key, 0.0))
 
-    @tasks.loop(seconds=30)
+    @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
@@ -147,15 +150,15 @@ class SentimentsModule(commands.Cog):
         self.message_processing_queue.clear()
 
         # process messages
-        results = self.pipeline(messages)
+        results = [cast_result_to_numeric(x["label"]) for x in self.pipeline(messages)]
 
         # update database
-        with self.use_database as database:
+        with self.use_database() as database:
             for author_id, result in zip(authors, results):
                 self.update_user(
                     author_id, database,
                     msg_n=lambda x: x + 1,  # add 1 to message number
-                    p_val=lambda x: x + result  #
+                    p_val=lambda x: x + result  # add result to p value (positivity value)
                 )
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
