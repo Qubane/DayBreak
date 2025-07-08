@@ -107,9 +107,9 @@ class SentimentsModule(commands.Cog):
         # write data to user
         for key, func in kwargs.items():
             func: Callable
-            database[user][key] = func(database[user].get(key, 0.0))
+            database[user][key] = func(database[user].get(key, 0))
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=15)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
@@ -150,7 +150,7 @@ class SentimentsModule(commands.Cog):
         self.message_processing_queue.clear()
 
         # process messages
-        results = [cast_result_to_numeric(x["label"]) for x in self.pipeline(messages)]
+        results = [cast_result_to_numeric(x["label"]) / 5 for x in self.pipeline(messages)]
 
         # update database
         with self.use_database() as database:
