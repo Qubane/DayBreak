@@ -108,7 +108,7 @@ class SentimentsModule(commands.Cog):
             func: Callable
             database[user][key] = func(database[user].get(key, 0))
 
-    @tasks.loop(seconds=15)
+    @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
