@@ -170,7 +170,27 @@ class SentimentsModule(commands.Cog):
         Implementation for positivity leaderboard
         """
 
-        pass
+        users = []
+        with self.use_database() as database:
+            for user_id, user_dict in database.items():
+                # count user
+                users.append((user_id, user_dict["p_val"] / user_dict["msg_n"]))
+
+        # sort users
+        users.sort(key=lambda x: x[1])
+
+        # make embed
+        embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.gold())
+
+        # add fields. Top 5 users
+        for user in users[:5]:
+            embed.add_field(
+                name=self.client.get_user(int(user[0])),
+                value=f"positivity score is {user[1] * 100:.0f}",
+                inline=False)
+
+        # display the embed
+        await interaction.response.send_message(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -178,6 +198,11 @@ class SentimentsModule(commands.Cog):
         Append message for processing
         """
 
+        # skip bot messages
+        if message.author.bot:
+            return
+
+        # add message to queue
         self.message_processing_queue.append(message)
 
 
