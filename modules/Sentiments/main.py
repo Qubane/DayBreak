@@ -8,7 +8,9 @@ It uses AI model to perform sentiment analysis on message, and update the leader
 
 import discord
 import logging
+import transformers.pipelines
 from discord import app_commands
+from transformers import pipeline
 from discord.ext import commands, tasks
 
 
@@ -24,20 +26,64 @@ class SentimentsModule(commands.Cog):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
+        # model
+        self.pipeline: transformers.pipelines.Pipeline = pipeline(
+            "text-classification",
+            model="tabularisai/multilingual-sentiment-analysis",
+            truncation=True,
+            device="cuda")
+
         # here's an example path to the database
         self.db_path = "var/sentiments_leaderboard.json"
 
         # processing queue
-        self.message_processing_queue: list[commands.Context] = []
+        self.message_processing_queue: list[discord.Message] = []
 
         # start task
         self.process_queued.start()
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=30)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
         """
+
+        # skip if there's nothing to process
+        if len(self.message_processing_queue) == 0:
+            return
+
+        # compile content together
+        author_id = self.message_processing_queue[0].author.id
+        author_message = ""
+        messages = []
+        authors = []
+        for message in self.message_processing_queue:
+            # if the author of the next message is the same
+            if author_id == message.author.id:
+                author_message += message.content + "\n"
+
+            # if someone else wrote the next message
+            else:
+                # append message to messages
+                messages.append(author_message)
+
+                # append the author to authors
+                authors.append(author_id)
+
+                # update the author
+                author_message = ""
+                author_id = message.author.id
+
+        # append left over message and author
+        if author_message:
+            messages.append(author_message)
+            authors.append(author_id)
+
+        # clear queue
+        self.message_processing_queue.clear()
+
+        # process messages
+        results = self.pipeline(messages)
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
@@ -51,12 +97,12 @@ class SentimentsModule(commands.Cog):
         pass
 
     @commands.Cog.listener()
-    async def on_message(self, ctx: commands.Context) -> None:
+    async def on_message(self, message: discord.Message) -> None:
         """
         Append message for processing
         """
 
-        self.message_processing_queue.append(ctx)
+        self.message_processing_queue.append(message)
 
 
 async def setup(client: commands.Bot) -> None:
