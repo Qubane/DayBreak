@@ -17,6 +17,28 @@ from contextlib import contextmanager
 from discord.ext import commands, tasks
 
 
+def cast_result_to_numeric(label: str) -> int:
+    """
+    Casts string label to numeric
+    :param label: result label
+    :return: int 1 - 5
+    """
+
+    match label:
+        case "Very Positive":
+            return 5
+        case "Positive":
+            return 4
+        case "Neutral":
+            return 3
+        case "Negative":
+            return 2
+        case "Very Negative":
+            return 1
+        case _:
+            raise ValueError(f"Unknown label '{label}'")
+
+
 class SentimentsModule(commands.Cog):
     """
     Sentiments module
@@ -130,7 +152,11 @@ class SentimentsModule(commands.Cog):
         # update database
         with self.use_database as database:
             for author_id, result in zip(authors, results):
-                database[author_id]
+                self.update_user(
+                    author_id, database,
+                    msg_n=lambda x: x + 1,  # add 1 to message number
+                    p_val=lambda x: x + result  #
+                )
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
