@@ -219,6 +219,15 @@ class SentimentsModule(commands.Cog):
         # display the embed
         await interaction.response.send_message(embed=embed)
 
+    @app_commands.command(name="posiself", description="Positivity of self")
+    async def posiself(
+            self,
+            interaction: discord.Interaction
+    ) -> None:
+        """
+        Implementation for positivity of self
+        """
+
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """
