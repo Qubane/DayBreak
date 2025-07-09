@@ -34,22 +34,29 @@ class ExceptionHandlerModule(commands.Cog):
         Global exception handler
         """
 
+        # embed
         embed = discord.Embed(color=discord.Color.red())
+
+        # expected error
+        # missing permissions
         if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             embed.title = error.__class__.__name__
             embed.description = "List of missing permissions"
             for permission in error.missing_permissions:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
-        elif isinstance(error, (app_commands.CommandInvokeError, commands.CommandInvokeError)):
-            raise error
+
+        # any kind of command error
         elif isinstance(error, (app_commands.AppCommandError, commands.CommandError)):
             embed.title = error.__class__.__name__
             embed.description = error.args[0]
+
+        # unexpected error
         else:
             self.logger.warning("An error had occurred while handling another error", exc_info=error)
             embed.title = "Unexpected error!"
             embed.description = "Unhandled exception had occurred, please contact @qubane"
 
+        # send response
         if isinstance(interaction, discord.Interaction):
             if interaction.response.type is discord.InteractionResponseType.deferred_channel_message:
                 await interaction.followup.send(embed=embed)
