@@ -264,6 +264,10 @@ class SentimentsModule(commands.Cog):
             return
 
         # number postfix
+        # Outputs `10st` (tenst), `20nd` (twentynd), `30rd` (thirtyrd)
+        #
+        # "it's not a bug, it's *character*" - @arminius97 (discord)
+        #
         if str(idx)[0] == "1":
             postfix = "st"
         elif str(idx)[0] == "2":
