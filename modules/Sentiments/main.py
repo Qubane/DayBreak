@@ -280,7 +280,7 @@ class SentimentsModule(commands.Cog):
         # make embed
         embed = discord.Embed(title=f"Posiself of {interaction.user.display_name}", color=discord.Color.green())
         embed.set_author(name=interaction.user.display_name)
-        embed.set_thumbnail(url=interaction.user.avatar.url)
+        embed.set_thumbnail(url=interaction.user.display_avatar.url)
         embed.add_field(
             name=f"Positivity score",
             value=f"{magic_number * 100:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
