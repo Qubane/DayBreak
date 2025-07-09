@@ -171,22 +171,11 @@ class SentimentsModule(commands.Cog):
         Implementation for positivity leaderboard
         """
 
-        def user_presence(_user_id: str | int):
-            """
-            Checks if user is present in guild, from which the context (interaction) comes from
-            :param _user_id: user id
-            :return: bool
-            """
-
-            if self.client.get_user(int(_user_id)) in interaction.guild.members:
-                return True
-            return False
-
         users: list[tuple[int, float]] = []
         with self.use_database() as database:
             for user_id, user_dict in database.items():
                 # skip users that are not present in current context
-                if self.client.get_user(user_id) not in interaction.guild.members:
+                if interaction.guild.get_member(int(user_id)) is None:
                     continue
 
                 # skip if user has less than 20 messages
