@@ -197,7 +197,7 @@ class SentimentsModule(commands.Cog):
         # add fields. Top 5 users
         for user in users[:5]:
             embed.add_field(
-                name=self.client.get_user(int(user[0])),
+                name=interaction.guild.get_member(int(user[0])).display_name,
                 value=f"positivity score is {user[1] * 100:.0f}",
                 inline=False)
 
