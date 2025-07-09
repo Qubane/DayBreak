@@ -169,14 +169,25 @@ class SentimentsModule(commands.Cog):
         Implementation for positivity leaderboard
         """
 
-        users = []
+        def user_presence(_user_id: str | int):
+            """
+            Checks if user is present in guild, from which the context (interaction) comes from
+            :param _user_id: user id
+            :return: bool
+            """
+
+            if self.client.get_user(int(_user_id)) in interaction.guild.members:
+                return True
+            return False
+
+        users: list[tuple[int, float]] = []
         with self.use_database() as database:
             for user_id, user_dict in database.items():
                 # count user
                 users.append((user_id, user_dict["p_val"] / user_dict["msg_n"]))
 
-        # sort users
-        users.sort(key=lambda x: x[1], reverse=True)
+        # sort and filter users
+        users = list(filter(lambda x: user_presence(x[0]), sorted(users, key=lambda x: x[1], reverse=True)))
 
         # make embed
         embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
