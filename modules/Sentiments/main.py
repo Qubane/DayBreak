@@ -72,7 +72,7 @@ class SentimentsModule(commands.Cog):
         self.process_queued.start()
 
     @contextmanager
-    def use_database(self):
+    def use_database(self, guild_id: str | int | None = None):
         """
         User database context manager
         """
@@ -81,9 +81,19 @@ class SentimentsModule(commands.Cog):
         with open(self.db_path, "r", encoding="utf-8") as file:
             database: dict[str, dict] = json.load(file)
 
+        # if guild id parameter is present the guild is not yet present -> add it
+        if guild_id is not None and str(guild_id) not in database:
+            database[str(guild_id)] = dict()
+
         # manage context
         try:
-            yield database
+            # yield whole database if no guild is provided
+            if guild_id is None:
+                yield database
+
+            # yield guild's database
+            else:
+                yield database[str(guild_id)]
         finally:
             # store new database
             with open(self.db_path, "w", encoding="utf-8") as file:
@@ -172,14 +182,10 @@ class SentimentsModule(commands.Cog):
         """
 
         users: list[tuple[int, float]] = []
-        with self.use_database() as database:
+        with self.use_database(interaction.guild_id) as database:
             for user_id, user_dict in database.items():
-                # skip users that are not present in current context
-                if interaction.guild.get_member(int(user_id)) is None:
-                    continue
-
                 # count user
-                magic_number = user_dict["p_val"]
+                magic_number = (user_dict["p_val"] * math.log(user_dict["msg_n"])) / user_dict["msg_n"]
                 users.append((user_id, magic_number))
 
         # sort users
