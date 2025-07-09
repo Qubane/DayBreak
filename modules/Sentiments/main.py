@@ -184,8 +184,12 @@ class SentimentsModule(commands.Cog):
         users: list[tuple[int, float]] = []
         with self.use_database(interaction.guild_id) as database:
             for user_id, user_dict in database.items():
+                # skip users who are not left the server
+                if interaction.guild.get_member(int(user_id)) is None:
+                    continue
+
                 # count user
-                magic_number = (user_dict["p_val"] * math.log(user_dict["msg_n"])) / user_dict["msg_n"]
+                magic_number = (user_dict["p_val"] * math.log(user_dict["msg_n"], 10)) / user_dict["msg_n"]
                 users.append((user_id, magic_number))
 
         # sort users
