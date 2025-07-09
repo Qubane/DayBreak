@@ -217,7 +217,7 @@ class SentimentsModule(commands.Cog):
         leaderboard = self.get_guild_leaderboard(interaction.guild_id)
 
         # filter users who left
-        leaderboard = list(filter(lambda x: interaction.guild.get_member(x[0]) is None, leaderboard))
+        leaderboard = list(filter(lambda x: interaction.guild.get_member(int(x[0])) is None, leaderboard))
 
         # make embed
         embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
