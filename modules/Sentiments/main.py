@@ -120,7 +120,7 @@ class SentimentsModule(commands.Cog):
             func: Callable
             database[user][key] = func(database[user].get(key, 0))
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(seconds=15)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
@@ -131,31 +131,25 @@ class SentimentsModule(commands.Cog):
             return
 
         # compile content together
-        author_id = self.message_processing_queue[0].author.id
-        author_message = ""
-        messages = []
-        authors = []
-        for message in self.message_processing_queue:
-            # if the author of the next message is the same
-            if author_id == message.author.id:
-                author_message += message.content + "\n"
+        messages: list[str] = [""]
+        reference: list[discord.Message] = [self.message_processing_queue[0]]
+        for queued_message in self.message_processing_queue:
+            is_dif_author = queued_message.author.id != reference[-1].author.id
+            is_dif_guild = queued_message.guild.id != reference[-1].guild.id
 
-            # if someone else wrote the next message
+            # if the message's author or guild are not the same as they were before
+            if is_dif_author or is_dif_guild:
+                # append new author to messages
+                messages.append(queued_message.content + "\n")
+                reference.append(queued_message)
             else:
-                # append message to messages
-                messages.append(author_message)
+                # if the context is too long
+                if len(messages[-1]) >= 256:
+                    messages.append("")
+                    reference.append(queued_message)
 
-                # append the author to authors
-                authors.append(author_id)
-
-                # update the author
-                author_message = ""
-                author_id = message.author.id
-
-        # append left over message and author
-        if author_message:
-            messages.append(author_message)
-            authors.append(author_id)
+                # append content
+                messages[-1] += queued_message.content + "\n"
 
         # clear queue
         self.message_processing_queue.clear()
@@ -165,9 +159,15 @@ class SentimentsModule(commands.Cog):
 
         # update database
         with self.use_database() as database:
-            for author_id, result in zip(authors, results):
+            # update database according to where the message was sent
+            for ref, result in zip(reference, results):
+                # make sure guild database is present
+                if str(ref.guild.id) not in database:
+                    database[str(ref.guild.id)] = dict()
+
+                # update user
                 self.update_user(
-                    author_id, database,
+                    ref.author.id, database[str(ref.guild.id)],
                     msg_n=lambda x: x + 1,  # add 1 to message number
                     p_val=lambda x: x + result  # add result to p value (positivity value)
                 )
