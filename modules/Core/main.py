@@ -69,7 +69,7 @@ class CoreModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        await self.client.tree.sync()
+        # await self.client.tree.sync()
         self.logger.info("Command tree synced")
 
     def load_config(self) -> None:
@@ -274,6 +274,19 @@ class CoreModule(commands.Cog):
             embed.add_field(name=status[0], value=status[1], inline=False)
 
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="bot-upgrade", description="upgrade bot")
+    async def upgrade_bot_command(
+        self,
+        interaction: discord.Interaction
+    ) -> None:
+        """
+        Upgrades bot. Can only be used by owner of the bot
+        """
+
+        if not (await self.client.is_owner(interaction.user)):
+            raise commands.MissingPermissions(
+                ["bot-owner"], "You must be a host of this bot to run this command")
 
 
 async def setup(client: commands.Bot) -> None:
