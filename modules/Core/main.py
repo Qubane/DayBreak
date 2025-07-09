@@ -297,6 +297,13 @@ class CoreModule(commands.Cog):
         self.logger.info("running 'git pull'...")
         result = subprocess.run(["git", "pull"], capture_output=True, text=True)
 
+        # skip if up to date
+        if "Already up to date." in result.stdout:
+            self.logger.info("Already up to date, no harm done")
+            return
+        else:
+            self.logger.info("Updates found")
+
         # reload self
         self.logger.info("Calling 'self' to reload...")
         await self.reload_self()
@@ -305,7 +312,9 @@ class CoreModule(commands.Cog):
         self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
         await interaction.response.send_message(
             embed=discord.Embed(
-                title="Success", description=f"Message: {result.stderr}\n{result.stdout}", color=discord.Color.green()),
+                title="Success",
+                description=f"Message: \n{result.stderr}\n{result.stdout}",
+                color=discord.Color.green()),
             ephemeral=True)
 
 
