@@ -302,18 +302,11 @@ class CoreModule(commands.Cog):
         await self.reload_self()
 
         # create embed
-        if result.stderr:
-            self.logger.warning(f"Bot upgrade failed due to this:\n{result.stderr}")
-            await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Fail", description=f"Error message: {result.stderr}", color=discord.Color.red()),
-                ephemeral=True)
-        else:
-            self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
-            await interaction.response.send_message(
-                embed=discord.Embed(
-                    title="Success", description=f"Message: {result.stdout}", color=discord.Color.green()),
-                ephemeral=True)
+        self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Success", description=f"Message: {result.stderr}\n{result.stdout}", color=discord.Color.green()),
+            ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
