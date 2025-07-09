@@ -300,6 +300,10 @@ class SentimentsModule(commands.Cog):
         if message.author.bot:
             return
 
+        # skip messages in DM's
+        if isinstance(message.channel, discord.DMChannel):
+            return
+
         # add message to queue
         self.message_processing_queue.append(message)
 
