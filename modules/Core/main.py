@@ -69,7 +69,7 @@ class CoreModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        # await self.client.tree.sync()
+        await self.client.tree.sync()
         self.logger.info("Command tree synced")
 
     def load_config(self) -> None:
@@ -287,6 +287,33 @@ class CoreModule(commands.Cog):
         if not (await self.client.is_owner(interaction.user)):
             raise commands.MissingPermissions(
                 ["bot-owner"], "You must be a host of this bot to run this command")
+
+        self.logger.info("initiated bot upgrade")
+
+        # import subprocess
+        import subprocess
+
+        # run "git pull" (unpythonic :< )
+        self.logger.info("running 'git pull'...")
+        result = subprocess.run(["git", "pull"], capture_output=True, text=True)
+
+        # reload self
+        self.logger.info("Calling 'self' to reload...")
+        await self.reload_self()
+
+        # create embed
+        if result.stderr:
+            self.logger.warning(f"Bot upgrade failed due to this:\n{result.stderr}")
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Fail", description=f"Error message: {result.stderr}", color=discord.Color.red()),
+                ephemeral=True)
+        else:
+            self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
+            await interaction.response.send_message(
+                embed=discord.Embed(
+                    title="Success", description=f"Message: {result.stdout}", color=discord.Color.green()),
+                ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
