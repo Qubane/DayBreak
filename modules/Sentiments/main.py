@@ -226,7 +226,7 @@ class SentimentsModule(commands.Cog):
         for user in leaderboard[:5]:
             embed.add_field(
                 name=interaction.guild.get_member(int(user[0])).display_name,
-                value=f"positivity score is {user[1] * 100:.0f}",
+                value=f"Positivity score is {user[1] * 100:.0f}",
                 inline=False)
 
         # display the embed
@@ -240,6 +240,51 @@ class SentimentsModule(commands.Cog):
         """
         Implementation for positivity of self
         """
+
+        # get leaderboard
+        leaderboard = self.get_guild_leaderboard(interaction.guild_id)
+
+        # index user
+        for idx, (user_id, magic_number) in enumerate(leaderboard, start=1):
+            if str(user_id) == str(interaction.user.id):
+                break
+
+        # if the loop finished (didn't break before that), means the user was not found
+        else:
+            # create response
+            embed = discord.Embed(
+                title="error 404: We don't know you yet!",
+                description="You are new to this server, so write more stuff to see the posiself!",
+                color=discord.Color.brand_green())
+
+            # send response
+            await interaction.response.send_message(embed=embed, ephemeral=True)
+
+            # early return
+            return
+
+        # number postfix
+        if str(idx)[0] == "1":
+            postfix = "st"
+        elif str(idx)[0] == "2":
+            postfix = "nd"
+        elif str(idx)[0] == "3":
+            postfix = "rd"
+        else:
+            postfix = "th"
+
+        # make embed
+        embed = discord.Embed(title=f"Posiself of {interaction.user.display_name}", color=discord.Color.green())
+        embed.set_author(name=interaction.user.display_name)
+        embed.set_thumbnail(url=interaction.user.avatar.url)
+        embed.add_field(
+            name=f"Positivity score",
+            value=f"{magic_number * 100:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
+        embed.add_field(name=f"Place on the posiboard", value=f"You are in the {idx}{postfix} place!", inline=False)
+        embed.set_footer(text="don't take this score at face value, it's just a magic number")
+
+        # send response
+        await interaction.response.send_message(embed=embed)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
