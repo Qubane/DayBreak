@@ -300,13 +300,12 @@ class CoreModule(commands.Cog):
         # skip if up to date
         if "Already up to date." in result.stdout:
             self.logger.info("Already up to date, no harm done")
-            return
         else:
             self.logger.info("Updates found")
 
-        # reload self
-        self.logger.info("Calling 'self' to reload...")
-        await self.reload_self()
+            # reload self
+            self.logger.info("Calling 'self' to reload...")
+            await self.reload_self()
 
         # create embed
         self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
