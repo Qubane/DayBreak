@@ -178,12 +178,8 @@ class SentimentsModule(commands.Cog):
                 if interaction.guild.get_member(int(user_id)) is None:
                     continue
 
-                # skip if user has less than 20 messages
-                if user_dict["msg_n"] < 20:
-                    continue
-
                 # count user
-                magic_number = user_dict["p_val"] / user_dict["msg_n"]
+                magic_number = (user_dict["p_val"] + math.log(user_dict["msg_n"])) / user_dict["msg_n"]
                 users.append((user_id, magic_number))
 
         # sort users
