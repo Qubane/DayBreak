@@ -131,6 +131,27 @@ class SentimentsModule(commands.Cog):
             func: Callable
             database[user][key] = func(database[user].get(key, 0))
 
+    def get_guild_leaderboard(self, guild_id: int | str) -> list[tuple[int, float]]:
+        """
+        Returns guild's leaderboard
+        :param guild_id: guild id
+        :return: leaderboard
+        """
+
+        # fetch and process guild's database
+        leaderboard: list[tuple[int, float]] = []
+        with self.use_database(guild_id) as database:
+            for user_id, user_dict in database.items():
+                # calculate user
+                magic_number = magic_number_formula(user_dict["p_val"], user_dict["msg_n"])
+                leaderboard.append((user_id, magic_number))
+
+        # sort users
+        leaderboard.sort(key=lambda x: x[1], reverse=True)
+
+        # return leaderboard
+        return leaderboard
+
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
@@ -192,25 +213,17 @@ class SentimentsModule(commands.Cog):
         Implementation for positivity leaderboard
         """
 
-        users: list[tuple[int, float]] = []
-        with self.use_database(interaction.guild_id) as database:
-            for user_id, user_dict in database.items():
-                # skip users who are not left the server
-                if interaction.guild.get_member(int(user_id)) is None:
-                    continue
+        # get leaderboard
+        leaderboard = self.get_guild_leaderboard(interaction.guild_id)
 
-                # calculate user
-                magic_number = magic_number_formula(user_dict["p_val"], user_dict["msg_n"])
-                users.append((user_id, magic_number))
-
-        # sort users
-        users.sort(key=lambda x: x[1], reverse=True)
+        # filter users who left
+        leaderboard = list(filter(lambda x: interaction.guild.get_member(x[0]) is None, leaderboard))
 
         # make embed
         embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
 
         # add fields. Top 5 users
-        for user in users[:5]:
+        for user in leaderboard[:5]:
             embed.add_field(
                 name=interaction.guild.get_member(int(user[0])).display_name,
                 value=f"positivity score is {user[1] * 100:.0f}",
