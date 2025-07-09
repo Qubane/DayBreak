@@ -5,7 +5,9 @@ Depending on how positive the messages are sent by user, they will be placed hig
 It uses AI model to perform sentiment analysis on message, and update the leaderboard accordingly.
 """
 
+
 import os
+import math
 import json
 import discord
 import logging
@@ -183,11 +185,20 @@ class SentimentsModule(commands.Cog):
         users: list[tuple[int, float]] = []
         with self.use_database() as database:
             for user_id, user_dict in database.items():
-                # count user
-                users.append((user_id, user_dict["p_val"] / user_dict["msg_n"]))
+                # skip users that are not present in current context
+                if self.client.get_user(user_id) not in interaction.guild.members:
+                    continue
 
-        # sort and filter users
-        users = list(filter(lambda x: user_presence(x[0]), sorted(users, key=lambda x: x[1], reverse=True)))
+                # skip if user has less than 20 messages
+                if user_dict["msg_n"] < 20:
+                    continue
+
+                # count user
+                magic_number = user_dict["p_val"] / user_dict["msg_n"]
+                users.append((user_id, magic_number))
+
+        # sort users
+        users.sort(key=lambda x: x[1], reverse=True)
 
         # make embed
         embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
