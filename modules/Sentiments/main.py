@@ -41,6 +41,17 @@ def cast_result_to_numeric(label: str) -> int:
             raise ValueError(f"Unknown label '{label}'")
 
 
+def magic_number_formula(positivity_score: float, message_count: int) -> float:
+    """
+    Does the magic to calculate the magic number
+    :param positivity_score: database value of user
+    :param message_count: database value of user
+    :return: magic number
+    """
+
+    return (positivity_score / message_count) + math.log(message_count, 10)
+
+
 class SentimentsModule(commands.Cog):
     """
     Sentiments module
@@ -120,7 +131,7 @@ class SentimentsModule(commands.Cog):
             func: Callable
             database[user][key] = func(database[user].get(key, 0))
 
-    @tasks.loop(seconds=15)
+    @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
@@ -188,8 +199,8 @@ class SentimentsModule(commands.Cog):
                 if interaction.guild.get_member(int(user_id)) is None:
                     continue
 
-                # count user
-                magic_number = (user_dict["p_val"] / user_dict["msg_n"]) + math.log(user_dict["msg_n"], 10)
+                # calculate user
+                magic_number = magic_number_formula(user_dict["p_val"], user_dict["msg_n"])
                 users.append((user_id, magic_number))
 
         # sort users
