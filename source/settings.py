@@ -13,6 +13,7 @@ MODULES_DIRECTORY = "modules"
 CONFIGS_DIRECTORY = "configs"
 VARS_DIRECTORY = "var"
 LOGS_DIRECTORY = "logs"
+KEYS_DIRECTORY = "keys"
 
 
 def init():
@@ -20,6 +21,11 @@ def init():
     # 'var' directory is used for storing data for modules
     if not os.path.isdir(VARS_DIRECTORY):
         os.mkdir(VARS_DIRECTORY)
+
+    # create 'keys' directory
+    # 'keys' directory is used for references to keynames for the KeyChain class
+    if not os.path.isdir(KEYS_DIRECTORY):
+        os.mkdir(KEYS_DIRECTORY)
 
     # create 'logs' directory
     if not os.path.isdir(LOGS_DIRECTORY):
