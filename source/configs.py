@@ -3,8 +3,16 @@ Handling loading of configurations for modules
 """
 
 
-class Config:
+from source.settings import CONFIGS_MODULES_DIRECTORY, CONFIGS_GUILDS_DIRECTORY
+
+
+class ModuleConfig:
     """
-    Config container class
+    Container for per-module configuration
     """
 
+
+class GuildConfig:
+    """
+    Container for per-guild module configuration
+    """
