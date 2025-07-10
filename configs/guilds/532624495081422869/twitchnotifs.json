@@ -1,0 +1,26 @@
+{
+  "guild_id": 532624495081422869,
+  "notifications_channel_id": 532624778012655626,
+  "role_id": 725411000576114688,
+  "format": {
+    "text": "{role_mention}",
+    "embed": {
+      "thumbnail": "{stream_thumbnail_url}",
+      "body": {
+        "title": "{stream_title}",
+        "description": null,
+        "url": "{stream_url}",
+        "color": "#6441a5"
+      },
+      "author": {
+        "name": "{channel_name}",
+        "url": null,
+        "icon_url": null
+      },
+      "fields": []
+    }
+  },
+  "channels": [
+    "codemaker_4"
+  ]
+}

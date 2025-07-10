@@ -1,0 +1,27 @@
+{
+  "guild_id": 1031161207291392000,
+  "notifications_channel_id": 1032546102676815922,
+  "role_id": 1190415930086395974,
+  "format": {
+    "text": "{role_mention}",
+    "embed": {
+      "thumbnail": "{stream_thumbnail_url}",
+      "body": {
+        "title": "{stream_title}",
+        "description": null,
+        "url": "{stream_url}",
+        "color": "#6441a5"
+      },
+      "author": {
+        "name": "{channel_name}",
+        "url": null,
+        "icon_url": null
+      },
+      "fields": []
+    }
+  },
+  "channels": [
+    "codemaker_4",
+    "the_almighty_cube"
+  ]
+}
