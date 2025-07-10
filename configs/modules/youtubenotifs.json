@@ -1,0 +1,6 @@
+{
+  "update_interval": 120,
+  "fetching_window": 3,
+  "checking_window_offset": 1,
+  "threads": 5
+}
