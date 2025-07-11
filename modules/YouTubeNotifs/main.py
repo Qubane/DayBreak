@@ -10,7 +10,7 @@ import discord
 import logging
 from discord import app_commands
 from discord.ext import commands, tasks
-from source.settings import CONFIGS_DIRECTORY
+from source.configs import *
 from source.notifications import make_announcement
 from modules.YouTubeNotifs.fetcher import Fetcher, Media, Channel
 
@@ -28,9 +28,8 @@ class YouTubeNotifsModule(commands.Cog):
         self.logger.info("Module loaded")
 
         # configs
-        self.config_path: str = f"{CONFIGS_DIRECTORY}/youtubenotifs.json"
-        self.module_config: dict[str, str | int] | None = None
-        self.guild_config: list[dict] | None = None
+        self.module_config: ModuleConfig = ModuleConfig("YouTubeNotifs")
+        self.guild_config: GuildConfigCollection = GuildConfigCollection("YouTubeNotifs")
 
         # youtube channels
         # {"channel_id": [Video(...), Video(...), ...]}
@@ -40,20 +39,8 @@ class YouTubeNotifsModule(commands.Cog):
         self.channels: dict[str, Channel] = dict()
         self.channels_init: bool = False
 
-        self.load_configs()
+        self.check.change_interval(seconds=self.module_config.update_interval)
         self.check.start()
-
-    def load_configs(self) -> None:
-        """
-        Loads 'youtubenotifs.json' config file
-        """
-
-        with open(self.config_path, "r", encoding="utf-8") as file:
-            config = json.loads(file.read())
-            self.module_config = config["config"]
-            self.guild_config = config["guild_config"]
-
-        self.check.change_interval(seconds=self.module_config["update_interval"])
 
     async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Media]]:
         """
@@ -62,22 +49,26 @@ class YouTubeNotifsModule(commands.Cog):
         :return: dict of channel_id -> list of videos by that channel
         """
 
+        # if amount was not provided, use value from config
         if amount is None:
-            amount = self.module_config["fetching_window"]
+            amount = self.module_config.fetching_window
 
         # fetch all logged YT channels
         channel_ids = set()
         for guild_config in self.guild_config:
-            channel_ids.update(guild_config["channels"])
+            channel_ids.update(guild_config.channels)
 
         # fetch videos from all configured YT channels
-        sem = asyncio.Semaphore(self.module_config["threads"])
+        sem = asyncio.Semaphore(self.module_config.threads)
 
         async def coro(_channel_id):
             async with sem:
                 return await Fetcher.fetch_videos(_channel_id, amount)
 
+        # fetch videos
         result = await asyncio.gather(*[coro(x) for x in channel_ids])
+
+        # create a dictionary with channel id pointing to list of fetched videos
         channel_dict = {cid: videos for cid, videos in zip(channel_ids, result)}
 
         # return channel dict
@@ -94,7 +85,7 @@ class YouTubeNotifsModule(commands.Cog):
             self.channels_init = True
             self.channels_videos = await self.retrieve_channel_videos()
 
-            sem = asyncio.Semaphore(self.module_config["threads"])
+            sem = asyncio.Semaphore(self.module_config.threads)
 
             async def coro(_channel_id):
                 async with sem:
@@ -111,16 +102,15 @@ class YouTubeNotifsModule(commands.Cog):
 
         # check every guild
         for guild_config in self.guild_config:
-            notification_channel = self.client.get_channel(guild_config["notifications_channel_id"])
-            notification_format = guild_config["format"]
-            video_role_ping = f"<@&{guild_config['video_role_id']}>"
+            notification_channel = self.client.get_channel(guild_config.notifications_channel_id)
+            video_role_ping = f"<@&{guild_config.video_role_id}>"
             # stream_role_ping = f"<@&{guild_config['stream_role_id']}>"  # unused
 
             # check every YT channel
-            for channel_id in guild_config["channels"]:
+            for channel_id in guild_config.channels:
                 # check every new video against old videos
                 # don't check last new video to prevent old videos to be considered new (ex. deleted video)
-                for new_video in new_channels[channel_id][:-self.module_config["checking_window_offset"]]:
+                for new_video in new_channels[channel_id][:-self.module_config.checking_window_offset]:
                     # if new video is not in old videos, then make an announcement
                     if new_video not in self.channels_videos[channel_id]:
                         keywords = self.return_keywords_dict(
@@ -137,7 +127,7 @@ class YouTubeNotifsModule(commands.Cog):
 
                         await make_announcement(
                             channel=notification_channel,
-                            config=guild_config["format"],
+                            config=guild_config.format,
                             keywords=keywords)
 
         # reassign new_channels to self.channels
@@ -172,44 +162,6 @@ class YouTubeNotifsModule(commands.Cog):
             "video_description": f"{video_description[:60]}..." if video_description is not None else None,
             "video_thumbnail_url": video_thumbnail_url,
             "video_publish_date": video_publish_date}
-
-    @commands.command(name="test-youtube-announcement")
-    @commands.has_permissions(administrator=True)
-    async def debug_announcement_test(
-            self,
-            ctx: commands.Context
-    ) -> None:
-        """
-        Executes python code
-        """
-
-        # test current guild config
-        for guild_config in self.guild_config:
-            if guild_config["guild_id"] == ctx.guild.id:
-                break
-        else:
-            raise commands.CommandError("this server doesn't have notifications configured")
-
-        yt_video = (await Fetcher.fetch_videos(guild_config["channels"][0], 1))[0]
-
-        keywords = self.return_keywords_dict(
-            role_mention=f"<@&{self.guild_config[0]['video_role_id']}>",
-            channel_name=yt_video.channel.title,
-            channel_url=yt_video.channel.url,
-            channel_thumbnail_url=yt_video.channel.thumbnails.high.url,
-            channel_country=yt_video.channel.country,
-            video_url=yt_video.url,
-            video_title=yt_video.title,
-            video_description=yt_video.description,
-            video_thumbnail_url=
-            yt_video.thumbnails.maxres.url if yt_video.thumbnails.maxres else yt_video.thumbnails.high.url,
-            video_publish_date=yt_video.published_at.__str__())
-
-        await make_announcement(
-            ctx.channel,
-            guild_config["format"],
-            keywords=keywords,
-            publish=False)
 
 
 async def setup(client: commands.Bot) -> None:

@@ -1,0 +1,4 @@
+{
+  "queue_process_interval": 300,
+  "queue_max_size": 256
+}

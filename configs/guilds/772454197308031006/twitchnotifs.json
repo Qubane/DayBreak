@@ -1,0 +1,26 @@
+{
+  "guild_id": 772454197308031006,
+  "notifications_channel_id": 772462702500904960,
+  "role_id": 1293544398893748276,
+  "format": {
+    "text": "{role_mention}",
+    "embed": {
+      "thumbnail": "{stream_thumbnail_url}",
+      "body": {
+        "title": "{stream_title}",
+        "description": null,
+        "url": "{stream_url}",
+        "color": "#6441a5"
+      },
+      "author": {
+        "name": "{channel_name}",
+        "url": null,
+        "icon_url": null
+      },
+      "fields": []
+    }
+  },
+  "channels": [
+    "mutzbunny"
+  ]
+}

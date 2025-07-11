@@ -5,13 +5,12 @@ All newly joined users will be given a membership role
 """
 
 
-import json
 import asyncio
 import discord
 import logging
 from discord import app_commands
 from discord.ext import commands
-from source.settings import CONFIGS_DIRECTORY
+from source.configs import *
 
 
 class MembershipsModule(commands.Cog):
@@ -26,24 +25,11 @@ class MembershipsModule(commands.Cog):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
-        # configs
-        self.config_path: str = f"{CONFIGS_DIRECTORY}/memberships.json"
-        self.guild_config: dict[int, int] | None = None
-
-        # load
-        self.load_config()
+        # config
+        self.config: GuildConfigCollection = GuildConfigCollection("memberships")
 
         # check members
         asyncio.create_task(self.check_all_memberships())
-
-    def load_config(self) -> None:
-        """
-        Loads module configs
-        """
-
-        with open(f"{CONFIGS_DIRECTORY}/memberships.json", "r", encoding="ascii") as f:
-            guild_config = json.loads(f.read())
-        self.guild_config = {int(x): int(y) for x, y in guild_config.items()}
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:
@@ -52,7 +38,7 @@ class MembershipsModule(commands.Cog):
         :param member: guild member
         """
 
-        if member.guild.id not in self.guild_config:
+        if member.guild.id not in self.config:
             return
 
         await self.give_membership(member)
@@ -63,8 +49,8 @@ class MembershipsModule(commands.Cog):
         """
 
         # check if user has the role
-        role_id = self.guild_config[member.guild.id]
-        if role_id in member._roles:
+        role_id = self.config[member.guild.id].member_role
+        if member.get_role(role_id) is None:
             return
 
         # add role, if missing
@@ -75,16 +61,21 @@ class MembershipsModule(commands.Cog):
         Checks all users in all guilds for membership presence
         """
 
-        sem = asyncio.Semaphore(20)
+        # define semaphore
+        sem = asyncio.Semaphore(5)
 
         async def coro(_member):
             async with sem:
                 await self.give_membership(_member)
+
+        # go through all connected guilds
         for guild in self.client.guilds:
-            if guild.id not in self.guild_config:
+            # if guild's memberships are not configured
+            if guild.id not in self.config:
                 self.logger.warning(f"Memberships not configured for '{guild.name}' [{guild.id}]")
                 continue
 
+            # else try to grant everyone roles
             await asyncio.gather(*[coro(mem) for mem in guild.members])
 
 

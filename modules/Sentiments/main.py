@@ -9,6 +9,7 @@ It uses AI model to perform sentiment analysis on message, and update the leader
 import os
 import math
 import json
+import asyncio
 import discord
 import logging
 from typing import Callable
@@ -17,6 +18,7 @@ from discord import app_commands
 from transformers import pipeline
 from contextlib import contextmanager
 from discord.ext import commands, tasks
+from source.configs import *
 
 
 def cast_result_to_numeric(label: str) -> int:
@@ -70,16 +72,20 @@ class SentimentsModule(commands.Cog):
             model="tabularisai/multilingual-sentiment-analysis",
             truncation=True)
 
-        # here's an example path to the database
+        # path to Sentiments database
         self.db_path = "var/sentiments_leaderboard.json"
         if not os.path.isfile(self.db_path):  # create file if missing
             with open(self.db_path, "w", encoding="utf-8") as f:
                 f.write("{}")
 
+        # configs
+        self.module_config: ModuleConfig = ModuleConfig("Sentiments")
+
         # processing queue
         self.message_processing_queue: list[discord.Message] = []
 
         # start task
+        self.process_queued.change_interval(seconds=self.module_config.queue_process_interval)
         self.process_queued.start()
 
     @contextmanager
@@ -306,6 +312,11 @@ class SentimentsModule(commands.Cog):
 
         # add message to queue
         self.message_processing_queue.append(message)
+
+        # check if queue size exceeds the configured size
+        if len(self.message_processing_queue) > self.module_config.queue_max_size:
+            # create task to process queued
+            asyncio.create_task(self.process_queued)
 
 
 async def setup(client: commands.Bot) -> None:

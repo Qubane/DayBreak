@@ -6,7 +6,7 @@ Manages API keys
 import os
 import logging
 from typing import TextIO
-from source.settings import CONFIGS_DIRECTORY
+from source.settings import KEYS_DIRECTORY
 
 
 LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -24,13 +24,9 @@ class KeyChain:
         """
 
         # go through files
-        for file in os.listdir(CONFIGS_DIRECTORY):
-            # skip all non-keys files
-            if os.path.splitext(file)[1] != ".keys":
-                continue
-
+        for file in os.listdir(KEYS_DIRECTORY):
             # make filepath
-            filepath = f"{CONFIGS_DIRECTORY}/{file}"
+            filepath = f"{KEYS_DIRECTORY}/{file}"
 
             # get keys
             with open(filepath, "r", encoding="utf-8") as f:
@@ -63,7 +59,8 @@ class KeyChain:
         # read keys
         keys = []
         for key in file.readlines():
-            keys.append(key.strip())  # append stripped key
+            # append key
+            keys.append(key.strip())
 
         # return keys
         return keys
