@@ -50,7 +50,7 @@ class MembershipsModule(commands.Cog):
 
         # check if user has the role
         role_id = self.config[member.guild.id].member_role
-        if member.get_role(role_id) is None:
+        if member.get_role(role_id) is not None:
             return
 
         # add role, if missing
