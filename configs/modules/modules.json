@@ -1,9 +1,11 @@
-[
-  "YouTubeNotifs",
-  "TwitchNotifs",
-  "Memberships",
-  "Sentiments",
-  "MathUtils",
-  "Utils",
-  "Misc"
-]
+{
+  "active_modules": [
+    "YouTubeNotifs",
+    "TwitchNotifs",
+    "Memberships",
+    "Sentiments",
+    "MathUtils",
+    "Utils",
+    "Misc"
+  ]
+}
