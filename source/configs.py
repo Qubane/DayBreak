@@ -8,7 +8,7 @@ from collections import namedtuple
 from source.settings import CONFIGS_MODULES_DIRECTORY, CONFIGS_GUILDS_DIRECTORY
 
 
-def create_attributes(config: dict) -> list[tuple]:
+def _create_attributes(config: dict) -> list[tuple]:
     """
     Converts a config dictionary into a list of recursive attributes
     :param config: configuration dictionary
@@ -25,7 +25,7 @@ def create_attributes(config: dict) -> list[tuple]:
         # sub config
         elif isinstance(value, dict):
             # get attribute list
-            recur_attr_list: list = create_attributes(value)
+            recur_attr_list: list = _create_attributes(value)
 
             # get names for attributes
             attr_names = []
@@ -55,14 +55,14 @@ def create_attributes(config: dict) -> list[tuple]:
     return attr_list
 
 
-def set_object_attributes(obj: object, config: dict):
+def _set_object_attributes(obj: object, config: dict):
     """
     Sets the attributes of an object
     :param obj: object
     :param config: configs
     """
 
-    for attribute in create_attributes(config):
+    for attribute in _create_attributes(config):
         if hasattr(attribute, "_fields"):
             setattr(obj, attribute.__class__.__name__, attribute)
         else:
@@ -82,7 +82,7 @@ class ModuleConfig:
             self._config: dict = json.load(file)
 
         # set self attributes
-        set_object_attributes(self, self._config)
+        _set_object_attributes(self, self._config)
 
 
 class GuildConfig:
@@ -98,7 +98,7 @@ class GuildConfig:
             self._config: dict = json.load(file)
 
         # set self attributes
-        set_object_attributes(self, self._config)
+        _set_object_attributes(self, self._config)
 
 
 class GuildConfigCollection:
