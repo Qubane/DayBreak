@@ -116,7 +116,7 @@ class GuildConfigCollection:
         for guild_id in os.listdir(CONFIGS_GUILDS_DIRECTORY):
             try:
                 # add config
-                self[str(guild_id)] = GuildConfig(guild_id, self.module_name)
+                self._guild_configs[str(guild_id)] = GuildConfig(guild_id, self.module_name)
             except OSError:
                 # if file wasn't found, or any kind of other OS related error
                 pass
@@ -130,5 +130,8 @@ class GuildConfigCollection:
     def __getitem__(self, item):
         return self._guild_configs[str(item)]
 
+    def __contains__(self, item):
+        return self._guild_configs.__contains__(str(item))
+
     def get(self, item) -> GuildConfig | None:
-        return self._guild_configs.get(item)
+        return self._guild_configs.get(str(item))
