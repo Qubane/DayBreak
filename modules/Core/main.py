@@ -89,7 +89,7 @@ class CoreModule(commands.Cog):
                 self.logger.warning(f"Malformed module '{present_module}'; missing 'main.py'")
 
         # load configs
-        config = ModuleConfig("modules.json")
+        config = ModuleConfig("modules")
 
         # load active modules into queue
         for queued_module in config.active_modules:
