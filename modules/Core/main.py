@@ -3,14 +3,16 @@ Core bot module.
 Adds the ability to load, unload and reload other modules
 Always imported, and cannot be unloaded, only reloaded
 """
+
+
 import os
-import json
 import asyncio
 import discord
 import logging
 from discord import app_commands
 from discord.ext import commands
-from source.settings import MODULES_DIRECTORY, CONFIGS_DIRECTORY
+from source.configs import *
+from source.settings import MODULES_DIRECTORY
 
 
 def make_module_path(module: str) -> str:
@@ -51,8 +53,6 @@ class CoreModule(commands.Cog):
         self.modules_static.append(self.module_name)
         self.modules_running.append(self.module_name)  # already running
 
-        self.config_path: str = f"{CONFIGS_DIRECTORY}/modules.json"
-
         # config and module loading
         self.load_config()
 
@@ -77,23 +77,28 @@ class CoreModule(commands.Cog):
         Loads 'self.modules_present' and 'self.modules_running' lists
         """
 
+        # create all present modules
         self.modules_present.clear()
         for present_module in os.listdir(MODULES_DIRECTORY):
+            # if the module is correctly setup
             if os.path.isfile(f"{MODULES_DIRECTORY}/{present_module}/main.py"):
                 self.modules_present.append(present_module)
+
+            # if module is missing 'main.py' file
             else:
                 self.logger.warning(f"Malformed module '{present_module}'; missing 'main.py'")
 
-        if not os.path.isfile(f"{CONFIGS_DIRECTORY}/modules.json"):
-            raise FileNotFoundError("Missing 'modules.json'")
-        with open(self.config_path, "r", encoding="ascii") as file:
-            modules: list[str] = json.loads(file.read())
+        # load configs
+        config = ModuleConfig("modules.json")
 
-        for queued_module in modules:
+        # load active modules into queue
+        for queued_module in config.active_modules:
             # if queued module does not exist in modules directory
             if queued_module not in self.modules_present:
                 self.logger.warning(f"Module '{queued_module}' not found")
                 continue
+
+            # append module to queue
             self.modules_queued.append(queued_module)
 
     async def load_all_queued(self) -> None:
@@ -102,15 +107,22 @@ class CoreModule(commands.Cog):
         """
 
         async def coro(module):
-            module_path = f"{MODULES_DIRECTORY}.{module}.main"
+            # try to load the module
             try:
-                await self.client.load_extension(module_path)
+                # load module
+                await self.client.load_extension(make_module_path(module))
+
+                # append to running modules
+                self.modules_running.append(module)
+
+            # in case of exception
             except commands.ExtensionError as e:
                 self.logger.warning(f"Module '{module}' failure", exc_info=e)
-                return
-            self.modules_running.append(module)
 
+        # gather queued modules and load them
         await asyncio.gather(*[coro(queued) for queued in self.modules_queued])
+
+        # clear queued modules
         self.modules_queued.clear()
 
     async def load_module(self, module: str) -> None:
@@ -119,9 +131,11 @@ class CoreModule(commands.Cog):
         :param module: module name
         """
 
+        # load module
         module_path = make_module_path(module)
         await self.client.load_extension(module_path)
 
+        # append to running modules
         self.modules_running.append(module)
 
     async def unload_module(self, module: str) -> None:
@@ -130,9 +144,11 @@ class CoreModule(commands.Cog):
         :param module: module name
         """
 
+        # unload module
         module_path = make_module_path(module)
         await self.client.unload_extension(module_path)
 
+        # remove from running modules
         self.modules_running.remove(module)
 
     async def reload_module(self, module: str) -> None:
@@ -141,6 +157,7 @@ class CoreModule(commands.Cog):
         :param module: module name
         """
 
+        # reload module
         module_path = make_module_path(module)
         await self.client.reload_extension(module_path)
 
@@ -155,10 +172,16 @@ class CoreModule(commands.Cog):
         await asyncio.gather(
             *[self.unload_module(module) for module in self.modules_running if module != self.module_name])
 
-        # load configs and load all modules
-        self.load_config()  # load modules from config
-        self.modules_queued += self.modules_static  # append static modules
-        self.modules_queued.remove(self.module_name)  # remove self from queued
+        # load configs
+        self.load_config()
+
+        # add static modules to queued
+        self.modules_queued += self.modules_static
+
+        # remove core from queued
+        self.modules_queued.remove(self.module_name)
+
+        # load all queued modules
         await self.load_all_queued()
 
         self.logger.info("Reload complete")
