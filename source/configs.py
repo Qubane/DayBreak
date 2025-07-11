@@ -99,3 +99,24 @@ class GuildConfig:
 
         # set self attributes
         set_object_attributes(self, self._config)
+
+
+class GuildConfigCollection:
+    """
+    Collection of per-guild configs
+    """
+
+    def __init__(self):
+        self._guild_configs: dict[str, GuildConfig] = {}
+
+    def __setitem__(self, key, value):
+        if isinstance(value, GuildConfig):
+            self._guild_configs[key] = value
+        else:
+            raise TypeError
+
+    def __getitem__(self, item):
+        return self._guild_configs[item]
+
+    def get(self, item) -> GuildConfig | None:
+        return self._guild_configs.get(item)
