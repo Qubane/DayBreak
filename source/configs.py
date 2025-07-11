@@ -3,6 +3,7 @@ Handling loading of configurations for modules
 """
 
 
+import os
 import json
 from collections import namedtuple
 from source.settings import CONFIGS_MODULES_DIRECTORY, CONFIGS_GUILDS_DIRECTORY
@@ -75,7 +76,7 @@ class ModuleConfig:
     """
 
     def __init__(self, module_name: str):
-        self.config_path: str = f"{CONFIGS_MODULES_DIRECTORY}/{module_name}"
+        self.config_path: str = f"{CONFIGS_MODULES_DIRECTORY}/{module_name}.json"
 
         # load raw config
         with open(self.config_path, "r", encoding="utf-8") as file:
@@ -87,11 +88,12 @@ class ModuleConfig:
 
 class GuildConfig:
     """
-    Container for per-guild module configuration
+    Container for per-guild module configuration.
+    Not intended to be used by itself. Instead, used as part of GuildConfigCollection
     """
 
-    def __init__(self, guild_id: str | int):
-        self.config_path: str = f"{CONFIGS_GUILDS_DIRECTORY}/{guild_id}"
+    def __init__(self, guild_id: str | int, module_name: str):
+        self.config_path: str = f"{CONFIGS_GUILDS_DIRECTORY}/{guild_id}/{module_name}.json"
 
         # load raw config
         with open(self.config_path, "r", encoding="utf-8") as file:
@@ -106,17 +108,27 @@ class GuildConfigCollection:
     Collection of per-guild configs
     """
 
-    def __init__(self):
+    def __init__(self, module_name: str):
+        self.module_name: str = module_name.lower()
         self._guild_configs: dict[str, GuildConfig] = {}
+
+        # load in configs
+        for guild_id in os.listdir(CONFIGS_GUILDS_DIRECTORY):
+            try:
+                # add config
+                self[str(guild_id)] = GuildConfig(guild_id, self.module_name)
+            except OSError:
+                # if file wasn't found, or any kind of other OS related error
+                pass
 
     def __setitem__(self, key, value):
         if isinstance(value, GuildConfig):
-            self._guild_configs[key] = value
+            self._guild_configs[str(key)] = value
         else:
             raise TypeError
 
     def __getitem__(self, item):
-        return self._guild_configs[item]
+        return self._guild_configs[str(item)]
 
     def get(self, item) -> GuildConfig | None:
         return self._guild_configs.get(item)
