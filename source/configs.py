@@ -5,6 +5,7 @@ Handling loading of configurations for modules
 
 import os
 import json
+from types import NoneType
 from collections import namedtuple
 from source.settings import CONFIGS_MODULES_DIRECTORY, CONFIGS_GUILDS_DIRECTORY
 
@@ -19,7 +20,7 @@ def _create_attributes(config: dict) -> list[tuple]:
     attr_list = []
     for key, value in config.items():
         # end value
-        if isinstance(value, (str, int, list)):
+        if isinstance(value, (str, int, list, NoneType)):
             # append to list of attributes
             attr_list.append((key, value))
 
