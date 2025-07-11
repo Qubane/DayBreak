@@ -76,7 +76,8 @@ class ModuleConfig:
     """
 
     def __init__(self, module_name: str):
-        self.config_path: str = f"{CONFIGS_MODULES_DIRECTORY}/{module_name}.json"
+        self.module_name = module_name.lower()
+        self.config_path: str = f"{CONFIGS_MODULES_DIRECTORY}/{self.module_name}.json"
 
         # load raw config
         with open(self.config_path, "r", encoding="utf-8") as file:
