@@ -75,8 +75,7 @@ class ModuleConfig:
     """
 
     def __init__(self, module_name: str):
-        # self.config_path: str = f"{CONFIGS_MODULES_DIRECTORY}/{module_name}"
-        self.config_path = module_name
+        self.config_path: str = f"{CONFIGS_MODULES_DIRECTORY}/{module_name}"
 
         # load raw config
         with open(self.config_path, "r", encoding="utf-8") as file:
