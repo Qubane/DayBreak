@@ -12,6 +12,17 @@ from discord import app_commands
 from discord.ext import commands
 
 
+def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
+    """
+    Compares privileges of 2 users. If 'caller' has higher privilege, returns True
+    :param caller: first user
+    :param user: second user
+    :return: True when 'caller' > 'user'; otherwise False
+    """
+
+    return caller.top_role > user.top_role
+
+
 class UtilsModule(commands.Cog):
     """
     This is an example module
@@ -68,7 +79,7 @@ class UtilsModule(commands.Cog):
         """
 
         # check if the command caller has the permissions to time out the other user
-        if interaction.user.top_role <= user.top_role:
+        if not has_privilege(interaction.user, user):
             # if not -> send fail message
             # make timeout fail message to command caller
             author_embed = discord.Embed(title="Fail!",
@@ -118,6 +129,65 @@ class UtilsModule(commands.Cog):
         # if something else failed, print a message
         except Exception as e:
             self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+
+    @app_commands.command(name="bkick", description="kicks a user")
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.guild_only()
+    @app_commands.describe(
+        user="User to kick",
+        reason="reason for a kick (default is 'bad behaviour')")
+    async def better_timeout(
+            self,
+            interaction: discord.Interaction,
+            user: discord.Member,
+            reason: str = "bad behaviour"
+    ) -> None:
+        """
+        Command that will kick users
+        """
+
+        # check if the command caller has the permissions to time out the other user
+        if not has_privilege(interaction.user, user):
+            # if not -> send fail message
+            # make timeout fail message to command caller
+            author_embed = discord.Embed(title="Fail!",
+                                         description=f"User {user.mention} has higher or equal privilege",
+                                         color=discord.Color.red())
+
+            # send the message
+            await interaction.response.send_message(embed=author_embed, ephemeral=True)
+
+            # return
+            return
+
+        # make message for the user who is going to be kicked out
+        user_embed = discord.Embed(title="You were kicked from the server",
+                                   color=discord.Color.red())
+        user_embed.add_field(name="Reason", value=reason, inline=True)
+        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
+
+        # try to send user a dm with a reason for a timeout
+        try:
+            await user.send(embed=user_embed)
+
+        # if it failed for these reasons, just ignore
+        except (discord.HTTPException, discord.Forbidden):
+            pass
+
+        # if something else failed, print a message
+        except Exception as e:
+            self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+
+        # kick the user
+        await user.kick(reason=reason)
+
+        # make success message to command caller
+        author_embed = discord.Embed(title="Success!",
+                                     description=f"User {user.mention} was kicked from the server",
+                                     color=discord.Color.green())
+
+        # send the message
+        await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
     # @commands.command(name="exec")
     # @commands.has_permissions(administrator=True)
