@@ -5,20 +5,17 @@ Depending on how positive the messages are sent by user, they will be placed hig
 It uses AI model to perform sentiment analysis on message, and update the leaderboard accordingly.
 """
 
-
-import os
 import math
-import json
+import sqlite3
 import asyncio
 import discord
 import logging
-from typing import Callable
 import transformers.pipelines
 from discord import app_commands
 from transformers import pipeline
-from contextlib import contextmanager
 from discord.ext import commands, tasks
 from source.configs import *
+from source.settings import VARS_DIRECTORY
 
 
 def cast_result_to_numeric(label: str) -> int:
@@ -72,11 +69,23 @@ class SentimentsModule(commands.Cog):
             model="tabularisai/multilingual-sentiment-analysis",
             truncation=True)
 
-        # path to Sentiments database
-        self.db_path = "var/sentiments_leaderboard.json"
-        if not os.path.isfile(self.db_path):  # create file if missing
-            with open(self.db_path, "w", encoding="utf-8") as f:
-                f.write("{}")
+        # database
+        self.database_connection: sqlite3.Connection = sqlite3.connect(f"{VARS_DIRECTORY}/sentiments.sqlite")
+        self.database_cursor: sqlite3.Cursor = self.database_connection.cursor()
+
+        # make sure the guild tables are present
+        for guild in self.client.guilds:
+            table_name = f"g{guild.id}"
+            self.database_cursor.execute(f"""
+            CREATE TABLE IF NOT EXISTS {table_name}(
+                UserId INTEGER PRIMARY KEY,
+                MessageCount INTEGER,
+                PValue REAL
+            );
+            """)
+
+        # commit database
+        self.database_connection.commit()
 
         # configs
         self.module_config: ModuleConfig = ModuleConfig("Sentiments")
@@ -87,76 +96,6 @@ class SentimentsModule(commands.Cog):
         # start task
         self.process_queued.change_interval(seconds=self.module_config.queue_process_interval)
         self.process_queued.start()
-
-    @contextmanager
-    def use_database(self, guild_id: str | int | None = None):
-        """
-        User database context manager
-        """
-
-        # the bot is small enough for json "databases" to be ok
-        with open(self.db_path, "r", encoding="utf-8") as file:
-            database: dict[str, dict] = json.load(file)
-
-        # if guild id parameter is present the guild is not yet present -> add it
-        if guild_id is not None and str(guild_id) not in database:
-            database[str(guild_id)] = dict()
-
-        # manage context
-        try:
-            # yield whole database if no guild is provided
-            if guild_id is None:
-                yield database
-
-            # yield guild's database
-            else:
-                yield database[str(guild_id)]
-        finally:
-            # store new database
-            with open(self.db_path, "w", encoding="utf-8") as file:
-                json.dump(database, file)
-
-    @staticmethod
-    def update_user(user: int | str, database: dict[str, dict], **kwargs) -> None:
-        """
-        Update user from database
-        :param user: user id
-        :param database: database context
-        :param kwargs: keyword arguments. Uses lambdas to affect the user parameters, for 'set' use 'lambda x: const'
-        """
-
-        # make sure id is a string
-        user = str(user)
-
-        # if user is not present
-        if user not in database:
-            database[user] = dict()
-
-        # write data to user
-        for key, func in kwargs.items():
-            func: Callable
-            database[user][key] = func(database[user].get(key, 0))
-
-    def get_guild_leaderboard(self, guild_id: int | str) -> list[tuple[int, float]]:
-        """
-        Returns guild's leaderboard
-        :param guild_id: guild id
-        :return: leaderboard
-        """
-
-        # fetch and process guild's database
-        leaderboard: list[tuple[int, float]] = []
-        with self.use_database(guild_id) as database:
-            for user_id, user_dict in database.items():
-                # calculate user
-                magic_number = magic_number_formula(user_dict["p_val"], user_dict["msg_n"])
-                leaderboard.append((user_id, magic_number))
-
-        # sort users
-        leaderboard.sort(key=lambda x: x[1], reverse=True)
-
-        # return leaderboard
-        return leaderboard
 
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
