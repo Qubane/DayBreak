@@ -47,7 +47,11 @@ class ExceptionHandlerModule(commands.Cog):
 
         # If command raised an error
         elif isinstance(error, (app_commands.CommandInvokeError, commands.CommandInvokeError)):
+            # answer to original, raised error
             await self.on_command_error(interaction, error.original)
+
+            # return
+            return
 
         # any kind of command error
         elif isinstance(error, (app_commands.AppCommandError, commands.CommandError)):
