@@ -327,10 +327,6 @@ class CoreModule(commands.Cog):
             self.logger.info("Calling 'self' to reload...")
             await self.reload_self()
 
-            # re-sync the command tree
-            await self.client.tree.sync()
-            self.logger.info("Command tree synced")
-
         # create embed
         self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
         await interaction.response.send_message(
