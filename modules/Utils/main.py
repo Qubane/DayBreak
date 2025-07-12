@@ -208,10 +208,10 @@ class UtilsModule(commands.Cog):
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
     @app_commands.command(name="bban", description="bans a user")
-    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.checks.has_permissions(ban_members=True)
     @app_commands.guild_only()
     @app_commands.describe(
-        user="user to kick",
+        user="user to ban",
         days="messages that will be deleted within this time",
         reason="reason for a ban (default is 'bad behaviour')")
     async def better_ban(
