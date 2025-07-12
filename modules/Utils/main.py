@@ -88,7 +88,8 @@ class UtilsModule(commands.Cog):
         """
 
         # check if the bot has privileges to time out the other user
-        if not has_privilege(interaction.guild.get_member(self.client.user.id), user):
+        self_member = interaction.guild.get_member(self.client.user.id)
+        if not has_privilege(self_member, user):
             raise commands.MissingPermissions(
                 ["moderate_members"],
                 f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
@@ -107,7 +108,11 @@ class UtilsModule(commands.Cog):
             duration = timedelta(seconds=60)
 
         # give timeout
-        await user.timeout(duration, reason=reason)
+        # either discord.py is being silly or discord, but "moderate_members" doesn't get computed correctly
+        try:
+            await user.timeout(duration, reason=reason)
+        except discord.Forbidden:
+            raise commands.MissingPermissions(["moderate_members"])
 
         # make timeout success message to command caller
         author_embed = discord.Embed(title="Success!",
@@ -154,15 +159,16 @@ class UtilsModule(commands.Cog):
         """
 
         # check if the bot has privileges to time out the other user
-        if not has_privilege(interaction.guild.get_member(self.client.user.id), user):
+        self_member = interaction.guild.get_member(self.client.user.id)
+        if not has_privilege(self_member, user) or not self_member.guild_permissions.kick_members:
             raise commands.MissingPermissions(
-                ["moderate_members"],
+                ["kick_members"],
                 f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
 
         # check if the command caller has the permissions to time out the other user
         if not has_privilege(interaction.user, user):
             raise commands.MissingPermissions(
-                ["moderate_members"],
+                ["kick_members"],
                 f"User {user.mention} has higher or equal privilege")
 
         # make message for the user who is going to be kicked out
