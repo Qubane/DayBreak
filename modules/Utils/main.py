@@ -155,13 +155,8 @@ class UtilsModule(commands.Cog):
         user_embed.add_field(name="Duration", value=duration.__str__())
         user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
-        # try to send user a dm with a reason for a timeout
-        try:
-            await user.send(embed=user_embed)
-
-        # if it failed for these reasons, just ignore
-        except (discord.HTTPException, discord.Forbidden):
-            pass
+        # try to notify user
+        await try_notify(user, user_embed, self.logger)
 
     @app_commands.command(name="bkick", description="kicks a user")
     @app_commands.checks.has_permissions(kick_members=True)
@@ -198,17 +193,8 @@ class UtilsModule(commands.Cog):
         user_embed.add_field(name="Reason", value=reason, inline=True)
         user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
-        # try to send user a dm with a reason for a timeout
-        try:
-            await user.send(embed=user_embed)
-
-        # if it failed for these reasons, just ignore
-        except (discord.HTTPException, discord.Forbidden):
-            pass
-
-        # if something else failed, print a message
-        except Exception as e:
-            self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+        # try to notify user
+        await try_notify(user, user_embed, self.logger)
 
         # kick the user
         await user.kick(reason=reason)
@@ -258,17 +244,8 @@ class UtilsModule(commands.Cog):
         user_embed.add_field(name="Reason", value=reason, inline=True)
         user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
-        # try to send user a dm with a reason for a timeout
-        try:
-            await user.send(embed=user_embed)
-
-        # if it failed for these reasons, just ignore
-        except (discord.HTTPException, discord.Forbidden):
-            pass
-
-        # if something else failed, print a message
-        except Exception as e:
-            self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+        # try to notify user
+        await try_notify(user, user_embed, self.logger)
 
         # kick the user
         await user.ban(delete_message_days=days, reason=reason)
