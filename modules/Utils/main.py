@@ -32,6 +32,31 @@ def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
     return positive_checks and not negative_checks
 
 
+async def try_notify(user: discord.Member, embed: discord.Embed, logger: logging.Logger | None = None):
+    """
+    Try to notify user about something
+    :param user: guild member
+    :param embed: pretty embed
+    :param logger: logger
+    """
+
+    # if logger was not defined
+    if logger is None:
+        logger = logging.getLogger(__name__)
+
+    # try to send user a dm
+    try:
+        await user.send(embed=embed)
+
+    # if it failed for these reasons, just ignore
+    except (discord.HTTPException, discord.Forbidden):
+        pass
+
+    # if something else failed, print a message
+    except Exception as e:
+        logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+
+
 class UtilsModule(commands.Cog):
     """
     This is an example module
