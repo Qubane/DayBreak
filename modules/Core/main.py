@@ -69,9 +69,6 @@ class CoreModule(commands.Cog):
 
         await self.client.change_presence(activity=discord.Game("A DayBreak"))
 
-        await self.client.tree.sync()
-        self.logger.info("Command tree synced")
-
     def load_config(self) -> None:
         """
         Loads 'self.modules_present' and 'self.modules_running' lists
@@ -309,7 +306,7 @@ class CoreModule(commands.Cog):
 
         if not (await self.client.is_owner(interaction.user)):
             raise commands.MissingPermissions(
-                ["bot-owner"], "You must be a host of this bot to run this command")
+                ["bot_owner"], "You must be a host of this bot to run this command")
 
         self.logger.info("initiated bot upgrade")
 
@@ -330,6 +327,10 @@ class CoreModule(commands.Cog):
             self.logger.info("Calling 'self' to reload...")
             await self.reload_self()
 
+            # re-sync the command tree
+            await self.client.tree.sync()
+            self.logger.info("Command tree synced")
+
         # create embed
         self.logger.info(f"Bot upgrade finished with message:\n{result.stdout}")
         await interaction.response.send_message(
@@ -338,6 +339,22 @@ class CoreModule(commands.Cog):
                 description=f"Message: \n{result.stderr}\n{result.stdout}",
                 color=discord.Color.green()),
             ephemeral=True)
+
+    @app_commands.command(name="bot-sync", description="sync command tree")
+    async def sync_bot_command(
+            self,
+            interaction: discord.Interaction
+    ) -> None:
+        """
+        Syncs up the command tree.
+        """
+
+        if not (await self.client.is_owner(interaction.user)):
+            raise commands.MissingPermissions(
+                ["bot_owner"], "You must be a host of this bot to run this command")
+
+        await self.client.tree.sync()
+        self.logger.info("Command tree synced")
 
 
 async def setup(client: commands.Bot) -> None:
