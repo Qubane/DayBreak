@@ -25,7 +25,7 @@ class MiscModule(commands.Cog):
         await interaction.response.send_message(
             f"{interaction.user.mention} You like kissing boys don't you?")
 
-    @app_commands.command(name="morning_tea", description="recipe for nice morning tea")
+    @app_commands.command(name="morning-tea", description="recipe for nice morning tea")
     @commands.cooldown(1, 3, commands.BucketType.user)
     async def morning_tea(self, interaction: discord.Interaction):
         await interaction.response.send_message(
@@ -51,19 +51,6 @@ class MiscModule(commands.Cog):
             f"8. Add pepper to the tea\n"
             f"  1. Shake the pepper, moaning in the process\n"
             f"## And voila, your tea is ready for consumption! :tea: :heart:\n")
-
-    @morning_tea.error
-    async def morning_tea_handler(self, ctx, error):
-        if isinstance(error, commands.CommandOnCooldown):
-            embed = discord.Embed(title="Be patient!",
-                                  description=f"Please wait: {error.retry_after:.2f} seconds",
-                                  color=discord.Color.orange())
-            await ctx.send(embed=embed, reference=ctx.message)
-        else:
-            embed = discord.Embed(title="ded...",
-                                  description=f"idk what happened, it ded. {type(error)}",
-                                  color=discord.Color.orange())
-            await ctx.send(embed=embed, reference=ctx.message)
 
 
 async def setup(client: commands.Bot) -> None:
