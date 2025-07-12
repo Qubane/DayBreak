@@ -29,7 +29,7 @@ class ExceptionHandlerModule(commands.Cog):
     async def on_command_error(
             self,
             interaction: commands.Context | discord.Interaction,
-            error: commands.ExtensionError):
+            error: commands.ExtensionError | Exception):
         """
         Global exception handler
         """
@@ -41,9 +41,13 @@ class ExceptionHandlerModule(commands.Cog):
         # missing permissions
         if isinstance(error, (app_commands.MissingPermissions, commands.MissingPermissions)):
             embed.title = error.__class__.__name__
-            embed.description = "List of missing permissions"
-            for permission in error.missing_permissions:
+            embed.description = f"Additional information: {'; '.join(error.args)}"
+            for permission in error.missing_permissions[:25]:
                 embed.add_field(name="Missing permission:", value=permission, inline=False)
+
+        # If command raised an error
+        elif isinstance(error, (app_commands.CommandInvokeError, commands.CommandInvokeError)):
+            await self.on_command_error(interaction, error.original)
 
         # any kind of command error
         elif isinstance(error, (app_commands.AppCommandError, commands.CommandError)):
