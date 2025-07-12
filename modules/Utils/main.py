@@ -23,7 +23,13 @@ def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
     hierarchy_check = caller.top_role > user.top_role
     owner_check = caller.guild.owner == caller
 
-    return any([hierarchy_check, owner_check])
+    # if either one is these are True
+    positive_checks = any([hierarchy_check, owner_check])
+
+    # if either one of these are False then the entire statement is False
+    negative_checks = caller.guild.owner == user
+
+    return negative_checks and positive_checks
 
 
 class UtilsModule(commands.Cog):
