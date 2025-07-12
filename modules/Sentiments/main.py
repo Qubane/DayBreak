@@ -134,20 +134,36 @@ class SentimentsModule(commands.Cog):
         # process messages
         results = [cast_result_to_numeric(x["label"]) / 5 for x in self.pipeline(messages)]
 
-        # update database
-        with self.use_database() as database:
-            # update database according to where the message was sent
-            for ref, result in zip(reference, results):
-                # make sure guild database is present
-                if str(ref.guild.id) not in database:
-                    database[str(ref.guild.id)] = dict()
+        # update database according to where the message was sent
+        for ref, result in zip(reference, results):
+            # table name
+            table_name = f"g{ref.guild.id}"
 
-                # update user
-                self.update_user(
-                    ref.author.id, database[str(ref.guild.id)],
-                    msg_n=lambda x: x + 1,  # add 1 to message number
-                    p_val=lambda x: x + result  # add result to p value (positivity value)
-                )
+            # user id
+            user_id = ref.author.id
+
+            # fetch user
+            existing_user = self.database_cursor.execute(
+                f"SELECT * FROM {table_name} WHERE UserId = ?",
+                (user_id,)).fetchone()
+
+            # if user not present
+            if not existing_user:
+                # insert user into table
+                self.database_cursor.execute(
+                    f"INSERT INTO {table_name} (UserId, MessageCount, PValue) VALUES (?, ?, ?)",
+                    (user_id, 0, 0.0))
+
+            # update user entry
+            self.database_cursor.execute(f"""
+                UPDATE {table_name} SET
+                MessageCount = MessageCount + 1,
+                PValue = PValue + ?
+                WHERE UserId = ?
+            """, (result, user_id))
+
+        # commit changes
+        self.database_connection.commit()
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
