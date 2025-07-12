@@ -67,6 +67,20 @@ class UtilsModule(commands.Cog):
         Code taken from 'UltraQbik/MightyOmegaBot'
         """
 
+        # check if the command caller has the permissions to time out the other user
+        if interaction.user.top_role <= user.top_role:
+            # if not -> send fail message
+            # make timeout fail message to command caller
+            author_embed = discord.Embed(title="Fail!",
+                                         description=f"User {user.mention} has higher or equal privilege",
+                                         color=discord.Color.red())
+
+            # send the message
+            await interaction.response.send_message(embed=author_embed, ephemeral=True)
+
+            # return
+            return
+
         # calculate duration, and give a timeout
         duration = timedelta(seconds=seconds, minutes=minutes, hours=hours, days=days, weeks=weeks)
 
@@ -77,19 +91,21 @@ class UtilsModule(commands.Cog):
         # give timeout
         await user.timeout(duration, reason=reason)
 
-        # make a pretty embed
-        author_embed = discord.Embed(title="Success!", description=f"User {user.name} was put on a timeout",
+        # make timeout success message to command caller
+        author_embed = discord.Embed(title="Success!",
+                                     description=f"User {user.mention} was put on a timeout",
                                      color=discord.Color.green())
 
-        # send the pretty embed
+        # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
-        # make a pretty embed
-        user_embed = discord.Embed(title="Timeout!", description="You were put on a timeout",
+        # make timeout message to user who was put on a timeout
+        user_embed = discord.Embed(title="Timeout!",
+                                   description="You were put on a timeout",
                                    color=discord.Color.red())
         user_embed.add_field(name="Reason", value=reason, inline=True)
         user_embed.add_field(name="Duration", value=duration.__str__())
-        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.avatar.url)
+        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
         # try to send user a dm with a reason for a timeout
         try:
