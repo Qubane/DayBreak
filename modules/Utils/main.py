@@ -137,7 +137,9 @@ class UtilsModule(commands.Cog):
         try:
             await user.timeout(duration, reason=reason)
         except discord.Forbidden:
-            raise commands.MissingPermissions(["moderate_members"])
+            raise commands.MissingPermissions(
+                ["moderate_members"],
+                "Bot is missing permissions")
 
         # make timeout success message to command caller
         author_embed = discord.Embed(title="Success!",
