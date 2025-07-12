@@ -64,7 +64,7 @@ class UtilsModule(commands.Cog):
     @app_commands.checks.has_permissions(moderate_members=True)
     @app_commands.guild_only()
     @app_commands.describe(
-        user="User to timeout",
+        user="user to timeout",
         seconds="how many seconds to timeout for",
         minutes="how many minutes to timeout for",
         hours="how many hours to timeout for",
@@ -138,15 +138,11 @@ class UtilsModule(commands.Cog):
         except (discord.HTTPException, discord.Forbidden):
             pass
 
-        # if something else failed, print a message
-        except Exception as e:
-            self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
-
     @app_commands.command(name="bkick", description="kicks a user")
     @app_commands.checks.has_permissions(kick_members=True)
     @app_commands.guild_only()
     @app_commands.describe(
-        user="User to kick",
+        user="user to kick",
         reason="reason for a kick (default is 'bad behaviour')")
     async def better_kick(
             self,
@@ -165,7 +161,7 @@ class UtilsModule(commands.Cog):
                 ["kick_members"],
                 f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
 
-        # check if the command caller has the permissions to time out the other user
+        # check if the command caller has the permissions to kick the other user
         if not has_privilege(interaction.user, user):
             raise commands.MissingPermissions(
                 ["kick_members"],
@@ -195,6 +191,66 @@ class UtilsModule(commands.Cog):
         # make success message to command caller
         author_embed = discord.Embed(title="Success!",
                                      description=f"User {user.mention} was kicked from the server",
+                                     color=discord.Color.green())
+
+        # send the message
+        await interaction.response.send_message(embed=author_embed, ephemeral=True)
+
+    @app_commands.command(name="bban", description="bans a user")
+    @app_commands.checks.has_permissions(kick_members=True)
+    @app_commands.guild_only()
+    @app_commands.describe(
+        user="user to kick",
+        days="messages that will be deleted within this time",
+        reason="reason for a ban (default is 'bad behaviour')")
+    async def better_ban(
+            self,
+            interaction: discord.Interaction,
+            user: discord.Member,
+            days: int,
+            reason: str = "bad behaviour"
+    ) -> None:
+        """
+        Command that will ban users
+        """
+
+        # check if the bot has privileges to time out the other user
+        self_member = interaction.guild.get_member(self.client.user.id)
+        if not has_privilege(self_member, user) or not self_member.guild_permissions.ban_members:
+            raise commands.MissingPermissions(
+                ["ban_members"],
+                f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
+
+        # check if the command caller has the permissions to ban the other user
+        if not has_privilege(interaction.user, user):
+            raise commands.MissingPermissions(
+                ["ban_members"],
+                f"User {user.mention} has higher or equal privilege")
+
+        # make message for the user who is going to be kicked out
+        user_embed = discord.Embed(title="You were banned from the server",
+                                   color=discord.Color.red())
+        user_embed.add_field(name="Reason", value=reason, inline=True)
+        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
+
+        # try to send user a dm with a reason for a timeout
+        try:
+            await user.send(embed=user_embed)
+
+        # if it failed for these reasons, just ignore
+        except (discord.HTTPException, discord.Forbidden):
+            pass
+
+        # if something else failed, print a message
+        except Exception as e:
+            self.logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+
+        # kick the user
+        await user.ban(delete_message_days=days, reason=reason)
+
+        # make success message to command caller
+        author_embed = discord.Embed(title="Success!",
+                                     description=f"User {user.mention} was banned from the server",
                                      color=discord.Color.green())
 
         # send the message
