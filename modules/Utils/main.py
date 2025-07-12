@@ -81,19 +81,17 @@ class UtilsModule(commands.Cog):
         Code taken from 'UltraQbik/MightyOmegaBot'
         """
 
+        # check if the bot has privileges to time out the other user
+        if not has_privilege(interaction.guild.get_member(self.client.user.id), user):
+            raise commands.MissingPermissions(
+                ["moderate_members"],
+                f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
+
         # check if the command caller has the permissions to time out the other user
         if not has_privilege(interaction.user, user):
-            # if not -> send fail message
-            # make timeout fail message to command caller
-            author_embed = discord.Embed(title="Fail!",
-                                         description=f"User {user.mention} has higher or equal privilege",
-                                         color=discord.Color.red())
-
-            # send the message
-            await interaction.response.send_message(embed=author_embed, ephemeral=True)
-
-            # return
-            return
+            raise commands.MissingPermissions(
+                ["moderate_members"],
+                f"User {user.mention} has higher or equal privilege")
 
         # calculate duration, and give a timeout
         duration = timedelta(seconds=seconds, minutes=minutes, hours=hours, days=days, weeks=weeks)
@@ -149,19 +147,17 @@ class UtilsModule(commands.Cog):
         Command that will kick users
         """
 
+        # check if the bot has privileges to time out the other user
+        if not has_privilege(interaction.guild.get_member(self.client.user.id), user):
+            raise commands.MissingPermissions(
+                ["moderate_members"],
+                f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
+
         # check if the command caller has the permissions to time out the other user
         if not has_privilege(interaction.user, user):
-            # if not -> send fail message
-            # make timeout fail message to command caller
-            author_embed = discord.Embed(title="Fail!",
-                                         description=f"User {user.mention} has higher or equal privilege",
-                                         color=discord.Color.red())
-
-            # send the message
-            await interaction.response.send_message(embed=author_embed, ephemeral=True)
-
-            # return
-            return
+            raise commands.MissingPermissions(
+                ["moderate_members"],
+                f"User {user.mention} has higher or equal privilege")
 
         # make message for the user who is going to be kicked out
         user_embed = discord.Embed(title="You were kicked from the server",
