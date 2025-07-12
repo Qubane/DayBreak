@@ -20,7 +20,10 @@ def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
     :return: True when 'caller' > 'user'; otherwise False
     """
 
-    return caller.top_role > user.top_role
+    hierarchy_check = caller.top_role > user.top_role
+    owner_check = caller.guild.owner == caller
+
+    return any([hierarchy_check, owner_check])
 
 
 class UtilsModule(commands.Cog):
@@ -136,7 +139,7 @@ class UtilsModule(commands.Cog):
     @app_commands.describe(
         user="User to kick",
         reason="reason for a kick (default is 'bad behaviour')")
-    async def better_timeout(
+    async def better_kick(
             self,
             interaction: discord.Interaction,
             user: discord.Member,
