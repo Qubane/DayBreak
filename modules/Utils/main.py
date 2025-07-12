@@ -218,7 +218,7 @@ class UtilsModule(commands.Cog):
             self,
             interaction: discord.Interaction,
             user: discord.Member,
-            days: int,
+            days: int = 0,
             reason: str = "bad behaviour"
     ) -> None:
         """
