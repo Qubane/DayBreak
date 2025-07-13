@@ -277,37 +277,35 @@ class SentimentsModule(commands.Cog):
         """
 
         # get leaderboard
-        leaderboard = self.get_guild_leaderboard(interaction.guild_id)
+        user_id = interaction.user.id
+        table_name = f"g{interaction.guild_id}"
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor
 
-        # index user
-        for idx, (user_id, magic_number) in enumerate(leaderboard, start=1):
-            if str(user_id) == str(interaction.user.id):
-                break
+            query = await cur.execute(f"""
+            SELECT
+                (SELECT MagicNumber FROM {table_name} WHERE UserId = ?) as MagicNumber,
+                (
+                    SELECT COUNT(*)
+                    FROM {table_name}
+                    WHERE MagicNumber >= (SELECT MagicNumber FROM {table_name} WHERE UserId = ?)
+                ) AS UserPosition
+            FROM {table_name}
+            WHERE UserId = ?
+            """, (user_id, user_id, user_id))
 
-        # if the loop finished (didn't break before that), means the user was not found
-        else:
-            # create response
-            embed = discord.Embed(
-                title="error 404: We don't know you yet!",
-                description="You are new to this server, so write more stuff to see the posiself!",
-                color=discord.Color.brand_green())
-
-            # send response
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
-            # early return
-            return
+            magic_number, leaderboard_place = await query.fetchone()
 
         # number postfix
         # Outputs `10st` (tenst), `20nd` (twentynd), `30rd` (thirtyrd)
         #
         # "it's not a bug, it's *character*" - @arminius97 (discord)
         #
-        if str(idx)[0] == "1":
+        if str(leaderboard_place)[0] == "1":
             postfix = "st"
-        elif str(idx)[0] == "2":
+        elif str(leaderboard_place)[0] == "2":
             postfix = "nd"
-        elif str(idx)[0] == "3":
+        elif str(leaderboard_place)[0] == "3":
             postfix = "rd"
         else:
             postfix = "th"
@@ -319,8 +317,10 @@ class SentimentsModule(commands.Cog):
         embed.add_field(
             name=f"Positivity score",
             value=f"{magic_number * 100:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
-        embed.add_field(name=f"Place on the posiboard", value=f"You are in the {idx}{postfix} place!", inline=False)
-        embed.set_footer(text="don't take this score at face value, it's just a magic number")
+        embed.add_field(
+            name=f"Place on the posiboard", value=f"You are in the {leaderboard_place}{postfix} place!", inline=False)
+        embed.set_footer(
+            text="don't take this score at face value, it's just a magic number")
 
         # send response
         await interaction.response.send_message(embed=embed)
