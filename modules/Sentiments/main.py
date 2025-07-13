@@ -5,11 +5,12 @@ Depending on how positive the messages are sent by user, they will be placed hig
 It uses AI model to perform sentiment analysis on message, and update the leaderboard accordingly.
 """
 
+
 import math
-import sqlite3
 import asyncio
 import discord
 import logging
+import aiosqlite
 import transformers.pipelines
 from discord import app_commands
 from transformers import pipeline
@@ -70,22 +71,8 @@ class SentimentsModule(commands.Cog):
             truncation=True)
 
         # database
-        self.database_connection: sqlite3.Connection = sqlite3.connect(f"{VARS_DIRECTORY}/sentiments.sqlite")
-        self.database_cursor: sqlite3.Cursor = self.database_connection.cursor()
-
-        # make sure the guild tables are present
-        for guild in self.client.guilds:
-            table_name = f"g{guild.id}"
-            self.database_cursor.execute(f"""
-            CREATE TABLE IF NOT EXISTS {table_name}(
-                UserId INTEGER PRIMARY KEY,
-                MessageCount INTEGER,
-                PValue REAL
-            );
-            """)
-
-        # commit database
-        self.database_connection.commit()
+        self.db_path: str = f"{VARS_DIRECTORY}/sentiments.sqlite"
+        self.db: aiosqlite.Connection | None = None
 
         # configs
         self.module_config: ModuleConfig = ModuleConfig("Sentiments")
@@ -96,6 +83,32 @@ class SentimentsModule(commands.Cog):
         # start task
         self.process_queued.change_interval(seconds=self.module_config.queue_process_interval)
         self.process_queued.start()
+
+    async def connect_database(self) -> None:
+        """
+        Connect database
+        """
+
+        # connect to the database
+        self.db = await aiosqlite.connect(self.db_path)
+
+        self.logger.info("Database connected")
+
+        # check the tables are present
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
+            for guild in self.client.guilds:
+                table_name = f"g{guild.id}"
+
+                await cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS {table_name}(
+                    UserId INTEGER PRIMARY KEY,
+                    MessageCount INTEGER,
+                    PValue REAL
+                );""")
+
+        # commit database changes
+        await self.db.commit()
 
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
@@ -135,35 +148,38 @@ class SentimentsModule(commands.Cog):
         results = [cast_result_to_numeric(x["label"]) / 5 for x in self.pipeline(messages)]
 
         # update database according to where the message was sent
-        for ref, result in zip(reference, results):
-            # table name
-            table_name = f"g{ref.guild.id}"
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
+            for ref, result in zip(reference, results):
+                # table name
+                table_name = f"g{ref.guild.id}"
 
-            # user id
-            user_id = ref.author.id
+                # user id
+                user_id = ref.author.id
 
-            # fetch user
-            existing_user = self.database_cursor.execute(
-                f"SELECT * FROM {table_name} WHERE UserId = ?",
-                (user_id,)).fetchone()
+                # fetch user
+                query = await cur.execute(
+                    f"SELECT * FROM {table_name} WHERE UserId = ?",
+                    (user_id,))
+                existing_user = await query.fetchone()
 
-            # if user not present
-            if not existing_user:
-                # insert user into table
-                self.database_cursor.execute(
-                    f"INSERT INTO {table_name} (UserId, MessageCount, PValue) VALUES (?, ?, ?)",
-                    (user_id, 0, 0.0))
+                # if user not present
+                if not existing_user:
+                    # insert user into table
+                    await cur.execute(
+                        f"INSERT INTO {table_name} (UserId, MessageCount, PValue) VALUES (?, ?, ?)",
+                        (user_id, 0, 0.0))
 
-            # update user entry
-            self.database_cursor.execute(f"""
-                UPDATE {table_name} SET
-                MessageCount = MessageCount + 1,
-                PValue = PValue + ?
-                WHERE UserId = ?
-            """, (result, user_id))
+                # update user entry
+                await cur.execute(f"""
+                    UPDATE {table_name} SET
+                    MessageCount = MessageCount + 1,
+                    PValue = PValue + ?
+                    WHERE UserId = ?
+                """, (result, user_id))
 
         # commit changes
-        self.database_connection.commit()
+        await self.db.commit()
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
@@ -275,4 +291,9 @@ class SentimentsModule(commands.Cog):
 
 
 async def setup(client: commands.Bot) -> None:
-    await client.add_cog(SentimentsModule(client))
+    # setup database
+    module = SentimentsModule(client)
+    await module.connect_database()
+
+    # add cog
+    await client.add_cog(module)
