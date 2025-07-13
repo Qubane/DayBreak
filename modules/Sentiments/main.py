@@ -196,18 +196,10 @@ class SentimentsModule(commands.Cog):
                 # user id
                 user_id = ref.author.id
 
-                # fetch user
-                query = await cur.execute(
-                    f"SELECT * FROM {table_name} WHERE UserId = ?",
-                    (user_id,))
-                existing_user = await query.fetchone()
-
-                # if user not present
-                if not existing_user:
-                    # insert user into table
-                    await cur.execute(
-                        f"INSERT INTO {table_name} (UserId, MessageCount, PValue) VALUES (?, ?, ?)",
-                        (user_id, 0, 0.0))
+                # insert user if not already present
+                await cur.execute(
+                    f"INSERT OR IGNORE INTO {table_name} (UserId, MessageCount, PValue) VALUES (?, ?, ?)",
+                    (user_id, 0, 0.0))
 
                 # update user entry
                 await cur.execute(f"""
