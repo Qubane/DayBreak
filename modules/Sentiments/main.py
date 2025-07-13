@@ -122,8 +122,9 @@ class SentimentsModule(commands.Cog):
                 await cur.execute(f"""
                 CREATE TABLE IF NOT EXISTS {table_name}(
                     UserId INTEGER PRIMARY KEY,
-                    MessageCount INTEGER,
-                    PValue REAL
+                    MessageCount INTEGER DEFAULT 0,
+                    PValue REAL DEFAULT 0.0,
+                    MagicNumber REAL DEFAULT 0.0
                 );""")
 
         # commit database changes
@@ -196,18 +197,27 @@ class SentimentsModule(commands.Cog):
                 # user id
                 user_id = ref.author.id
 
-                # insert user if not already present
-                await cur.execute(
-                    f"INSERT OR IGNORE INTO {table_name} (UserId, MessageCount, PValue) VALUES (?, ?, ?)",
-                    (user_id, 0, 0.0))
+                # insert user if not present
+                await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
+
+                # fetch user
+                query = await cur.execute(
+                    f"SELECT MessageCount, PValue FROM {table_name} WHERE UserId = ?", (user_id,))
+                user = await query.fetchone()
+
+                # compute user values
+                message_count = user[0] + 1
+                p_value = user[1] + result
+                magic_number = magic_number_formula(p_value, message_count)
 
                 # update user entry
                 await cur.execute(f"""
                     UPDATE {table_name} SET
-                    MessageCount = MessageCount + 1,
-                    PValue = PValue + ?
+                    MessageCount = ?,
+                    PValue = ?,
+                    MagicNumber = ?
                     WHERE UserId = ?
-                """, (result, user_id))
+                """, (message_count, p_value, magic_number, user_id))
 
         # commit changes
         await self.db.commit()
@@ -222,7 +232,13 @@ class SentimentsModule(commands.Cog):
         """
 
         # get leaderboard
-        leaderboard = self.get_guild_leaderboard(interaction.guild_id)
+        table_name = f"g{interaction.guild_id}"
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
+            query = await cur.execute(f"SELECT * FROM {table_name} ORDER BY MagicNumber DESC")
+            leaderboard = await query.fetchall()
+            print(leaderboard)
+            return
 
         # filter users who left
         leaderboard = list(filter(lambda x: (interaction.guild.get_member(int(x[0])) is not None), leaderboard))
