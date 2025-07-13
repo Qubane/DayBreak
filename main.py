@@ -4,6 +4,7 @@ This is what you run to start the bot
 """
 
 
+import asyncio
 import discord
 import logging
 import source.settings
@@ -23,6 +24,18 @@ class Client(commands.Bot):
 
         # logger
         self.logger: logging.Logger = logging.getLogger(__name__)
+
+    async def close(self) -> None:
+        """
+        Call cleanups for cogs (if present)
+        """
+
+        # clean up tasks
+        cleanup_tasks = [cog.on_cleanup() for cog in self.cogs.values() if hasattr(cog, "on_cleanup")]
+        await asyncio.gather(*cleanup_tasks)
+
+        # actually close the bot
+        await super().close()
 
     async def setup_hook(self) -> None:
         """
