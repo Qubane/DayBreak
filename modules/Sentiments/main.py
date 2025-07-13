@@ -6,19 +6,17 @@ It uses AI model to perform sentiment analysis on message, and update the leader
 """
 
 
-import os
 import math
-import json
 import asyncio
 import discord
 import logging
-from typing import Callable
+import aiosqlite
 import transformers.pipelines
 from discord import app_commands
 from transformers import pipeline
-from contextlib import contextmanager
 from discord.ext import commands, tasks
 from source.configs import *
+from source.settings import VARS_DIRECTORY
 
 
 def cast_result_to_numeric(label: str) -> int:
@@ -67,16 +65,13 @@ class SentimentsModule(commands.Cog):
         self.logger.info("Module loaded")
 
         # model
-        self.pipeline: transformers.pipelines.Pipeline = pipeline(
-            "text-classification",
-            model="tabularisai/multilingual-sentiment-analysis",
-            truncation=True)
+        self.pipeline: transformers.pipelines.Pipeline | None = None
+        asyncio.create_task(self.load_pipeline())
 
-        # path to Sentiments database
-        self.db_path = "var/sentiments_leaderboard.json"
-        if not os.path.isfile(self.db_path):  # create file if missing
-            with open(self.db_path, "w", encoding="utf-8") as f:
-                f.write("{}")
+        # database
+        self.db_path: str = f"{VARS_DIRECTORY}/sentiments.sqlite"
+        self.db: aiosqlite.Connection | None = None
+        asyncio.create_task(self.connect_database())
 
         # configs
         self.module_config: ModuleConfig = ModuleConfig("Sentiments")
@@ -88,81 +83,78 @@ class SentimentsModule(commands.Cog):
         self.process_queued.change_interval(seconds=self.module_config.queue_process_interval)
         self.process_queued.start()
 
-    @contextmanager
-    def use_database(self, guild_id: str | int | None = None):
+    async def on_cleanup(self):
         """
-        User database context manager
-        """
-
-        # the bot is small enough for json "databases" to be ok
-        with open(self.db_path, "r", encoding="utf-8") as file:
-            database: dict[str, dict] = json.load(file)
-
-        # if guild id parameter is present the guild is not yet present -> add it
-        if guild_id is not None and str(guild_id) not in database:
-            database[str(guild_id)] = dict()
-
-        # manage context
-        try:
-            # yield whole database if no guild is provided
-            if guild_id is None:
-                yield database
-
-            # yield guild's database
-            else:
-                yield database[str(guild_id)]
-        finally:
-            # store new database
-            with open(self.db_path, "w", encoding="utf-8") as file:
-                json.dump(database, file)
-
-    @staticmethod
-    def update_user(user: int | str, database: dict[str, dict], **kwargs) -> None:
-        """
-        Update user from database
-        :param user: user id
-        :param database: database context
-        :param kwargs: keyword arguments. Uses lambdas to affect the user parameters, for 'set' use 'lambda x: const'
+        Cleanup because anything asynchronous has to be a headache
         """
 
-        # make sure id is a string
-        user = str(user)
+        await self.disconnect_database()
 
-        # if user is not present
-        if user not in database:
-            database[user] = dict()
-
-        # write data to user
-        for key, func in kwargs.items():
-            func: Callable
-            database[user][key] = func(database[user].get(key, 0))
-
-    def get_guild_leaderboard(self, guild_id: int | str) -> list[tuple[int, float]]:
+    async def disconnect_database(self) -> None:
         """
-        Returns guild's leaderboard
-        :param guild_id: guild id
-        :return: leaderboard
+        Disconnects the database
         """
 
-        # fetch and process guild's database
-        leaderboard: list[tuple[int, float]] = []
-        with self.use_database(guild_id) as database:
-            for user_id, user_dict in database.items():
-                # calculate user
-                magic_number = magic_number_formula(user_dict["p_val"], user_dict["msg_n"])
-                leaderboard.append((user_id, magic_number))
+        if self.db is not None:
+            await self.db.commit()
+            await self.db.close()
 
-        # sort users
-        leaderboard.sort(key=lambda x: x[1], reverse=True)
+            self.logger.info("Database closed")
 
-        # return leaderboard
-        return leaderboard
+    @commands.Cog.listener("on_ready")
+    async def connect_database(self) -> None:
+        """
+        Connect database
+        """
+
+        # connect to the database
+        if self.db is None:
+            self.db = await aiosqlite.connect(self.db_path)
+
+            self.logger.info("Database connected")
+
+        # check the tables are present
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
+            for guild in self.client.guilds:
+                table_name = f"g{guild.id}"
+
+                await cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS {table_name}(
+                    UserId INTEGER PRIMARY KEY,
+                    MessageCount INTEGER DEFAULT 0,
+                    PValue REAL DEFAULT 0.0,
+                    MagicNumber REAL DEFAULT 0.0
+                );""")
+
+        # commit database changes
+        await self.db.commit()
+
+    async def load_pipeline(self):
+        """
+        Loading pipeline slowed the loading of other modules, which is not good
+        """
+
+        def task():
+            self.pipeline = pipeline(
+                "text-classification",
+                model="tabularisai/multilingual-sentiment-analysis",
+                truncation=True)
+
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, task)
+
+        self.logger.info("Model pipeline loaded")
 
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
         """
+
+        # skip if model is not yet loaded
+        if self.pipeline is None:
+            return
 
         # skip if there's nothing to process
         if len(self.message_processing_queue) == 0:
@@ -195,20 +187,40 @@ class SentimentsModule(commands.Cog):
         # process messages
         results = [cast_result_to_numeric(x["label"]) / 5 for x in self.pipeline(messages)]
 
-        # update database
-        with self.use_database() as database:
-            # update database according to where the message was sent
+        # update database according to where the message was sent
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
             for ref, result in zip(reference, results):
-                # make sure guild database is present
-                if str(ref.guild.id) not in database:
-                    database[str(ref.guild.id)] = dict()
+                # table name
+                table_name = f"g{ref.guild.id}"
 
-                # update user
-                self.update_user(
-                    ref.author.id, database[str(ref.guild.id)],
-                    msg_n=lambda x: x + 1,  # add 1 to message number
-                    p_val=lambda x: x + result  # add result to p value (positivity value)
-                )
+                # user id
+                user_id = ref.author.id
+
+                # insert user if not present
+                await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
+
+                # fetch user
+                query = await cur.execute(
+                    f"SELECT MessageCount, PValue FROM {table_name} WHERE UserId = ?", (user_id,))
+                user = await query.fetchone()
+
+                # compute user values
+                message_count = user[0] + 1
+                p_value = user[1] + result
+                magic_number = magic_number_formula(p_value, message_count)
+
+                # update user entry
+                await cur.execute(f"""
+                    UPDATE {table_name} SET
+                    MessageCount = ?,
+                    PValue = ?,
+                    MagicNumber = ?
+                    WHERE UserId = ?
+                """, (message_count, p_value, magic_number, user_id))
+
+        # commit changes
+        await self.db.commit()
 
     @app_commands.command(name="posiboard", description="positivity leaderboard")
     async def posiboard(
@@ -220,20 +232,37 @@ class SentimentsModule(commands.Cog):
         """
 
         # get leaderboard
-        leaderboard = self.get_guild_leaderboard(interaction.guild_id)
+        table_name = f"g{interaction.guild_id}"
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
 
-        # filter users who left
-        leaderboard = list(filter(lambda x: (interaction.guild.get_member(int(x[0])) is not None), leaderboard))
+            # fetch users, ordered from highest to lowest
+            query = await cur.execute(
+                f"SELECT UserId, MagicNumber FROM {table_name} ORDER BY MagicNumber DESC")
+            leaderboard = await query.fetchall()
 
         # make embed
         embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
 
         # add fields. Top 5 users
-        for user in leaderboard[:5]:
+        limit = 5
+        for user_row in leaderboard:
+            # if limit is 0 -> break
+            if limit <= 0:
+                break
+
+            # if user left the guild, skip them
+            if interaction.guild.get_member(user_row[0]) is None:
+                continue
+
+            # else add them to embed
             embed.add_field(
-                name=interaction.guild.get_member(int(user[0])).display_name,
-                value=f"Positivity score is {user[1] * 100:.0f}",
+                name=interaction.guild.get_member(user_row[0]).display_name,
+                value=f"Positivity score is {user_row[1] * 100:.0f}",
                 inline=False)
+
+            # decrement the limit
+            limit -= 1
 
         # display the embed
         await interaction.response.send_message(embed=embed)
@@ -248,37 +277,35 @@ class SentimentsModule(commands.Cog):
         """
 
         # get leaderboard
-        leaderboard = self.get_guild_leaderboard(interaction.guild_id)
+        user_id = interaction.user.id
+        table_name = f"g{interaction.guild_id}"
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor
 
-        # index user
-        for idx, (user_id, magic_number) in enumerate(leaderboard, start=1):
-            if str(user_id) == str(interaction.user.id):
-                break
+            query = await cur.execute(f"""
+            SELECT
+                (SELECT MagicNumber FROM {table_name} WHERE UserId = ?) as MagicNumber,
+                (
+                    SELECT COUNT(*)
+                    FROM {table_name}
+                    WHERE MagicNumber >= (SELECT MagicNumber FROM {table_name} WHERE UserId = ?)
+                ) AS UserPosition
+            FROM {table_name}
+            WHERE UserId = ?
+            """, (user_id, user_id, user_id))
 
-        # if the loop finished (didn't break before that), means the user was not found
-        else:
-            # create response
-            embed = discord.Embed(
-                title="error 404: We don't know you yet!",
-                description="You are new to this server, so write more stuff to see the posiself!",
-                color=discord.Color.brand_green())
-
-            # send response
-            await interaction.response.send_message(embed=embed, ephemeral=True)
-
-            # early return
-            return
+            magic_number, leaderboard_place = await query.fetchone()
 
         # number postfix
         # Outputs `10st` (tenst), `20nd` (twentynd), `30rd` (thirtyrd)
         #
         # "it's not a bug, it's *character*" - @arminius97 (discord)
         #
-        if str(idx)[0] == "1":
+        if str(leaderboard_place)[0] == "1":
             postfix = "st"
-        elif str(idx)[0] == "2":
+        elif str(leaderboard_place)[0] == "2":
             postfix = "nd"
-        elif str(idx)[0] == "3":
+        elif str(leaderboard_place)[0] == "3":
             postfix = "rd"
         else:
             postfix = "th"
@@ -290,8 +317,10 @@ class SentimentsModule(commands.Cog):
         embed.add_field(
             name=f"Positivity score",
             value=f"{magic_number * 100:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
-        embed.add_field(name=f"Place on the posiboard", value=f"You are in the {idx}{postfix} place!", inline=False)
-        embed.set_footer(text="don't take this score at face value, it's just a magic number")
+        embed.add_field(
+            name=f"Place on the posiboard", value=f"You are in the {leaderboard_place}{postfix} place!", inline=False)
+        embed.set_footer(
+            text="don't take this score at face value, it's just a magic number")
 
         # send response
         await interaction.response.send_message(embed=embed)
