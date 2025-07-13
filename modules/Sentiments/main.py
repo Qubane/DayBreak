@@ -73,6 +73,7 @@ class SentimentsModule(commands.Cog):
         # database
         self.db_path: str = f"{VARS_DIRECTORY}/sentiments.sqlite"
         self.db: aiosqlite.Connection | None = None
+        asyncio.create_task(self.connect_database())
 
         # configs
         self.module_config: ModuleConfig = ModuleConfig("Sentiments")
@@ -84,15 +85,35 @@ class SentimentsModule(commands.Cog):
         self.process_queued.change_interval(seconds=self.module_config.queue_process_interval)
         self.process_queued.start()
 
+    async def cleanup(self):
+        """
+        Cleanup because anything asynchronous has to be a headache
+        """
+
+        await self.disconnect_database()
+
+    async def disconnect_database(self) -> None:
+        """
+        Disconnects the database
+        """
+
+        if self.db is not None:
+            await self.db.commit()
+            await self.db.close()
+
+            self.logger.info("Database closed")
+
+    @commands.Cog.listener("on_ready")
     async def connect_database(self) -> None:
         """
         Connect database
         """
 
         # connect to the database
-        self.db = await aiosqlite.connect(self.db_path)
+        if self.db is None:
+            self.db = await aiosqlite.connect(self.db_path)
 
-        self.logger.info("Database connected")
+            self.logger.info("Database connected")
 
         # check the tables are present
         async with self.db.cursor() as cur:
@@ -291,9 +312,4 @@ class SentimentsModule(commands.Cog):
 
 
 async def setup(client: commands.Bot) -> None:
-    # setup database
-    module = SentimentsModule(client)
-    await module.connect_database()
-
-    # add cog
-    await client.add_cog(module)
+    await client.add_cog(SentimentsModule(client))
