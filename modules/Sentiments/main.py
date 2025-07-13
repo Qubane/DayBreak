@@ -65,10 +65,8 @@ class SentimentsModule(commands.Cog):
         self.logger.info("Module loaded")
 
         # model
-        self.pipeline: transformers.pipelines.Pipeline = pipeline(
-            "text-classification",
-            model="tabularisai/multilingual-sentiment-analysis",
-            truncation=True)
+        self.pipeline: transformers.pipelines.Pipeline | None = None
+        asyncio.create_task(self.load_pipeline())
 
         # database
         self.db_path: str = f"{VARS_DIRECTORY}/sentiments.sqlite"
@@ -131,11 +129,31 @@ class SentimentsModule(commands.Cog):
         # commit database changes
         await self.db.commit()
 
+    async def load_pipeline(self):
+        """
+        Loading pipeline slowed the loading of other modules, which is not good
+        """
+
+        def task():
+            self.pipeline = pipeline(
+                "text-classification",
+                model="tabularisai/multilingual-sentiment-analysis",
+                truncation=True)
+
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, task)
+
+        self.logger.info("Model pipeline loaded")
+
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
         Perform sentiment analysis on queued messages
         """
+
+        # skip if model is not yet loaded
+        if self.pipeline is None:
+            return
 
         # skip if there's nothing to process
         if len(self.message_processing_queue) == 0:
