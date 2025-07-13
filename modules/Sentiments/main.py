@@ -85,7 +85,7 @@ class SentimentsModule(commands.Cog):
         self.process_queued.change_interval(seconds=self.module_config.queue_process_interval)
         self.process_queued.start()
 
-    async def cleanup(self):
+    async def on_cleanup(self):
         """
         Cleanup because anything asynchronous has to be a headache
         """
