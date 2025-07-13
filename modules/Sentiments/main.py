@@ -235,23 +235,34 @@ class SentimentsModule(commands.Cog):
         table_name = f"g{interaction.guild_id}"
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor  # help with type hinting
-            query = await cur.execute(f"SELECT * FROM {table_name} ORDER BY MagicNumber DESC")
-            leaderboard = await query.fetchall()
-            print(leaderboard)
-            return
 
-        # filter users who left
-        leaderboard = list(filter(lambda x: (interaction.guild.get_member(int(x[0])) is not None), leaderboard))
+            # fetch users, ordered from highest to lowest
+            query = await cur.execute(
+                f"SELECT UserId, MagicNumber FROM {table_name} ORDER BY MagicNumber DESC")
+            leaderboard = await query.fetchall()
 
         # make embed
         embed = discord.Embed(title="Positivity leaderboard", color=discord.Color.green())
 
         # add fields. Top 5 users
-        for user in leaderboard[:5]:
+        limit = 5
+        for user_row in leaderboard:
+            # if limit is 0 -> break
+            if limit <= 0:
+                break
+
+            # if user left the guild, skip them
+            if interaction.guild.get_member(user_row[0]) is None:
+                continue
+
+            # else add them to embed
             embed.add_field(
-                name=interaction.guild.get_member(int(user[0])).display_name,
-                value=f"Positivity score is {user[1] * 100:.0f}",
+                name=interaction.guild.get_member(user_row[0]).display_name,
+                value=f"Positivity score is {user_row[1] * 100:.0f}",
                 inline=False)
+
+            # decrement the limit
+            limit -= 1
 
         # display the embed
         await interaction.response.send_message(embed=embed)
