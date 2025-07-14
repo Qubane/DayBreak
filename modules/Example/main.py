@@ -5,8 +5,11 @@ This is an example module for DayBreak bot
 
 import discord
 import logging
+import aiosqlite
 from discord import app_commands
 from discord.ext import commands
+from source.configs import *
+from source.databases import *
 
 
 class ExampleModule(commands.Cog):
@@ -22,8 +25,29 @@ class ExampleModule(commands.Cog):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
-        # here's an example variable
-        self.example = "example"
+        # configs
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)  # per module config
+        self.guild_configs: GuildConfigCollection = GuildConfigCollection(self.module_name)  # per guild config
+
+        # databases
+        self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
+        self.db: aiosqlite.Connection | None = None
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
+
+        # close the database on clean up
+        await self.db_handle.close()
+
+    async def on_ready(self):
+        """
+        When the module is loaded
+        """
+
+        # connect to database
+        self.db = await self.db_handle.connect()
 
     @app_commands.command(name="example", description="does some things")
     @app_commands.describe(
