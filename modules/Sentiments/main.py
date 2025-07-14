@@ -72,7 +72,6 @@ class SentimentsModule(commands.Cog):
         # database
         self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
         self.db: aiosqlite.Connection | None = None
-        asyncio.create_task(self.on_ready())
 
         # configs
         self.module_config: ModuleConfig = ModuleConfig(self.module_name)
@@ -92,7 +91,6 @@ class SentimentsModule(commands.Cog):
         await self.db_handle.close()
         self.logger.info("Database closed")
 
-    @commands.Cog.listener("on_ready")
     async def on_ready(self) -> None:
         """
         Connect database
