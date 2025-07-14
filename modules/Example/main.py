@@ -15,7 +15,8 @@ class ExampleModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "Example"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -23,9 +24,6 @@ class ExampleModule(commands.Cog):
 
         # here's an example variable
         self.example = "example"
-
-        # here's an example path to the database
-        self.db_path = "var/example_db.json"
 
     @app_commands.command(name="example", description="does some things")
     @app_commands.describe(
