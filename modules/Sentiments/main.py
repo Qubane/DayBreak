@@ -143,7 +143,7 @@ class SentimentsModule(commands.Cog):
         """
 
         # make query
-        async with self.db.cursor as cur:
+        async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor  # help with type hinting
             await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
 
