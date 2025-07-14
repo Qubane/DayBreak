@@ -263,7 +263,7 @@ class UtilsModule(commands.Cog):
         Command that will ban users
         """
 
-        # check if the bot has privileges to time out the other user
+        # check if the bot has privileges to ban the other user
         self_member = interaction.guild.get_member(self.client.user.id)
         if not has_privilege(self_member, user) or not self_member.guild_permissions.ban_members:
             raise commands.MissingPermissions(
@@ -285,7 +285,7 @@ class UtilsModule(commands.Cog):
         # try to notify user
         await try_notify(user, user_embed, self.logger)
 
-        # kick the user
+        # ban the user
         await user.ban(delete_message_days=days, reason=reason)
 
         # make success message to command caller
@@ -314,10 +314,92 @@ class UtilsModule(commands.Cog):
         Warns a user
         """
 
+        # check if the bot has privileges to warn / ban the other user
+        self_member = interaction.guild.get_member(self.client.user.id)
+        if not has_privilege(self_member, user) or not self_member.guild_permissions.ban_members:
+            raise commands.MissingPermissions(
+                ["ban_members"],
+                f"User {user.mention} has higher or equal privilege. Bot is missing permissions")
+
+        # check if the command caller has the permissions to warn / ban the other user
+        if not has_privilege(interaction.user, user):
+            raise commands.MissingPermissions(
+                ["ban_members"],
+                f"User {user.mention} has higher or equal privilege")
+
+        # db cursor
         async with self.warns_db.cursor() as cur:
             cur: aiosqlite.Cursor
 
+            # user parameters
+            user_id = user.id
+            table_name = f"g{interaction.guild_id}"
 
+            # insert or ignore
+            await insert_or_ignore_user(cur, table_name, user_id)
+
+            # fetch user warns
+            query = await cur.execute(f"SELECT WarnCount FROM {table_name} WHERE UserId = ?", (user_id,))
+            warn_count = (await query.fetchone())[0] + 1
+
+            # check if user is to be banned
+            is_user_banned = False
+            if warn_count >= 3:
+                is_user_banned = True
+                warn_count = 0
+
+            # update warn counter
+            await cur.execute(
+                f"UPDATE {table_name} SET WarnCount = ? WHERE UserId = ?",
+                (warn_count, user_id,))
+
+            # if user is to be banned
+            if is_user_banned:
+                # make message for the user who is going to be kicked out
+                user_embed = discord.Embed(title="You exceeded the number of warns; You have been banned",
+                                           color=discord.Color.red())
+                user_embed.add_field(name="Reason", value=reason, inline=True)
+                user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
+
+                # try to notify user
+                await try_notify(user, user_embed, self.logger)
+
+                # ban the user
+                await user.ban(reason=reason)
+
+            # if user is not banned, and silent flag is off
+            elif not silent:
+                # make message for the user who is going to be kicked out
+                user_embed = discord.Embed(title=f"You have been given a warning. Current warn count: {warn_count}",
+                                           color=discord.Color.red())
+                user_embed.add_field(name="Reason", value=reason, inline=True)
+                user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
+
+                # try to notify user
+                await try_notify(user, user_embed, self.logger)
+
+        # commit changes
+        await self.warns_db.commit()
+
+        # send notification to author
+        if is_user_banned:
+            # make success message to command caller
+            author_embed = discord.Embed(title="Success!",
+                                         description=f"User {user.mention} had exceeded the number of warns, "
+                                                     f"and was banned from the server",
+                                         color=discord.Color.green())
+
+            # send the message
+            await interaction.response.send_message(embed=author_embed, ephemeral=True)
+        else:
+            # make success message to command caller
+            author_embed = discord.Embed(title="Success!",
+                                         description=f"User {user.mention} was given a warning. "
+                                                     f"Current warn count: {warn_count}",
+                                         color=discord.Color.green())
+
+            # send the message
+            await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
