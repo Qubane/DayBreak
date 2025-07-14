@@ -1,4 +1,5 @@
 import discord
+from source.configs import *
 
 
 def format_string(string: str | None, *args, **kwargs) -> str | None:
@@ -17,7 +18,7 @@ def format_string(string: str | None, *args, **kwargs) -> str | None:
 
 async def make_announcement(
         channel: discord.TextChannel,
-        config: dict,
+        config: GuildConfig,
         keywords: dict,
         publish: bool = True
 ) -> None:
@@ -30,24 +31,24 @@ async def make_announcement(
     """
 
     # text
-    text = format_string(config["text"], **keywords)
+    text = format_string(config.text, **keywords)
 
     # embed
     embed = discord.Embed(
-        title=format_string(config["embed"]["body"]["title"], **keywords),
-        description=format_string(config["embed"]["body"]["description"], **keywords),
-        url=format_string(config["embed"]["body"]["url"], **keywords),
-        color=discord.Color.from_str(config["embed"]["body"]["color"]))
+        title=format_string(config.embed.body.title, **keywords),
+        description=format_string(config.embed.body.description, **keywords),
+        url=format_string(config.embed.body.url, **keywords),
+        color=discord.Color.from_str(config.embed.body.color))
     embed.set_image(
-        url=format_string(config["embed"]["thumbnail"], **keywords))
+        url=format_string(config.embed.thumbnail, **keywords))
     embed.set_author(
-        name=format_string(config["embed"]["author"]["name"], **keywords),
-        url=format_string(config["embed"]["author"]["url"], **keywords),
-        icon_url=format_string(config["embed"]["author"]["icon_url"], **keywords))
-    for field_config in config["embed"]["fields"]:
+        name=format_string(config.embed.author.name, **keywords),
+        url=format_string(config.embed.author.url, **keywords),
+        icon_url=format_string(config.embed.author.icon_url, **keywords))
+    for field_config in config.embed.fields:
         embed.add_field(
-            name=format_string(field_config["name"], **keywords),
-            value=format_string(field_config["value"], **keywords))
+            name=format_string(field_config.name, **keywords),
+            value=format_string(field_config.value, **keywords))
 
     # sending and publishing
     message_context = await channel.send(content=text, embed=embed)
