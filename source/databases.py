@@ -7,6 +7,18 @@ import aiosqlite
 from source.settings import *
 
 
+async def insert_or_ignore_user(cur: aiosqlite.Cursor, table_name: str, user_id: int | str) -> None:
+    """
+    SQL query
+    'INSERT OR IGNORE INTO {table_name} (UserId) VALUES ({user_id});'
+    :param cur: database cursor
+    :param table_name: guild table name
+    :param user_id: user id
+    """
+
+    await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
+
+
 class DatabaseHandle:
     """
     Database handling class
