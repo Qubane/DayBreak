@@ -10,6 +10,7 @@ import logging
 from datetime import timedelta
 from discord import app_commands
 from discord.ext import commands
+from source.configs import *
 from source.databases import *
 
 
@@ -70,6 +71,10 @@ class UtilsModule(commands.Cog):
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
+
+        # configs
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)
+        self.guilds_config: GuildConfigCollection = GuildConfigCollection(self.module_name)
 
         # databases
         self.warns_db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
