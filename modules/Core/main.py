@@ -56,7 +56,12 @@ class CoreModule(commands.Cog):
         # config and module loading
         self.load_config()
 
-    @commands.Cog.listener()
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
+
+    @commands.Cog.listener("on_ready")
     async def on_ready(self) -> None:
         """
         When the bot successfully connects to discord's websocket

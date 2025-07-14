@@ -16,7 +16,8 @@ class ExceptionHandlerModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "ExceptionHandler"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -25,7 +26,12 @@ class ExceptionHandlerModule(commands.Cog):
         # add global exception handler
         self.client.tree.error(coro=self.on_command_error)
 
-    @commands.Cog.listener()
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
+
+    @commands.Cog.listener("on_command_error")
     async def on_command_error(
             self,
             interaction: commands.Context | discord.Interaction,

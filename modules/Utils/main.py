@@ -63,11 +63,17 @@ class UtilsModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "Utils"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
 
     @app_commands.command(name="latency", description="shows bots latency")
     async def latency(

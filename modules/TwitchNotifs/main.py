@@ -20,15 +20,16 @@ class TwitchNotifsModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "TwitchNotifs"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
         # configs
-        self.module_config: ModuleConfig = ModuleConfig("TwitchNotifs")
-        self.guild_config: GuildConfigCollection = GuildConfigCollection("TwitchNotifs")
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)
+        self.guild_config: GuildConfigCollection = GuildConfigCollection(self.module_name)
 
         # channels
         # 'channel_name': Stream
@@ -39,6 +40,11 @@ class TwitchNotifsModule(commands.Cog):
         self.check_routine.change_interval(seconds=self.module_config.update_interval)
         self.check_routine.start()
         self.update_key_routine.start()
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
 
     async def fetch_streams(self) -> dict[str, Stream | None]:
         """

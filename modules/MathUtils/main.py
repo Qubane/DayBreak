@@ -20,7 +20,8 @@ class MathUtilsModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "MathUtils"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -28,6 +29,11 @@ class MathUtilsModule(commands.Cog):
 
         # tiny config
         self.calculation_timeout: float = 10
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
 
     @staticmethod
     def render_latex_formula(formula: str) -> BytesIO:

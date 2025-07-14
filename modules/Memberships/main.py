@@ -19,17 +19,23 @@ class MembershipsModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "Memberships"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
         # config
-        self.config: GuildConfigCollection = GuildConfigCollection("memberships")
+        self.config: GuildConfigCollection = GuildConfigCollection(self.module_name)
 
         # check members
         asyncio.create_task(self.check_all_memberships())
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
 
     @commands.Cog.listener()
     async def on_member_join(self, member: discord.Member) -> None:

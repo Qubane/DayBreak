@@ -14,11 +14,17 @@ from discord import app_commands
 
 class MiscModule(commands.Cog):
     def __init__(self, client: commands.Bot):
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "Misc"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
 
     @app_commands.command(name="bk", description="boykisser")
     async def boy_kisser(self, interaction: discord.Interaction):

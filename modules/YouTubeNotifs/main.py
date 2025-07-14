@@ -21,15 +21,16 @@ class YouTubeNotifsModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "YouTubeNotifs"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
         # configs
-        self.module_config: ModuleConfig = ModuleConfig("YouTubeNotifs")
-        self.guild_config: GuildConfigCollection = GuildConfigCollection("YouTubeNotifs")
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)
+        self.guild_config: GuildConfigCollection = GuildConfigCollection(self.module_name)
 
         # youtube channels
         # {"channel_id": [Video(...), Video(...), ...]}
@@ -41,6 +42,11 @@ class YouTubeNotifsModule(commands.Cog):
 
         self.check.change_interval(seconds=self.module_config.update_interval)
         self.check.start()
+
+    async def on_cleanup(self):
+        """
+        Gets called when the bot is exiting
+        """
 
     async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Media]]:
         """
