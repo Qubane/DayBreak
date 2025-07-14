@@ -112,7 +112,7 @@ class CoreModule(commands.Cog):
             # try to load the module
             try:
                 # load module
-                await self.client.load_extension(make_module_path(module))
+                await self.load_module(module)
 
                 # append to running modules
                 self.modules_running.append(module)
@@ -135,7 +135,13 @@ class CoreModule(commands.Cog):
 
         # load module
         module_path = make_module_path(module)
+
+        # load extension
         await self.client.load_extension(module_path)
+
+        # call on_ready
+        if hasattr(cog := self.client.cogs[module + "Module"], "on_ready"):
+            await cog.on_ready()
 
         # append to running modules
         self.modules_running.append(module)
@@ -148,7 +154,11 @@ class CoreModule(commands.Cog):
 
         # unload module
         module_path = make_module_path(module)
+
+        # call clean up
         await self.client.cogs[module + "Module"].on_cleanup()
+
+        # unload extension
         await self.client.unload_extension(module_path)
 
         # remove from running modules
@@ -162,8 +172,16 @@ class CoreModule(commands.Cog):
 
         # reload module
         module_path = make_module_path(module)
+
+        # call cleanup
         await self.client.cogs[module + "Module"].on_cleanup()
+
+        # reload extension
         await self.client.reload_extension(module_path)
+
+        # call on_ready
+        if hasattr(cog := self.client.cogs[module + "Module"], "on_ready"):
+            await cog.on_ready()
 
     async def reload_self(self) -> None:
         """
