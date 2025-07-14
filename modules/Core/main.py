@@ -31,7 +31,7 @@ class CoreModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
         self.module_name: str = "Core"
 
         # logging
