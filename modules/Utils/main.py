@@ -10,6 +10,7 @@ import logging
 from datetime import timedelta
 from discord import app_commands
 from discord.ext import commands
+from source.databases import *
 
 
 def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
@@ -70,10 +71,25 @@ class UtilsModule(commands.Cog):
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
 
+        # databases
+        self.warns_db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
+        self.warns_db: aiosqlite.Connection | None = None
+
     async def on_cleanup(self):
         """
         Gets called when the bot is exiting
         """
+
+        await self.warns_db_handle.close()
+
+    @commands.Cog.listener("on_ready")
+    async def on_ready(self):
+        """
+        When the module is loaded
+        """
+
+        # connect to database
+        self.warns_db = await self.warns_db_handle.connect()
 
     @app_commands.command(name="latency", description="shows bots latency")
     async def latency(
