@@ -135,6 +135,15 @@ class SentimentsModule(commands.Cog):
 
         self.logger.info("Model pipeline loaded")
 
+    async def insert_or_ignore_user(self, table_name: str, user_id: int | str):
+        """
+        SQL query to insert or ignore user
+        :param table_name: guild's table name
+        :param user_id: user id
+        """
+
+
+
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
