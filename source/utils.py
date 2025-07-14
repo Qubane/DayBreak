@@ -13,7 +13,7 @@ class DotDict(dict):
         if isinstance(val, dict):
             return DotDict(val)
         elif isinstance(val, list):
-            return [DotDict(x) for x in val]
+            return [DotDict(x) for x in val if isinstance(x, (dict, list))]
         else:
             return val
 
