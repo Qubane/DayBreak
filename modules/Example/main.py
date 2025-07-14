@@ -41,6 +41,7 @@ class ExampleModule(commands.Cog):
         # close the database on clean up
         await self.db_handle.close()
 
+    @commands.Cog.listener("on_ready")
     async def on_ready(self):
         """
         When the module is loaded
