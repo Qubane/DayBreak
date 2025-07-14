@@ -19,6 +19,22 @@ async def insert_or_ignore_user(cur: aiosqlite.Cursor, table_name: str, user_id:
     await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
 
 
+async def create_table_if_not_exists(cur: aiosqlite.Cursor, guild_ids: list[int | str], query: str) -> None:
+    """
+    SQL query
+    'CREATE TABLE IF NOT EXISTS {table_name} (...)'
+    :param cur: database cursor
+    :param guild_ids: list of guild id's
+    :param query: table creation query ({table_name} for table name)
+    """
+
+    # iterate through guilds and append them
+    for guild_id in guild_ids:
+        table_name = f"g{guild_id}"
+
+        await cur.execute(query.format(table_name=table_name))
+
+
 class DatabaseHandle:
     """
     Database handling class
