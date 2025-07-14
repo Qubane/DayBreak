@@ -133,18 +133,6 @@ class SentimentsModule(commands.Cog):
 
         self.logger.info("Model pipeline loaded")
 
-    async def insert_or_ignore_user(self, table_name: str, user_id: int | str):
-        """
-        SQL query to insert or ignore user
-        :param table_name: guild's table name
-        :param user_id: user id
-        """
-
-        # make query
-        async with self.db.cursor() as cur:
-            cur: aiosqlite.Cursor  # help with type hinting
-            await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
-
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
         """
@@ -197,7 +185,7 @@ class SentimentsModule(commands.Cog):
                 user_id = ref.author.id
 
                 # insert user if not present
-                await self.insert_or_ignore_user(table_name, user_id)
+                await insert_or_ignore_user(cur, table_name, user_id)
 
                 # fetch user
                 query = await cur.execute(
@@ -282,7 +270,7 @@ class SentimentsModule(commands.Cog):
             cur: aiosqlite.Cursor
 
             # insert user if not present
-            await self.insert_or_ignore_user(table_name, user_id)
+            await insert_or_ignore_user(cur, table_name, user_id)
 
             # make query for user's MagicNumber and UserPosition
             query = await cur.execute(f"""
