@@ -16,7 +16,7 @@ from discord import app_commands
 from transformers import pipeline
 from discord.ext import commands, tasks
 from source.configs import *
-from source.settings import VARS_DIRECTORY
+from source.databases import *
 
 
 def cast_result_to_numeric(label: str) -> int:
@@ -58,7 +58,8 @@ class SentimentsModule(commands.Cog):
     """
 
     def __init__(self, client: commands.Bot) -> None:
-        self.client = client
+        self.client: commands.Bot = client
+        self.module_name: str = "Sentiments"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
@@ -69,12 +70,12 @@ class SentimentsModule(commands.Cog):
         asyncio.create_task(self.load_pipeline())
 
         # database
-        self.db_path: str = f"{VARS_DIRECTORY}/sentiments.sqlite"
+        self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
         self.db: aiosqlite.Connection | None = None
         asyncio.create_task(self.connect_database())
 
         # configs
-        self.module_config: ModuleConfig = ModuleConfig("Sentiments")
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)
 
         # processing queue
         self.message_processing_queue: list[discord.Message] = []
@@ -95,11 +96,8 @@ class SentimentsModule(commands.Cog):
         Disconnects the database
         """
 
-        if self.db is not None:
-            await self.db.commit()
-            await self.db.close()
-
-            self.logger.info("Database closed")
+        await self.db_handle.close()
+        self.logger.info("Database closed")
 
     @commands.Cog.listener("on_ready")
     async def connect_database(self) -> None:
@@ -108,10 +106,8 @@ class SentimentsModule(commands.Cog):
         """
 
         # connect to the database
-        if self.db is None:
-            self.db = await aiosqlite.connect(self.db_path)
-
-            self.logger.info("Database connected")
+        self.db = await self.db_handle.connect()
+        self.logger.info("Database connected")
 
         # check the tables are present
         async with self.db.cursor() as cur:
