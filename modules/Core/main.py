@@ -143,6 +143,7 @@ class CoreModule(commands.Cog):
 
         # unload module
         module_path = make_module_path(module)
+        await self.client.cogs[module_path].on_cleanup()
         await self.client.unload_extension(module_path)
 
         # remove from running modules
@@ -156,6 +157,7 @@ class CoreModule(commands.Cog):
 
         # reload module
         module_path = make_module_path(module)
+        await self.client.cogs[module_path].on_cleanup()
         await self.client.reload_extension(module_path)
 
     async def reload_self(self) -> None:
