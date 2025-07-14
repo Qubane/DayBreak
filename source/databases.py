@@ -13,7 +13,7 @@ class DatabaseHandle:
     """
 
     def __init__(self, module_name: str):
-        self.database_path: str = f"{VARS_DIRECTORY}/{module_name}.sqlite"
+        self.database_path: str = f"{VARS_DIRECTORY}/{module_name.lower()}.sqlite"
 
         self.db: aiosqlite.Connection | None = None
 
