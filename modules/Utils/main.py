@@ -81,8 +81,8 @@ class UtilsModule(commands.Cog):
         """
 
         await self.warns_db_handle.close()
+        self.logger.info("Database closed")
 
-    @commands.Cog.listener("on_ready")
     async def on_ready(self):
         """
         When the module is loaded
@@ -90,6 +90,22 @@ class UtilsModule(commands.Cog):
 
         # connect to database
         self.warns_db = await self.warns_db_handle.connect()
+        self.logger.info("Database connected")
+
+        # check the tables are present
+        async with self.warns_db.cursor() as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
+            for guild in self.client.guilds:
+                table_name = f"g{guild.id}"
+
+                await cur.execute(f"""
+                CREATE TABLE IF NOT EXISTS {table_name}(
+                    UserId INTEGER PRIMARY KEY,
+                    WarnCount INTEGER DEFAULT 0
+                );""")
+
+        # commit database changes
+        await self.warns_db.commit()
 
     @app_commands.command(name="latency", description="shows bots latency")
     async def latency(
@@ -299,6 +315,9 @@ class UtilsModule(commands.Cog):
         """
         Warns a user
         """
+
+        async with self.warns_db.cursor() as cur:
+            cur: aiosqlite.Cursor
 
 
 async def setup(client: commands.Bot) -> None:
