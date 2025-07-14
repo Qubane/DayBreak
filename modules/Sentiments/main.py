@@ -105,10 +105,8 @@ class SentimentsModule(commands.Cog):
         # check the tables are present
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor  # help with type hinting
-            for guild in self.client.guilds:
-                table_name = f"g{guild.id}"
-
-                await cur.execute(f"""
+            guild_ids = [guild.id for guild in self.client.guilds]
+            await create_table_if_not_exists(cur, guild_ids, """
                 CREATE TABLE IF NOT EXISTS {table_name}(
                     UserId INTEGER PRIMARY KEY,
                     MessageCount INTEGER DEFAULT 0,

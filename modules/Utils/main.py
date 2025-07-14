@@ -95,10 +95,8 @@ class UtilsModule(commands.Cog):
         # check the tables are present
         async with self.warns_db.cursor() as cur:
             cur: aiosqlite.Cursor  # help with type hinting
-            for guild in self.client.guilds:
-                table_name = f"g{guild.id}"
-
-                await cur.execute(f"""
+            guild_ids = [guild.id for guild in self.client.guilds]
+            await create_table_if_not_exists(cur, guild_ids, """
                 CREATE TABLE IF NOT EXISTS {table_name}(
                     UserId INTEGER PRIMARY KEY,
                     WarnCount INTEGER DEFAULT 0
@@ -318,6 +316,8 @@ class UtilsModule(commands.Cog):
 
         async with self.warns_db.cursor() as cur:
             cur: aiosqlite.Cursor
+
+
 
 
 async def setup(client: commands.Bot) -> None:
