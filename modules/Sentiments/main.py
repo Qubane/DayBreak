@@ -89,13 +89,6 @@ class SentimentsModule(commands.Cog):
         Cleanup because anything asynchronous has to be a headache
         """
 
-        await self.disconnect_database()
-
-    async def disconnect_database(self) -> None:
-        """
-        Disconnects the database
-        """
-
         await self.db_handle.close()
         self.logger.info("Database closed")
 
