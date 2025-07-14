@@ -7,12 +7,35 @@ import aiosqlite
 from source.settings import *
 
 
-async def connect_module_database(module_name: str) -> aiosqlite.Connection:
+class DatabaseHandle:
     """
-    Connects and returns database
-    :param module_name: name of the module
-    :return: database connection
+    Database handling class
     """
 
-    database_path = f"{VARS_DIRECTORY}/{module_name}.sqlite"
-    return await aiosqlite.connect(database_path)
+    def __init__(self, module_name: str):
+        self.database_path: str = f"{VARS_DIRECTORY}/{module_name}.sqlite"
+
+        self.db: aiosqlite.Connection | None = None
+
+    async def connect(self) -> aiosqlite.Connection:
+        """
+        Connects database
+        :return: database connection
+        """
+
+        # if database wasn't connected
+        if self.db is None:
+            self.db = await aiosqlite.connect(self.database_path)
+
+        # return connection
+        return self.db
+
+    async def close(self) -> None:
+        """
+        Closes database connection
+        """
+
+        # if database is connected
+        if self.db is not None:
+            await self.db.commit()
+            await self.db.close()
