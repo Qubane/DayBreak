@@ -199,7 +199,7 @@ class SentimentsModule(commands.Cog):
                 user_id = ref.author.id
 
                 # insert user if not present
-                await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
+                await self.insert_or_ignore_user(table_name, user_id)
 
                 # fetch user
                 query = await cur.execute(
@@ -283,6 +283,10 @@ class SentimentsModule(commands.Cog):
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
 
+            # insert user if not present
+            await self.insert_or_ignore_user(table_name, user_id)
+
+            # make query for user's MagicNumber and UserPosition
             query = await cur.execute(f"""
             SELECT
                 (SELECT MagicNumber FROM {table_name} WHERE UserId = ?) as MagicNumber,
@@ -295,6 +299,7 @@ class SentimentsModule(commands.Cog):
             WHERE UserId = ?
             """, (user_id, user_id, user_id))
 
+            # fetch one from query
             magic_number, leaderboard_place = await query.fetchone()
 
         # number postfix
