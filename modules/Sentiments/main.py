@@ -142,7 +142,10 @@ class SentimentsModule(commands.Cog):
         :param user_id: user id
         """
 
-
+        # make query
+        async with self.db.cursor as cur:
+            cur: aiosqlite.Cursor  # help with type hinting
+            await cur.execute(f"INSERT OR IGNORE INTO {table_name} (UserId) VALUES (?)", (user_id,))
 
     @tasks.loop(minutes=5)
     async def process_queued(self) -> None:
