@@ -67,7 +67,6 @@ class SentimentsModule(commands.Cog):
 
         # model
         self.pipeline: transformers.pipelines.Pipeline | None = None
-        asyncio.create_task(self.load_pipeline())
 
         # database
         self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
@@ -95,6 +94,9 @@ class SentimentsModule(commands.Cog):
         """
         Connect database
         """
+
+        # load pipeline
+        await self.load_pipeline()
 
         # connect to the database
         self.db = await self.db_handle.connect()
