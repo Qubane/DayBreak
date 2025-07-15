@@ -311,8 +311,44 @@ class UtilsModule(commands.Cog):
         Performs some kind of task
         """
 
+        anything_changed = False
         async with self.warns_db.cursor() as cur:
             cur: aiosqlite.Cursor
+
+            # get current timestamp
+            current_timestamp = int(datetime.now().timestamp())
+
+            for guild in self.client.guilds:
+                table_name = f"g{guild.id}"
+
+                # get config warn limit
+                warn_reset_time = self.guilds_config.get(guild.id, self.module_config).warn_reset_time
+
+                # fetch users who can have their warns reset
+                query = await cur.execute(
+                    f"SELECT UserId, WarnCount FROM {table_name} WHERE ? - LastWarn >= ?",
+                    (current_timestamp, warn_reset_time,))
+                query_users = await query.fetchall()
+
+                # iterate over those users, and reset their warn counts
+                for query_user in query_users:
+                    user_id, warn_count = query_user
+
+                    # skip users who already have 0 warns
+                    if warn_count == 0:
+                        continue
+
+                    # otherwise reset their warn counter
+                    await cur.execute(
+                        f"UPDATE {table_name} SET WarnCount = 0 WHERE UserId = ?",
+                        (user_id,))
+
+                    if not anything_changed:
+                        anything_changed = True
+
+            # commit changes
+            if anything_changed:
+                await self.warns_db.commit()
 
     @app_commands.command(name="warn", description="warns user")
     @app_commands.checks.has_permissions(ban_members=True)
