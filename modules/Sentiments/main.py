@@ -317,7 +317,7 @@ class SentimentsModule(commands.Cog):
         # send response
         await interaction.response.send_message(embed=embed)
 
-    @commands.Cog.listener()
+    @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message) -> None:
         """
         Append message for processing
