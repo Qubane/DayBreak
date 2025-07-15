@@ -9,7 +9,7 @@ import discord
 import logging
 from datetime import datetime, timedelta
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
 
@@ -79,6 +79,9 @@ class UtilsModule(commands.Cog):
         # databases
         self.warns_db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
         self.warns_db: aiosqlite.Connection | None = None
+
+        # tasks
+        self.check_warn_resets.start()
 
     async def on_cleanup(self):
         """
@@ -301,6 +304,15 @@ class UtilsModule(commands.Cog):
 
         # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
+
+    @tasks.loop(minutes=5)
+    async def check_warn_resets(self) -> None:
+        """
+        Performs some kind of task
+        """
+
+        async with self.warns_db.cursor() as cur:
+            cur: aiosqlite.Cursor
 
     @app_commands.command(name="warn", description="warns user")
     @app_commands.checks.has_permissions(ban_members=True)
