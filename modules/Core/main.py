@@ -25,6 +25,17 @@ def make_module_path(module: str) -> str:
     return f"{MODULES_DIRECTORY}.{module}.main"
 
 
+async def is_bot_owner(client: commands.Bot, interaction: discord.Interaction) -> bool:
+    """
+    Checks if the interaction was called by bot owner
+    :param client: bot client
+    :param interaction: app commands interaction
+    :return: True if interaction was called by bot owner
+    """
+
+    return await client.is_owner(interaction.user)
+
+
 class CoreModule(commands.Cog):
     """
     Core module
@@ -374,8 +385,17 @@ class CoreModule(commands.Cog):
             raise commands.MissingPermissions(
                 ["bot_owner"], "You must be a host of this bot to run this command")
 
+        # sync the tree
         await self.client.tree.sync()
         self.logger.info("Command tree synced")
+
+        # send response
+        await interaction.response.send_message(
+            embed=discord.Embed(
+                title="Success",
+                description=f"Command tree was synced!",
+                color=discord.Color.green()),
+            ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
