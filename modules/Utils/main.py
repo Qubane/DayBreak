@@ -305,7 +305,7 @@ class UtilsModule(commands.Cog):
         # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
-    @tasks.loop(minutes=5)
+    @tasks.loop(minutes=2)
     async def check_warn_resets(self) -> None:
         """
         Performs some kind of task
