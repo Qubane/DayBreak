@@ -82,5 +82,5 @@ class GuildConfigCollection:
     def __iter__(self):
         return self._guild_configs.values().__iter__()
 
-    def get(self, item) -> GuildConfig | None:
-        return self._guild_configs.get(str(item))
+    def get(self, item, default=None) -> GuildConfig | None:
+        return self._guild_configs.get(str(item), default)
