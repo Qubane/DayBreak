@@ -244,6 +244,9 @@ class CoreModule(commands.Cog):
         Loads a given module
         """
 
+        # check bot ownership
+        await check_bot_ownership(self.client, interaction)
+
         if module not in self.modules_present:
             raise commands.CommandError("Module with this name doesn't exist")
         if module in self.modules_running:
@@ -269,6 +272,9 @@ class CoreModule(commands.Cog):
         """
         Unloads a given module
         """
+
+        # check bot ownership
+        await check_bot_ownership(self.client, interaction)
 
         if module not in self.modules_present:
             raise commands.CommandError("Module with this name doesn't exist")
@@ -298,6 +304,9 @@ class CoreModule(commands.Cog):
         Reloads a given module
         """
 
+        # check bot ownership
+        await check_bot_ownership(self.client, interaction)
+
         if module not in self.modules_present:
             raise commands.CommandError("Module with this name doesn't exist")
         if module not in self.modules_running:
@@ -323,6 +332,9 @@ class CoreModule(commands.Cog):
         """
         Lists all modules
         """
+
+        # check bot ownership
+        await check_bot_ownership(self.client, interaction)
 
         # modules
         # [(name, status), (name, status), (name, status), ...]
@@ -352,9 +364,8 @@ class CoreModule(commands.Cog):
         Upgrades bot. Can only be used by owner of the bot
         """
 
-        if not (await self.client.is_owner(interaction.user)):
-            raise commands.MissingPermissions(
-                ["bot_owner"], "You must be a host of this bot to run this command")
+        # check bot ownership
+        await check_bot_ownership(self.client, interaction)
 
         self.logger.info("initiated bot upgrade")
 
@@ -393,9 +404,8 @@ class CoreModule(commands.Cog):
         Syncs up the command tree.
         """
 
-        if not (await is_bot_owner(self.client, interaction)):
-            raise commands.MissingPermissions(
-                ["bot_owner"], "You must be a host of this bot to run this command")
+        # check bot ownership
+        await check_bot_ownership(self.client, interaction)
 
         # sync the tree
         await self.client.tree.sync()
