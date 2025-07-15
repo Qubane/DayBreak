@@ -247,13 +247,16 @@ class CoreModule(commands.Cog):
         # check bot ownership
         await check_bot_ownership(self.client, interaction)
 
+        # additional checks
         if module not in self.modules_present:
             raise commands.CommandError("Module with this name doesn't exist")
         if module in self.modules_running:
             raise commands.CommandError("Module with this name is already loaded")
 
+        # load module
         await self.load_module(module)
 
+        # send response
         embed = discord.Embed(
             title="Success!",
             description=f"Module '{module}' is now loaded",
@@ -276,6 +279,7 @@ class CoreModule(commands.Cog):
         # check bot ownership
         await check_bot_ownership(self.client, interaction)
 
+        # checks
         if module not in self.modules_present:
             raise commands.CommandError("Module with this name doesn't exist")
         if module not in self.modules_running:
@@ -283,8 +287,10 @@ class CoreModule(commands.Cog):
         if module in self.modules_static:
             raise commands.CommandError("Static modules cannot be unloaded")
 
+        # unload module
         await self.unload_module(module)
 
+        # send response
         embed = discord.Embed(
             title="Success!",
             description=f"Module '{module}' was unloaded",
@@ -307,6 +313,7 @@ class CoreModule(commands.Cog):
         # check bot ownership
         await check_bot_ownership(self.client, interaction)
 
+        # checks
         if module not in self.modules_present:
             raise commands.CommandError("Module with this name doesn't exist")
         if module not in self.modules_running:
@@ -317,6 +324,7 @@ class CoreModule(commands.Cog):
         else:
             await self.reload_module(module)
 
+        # send response
         embed = discord.Embed(
             title="Success!",
             description=f"Module '{module}' was reloaded",
