@@ -1,4 +1,4 @@
 {
-  "default_max_warn": 3,
-  "default_reset_time": 15552000
+  "max_warn_count": 3,
+  "warn_reset_time": 15552000
 }
