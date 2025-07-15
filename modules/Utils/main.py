@@ -80,9 +80,6 @@ class UtilsModule(commands.Cog):
         self.warns_db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
         self.warns_db: aiosqlite.Connection | None = None
 
-        # tasks
-        self.check_warn_resets.start()
-
     async def on_cleanup(self):
         """
         Gets called when the bot is exiting
@@ -113,6 +110,9 @@ class UtilsModule(commands.Cog):
 
         # commit database changes
         await self.warns_db.commit()
+
+        # start task
+        self.check_warn_resets.start()
 
     @app_commands.command(name="latency", description="shows bots latency")
     async def latency(
