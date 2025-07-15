@@ -4,6 +4,7 @@
     "TwitchNotifs",
     "Memberships",
     "Sentiments",
+    "HostUtils",
     "MathUtils",
     "Utils",
     "Misc"
