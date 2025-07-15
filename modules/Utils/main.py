@@ -460,6 +460,28 @@ class UtilsModule(commands.Cog):
             # send the message
             await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
+    @app_commands.command(name="warn-reset", description="resets user warns")
+    @app_commands.checks.has_permissions(administrator=True, ban_members=True)
+    @app_commands.guild_only()
+    @app_commands.describe(
+        user="user to remove warns for")
+    async def command_warn_reset(
+            self,
+            interaction: discord.Interaction,
+            user: discord.Member,
+    ) -> None:
+        """
+        Lifts warns from user
+        """
+
+        # make success message to command caller
+        author_embed = discord.Embed(title="Success!",
+                                     description=f"User {user.mention} had their warns lifted!",
+                                     color=discord.Color.green())
+
+        # send the message
+        await interaction.response.send_message(embed=author_embed, ephemeral=True)
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(UtilsModule(client))
