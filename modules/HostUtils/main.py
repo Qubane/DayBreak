@@ -34,6 +34,7 @@ class HostUtilsModule(commands.Cog):
         """
 
     @commands.command("make-announce")
+    @commands.is_owner()
     async def command_make_announce(
         self,
         ctx: commands.Context,
@@ -43,6 +44,18 @@ class HostUtilsModule(commands.Cog):
         """
         This is an announcement command, that is used to update people on bot news
         """
+
+        # go through configured channels, and send notifications
+        for guild_config in self.guild_configs:
+            # get channel
+            channel = self.client.get_channel(guild_config.bot_announcements)
+
+            # skip undefined channels
+            if channel is None:
+                continue
+
+            # send user message
+            await channel.send(message)
 
 
 async def setup(client: commands.Bot) -> None:
