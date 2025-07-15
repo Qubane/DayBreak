@@ -7,7 +7,7 @@ import discord
 import logging
 import aiosqlite
 from discord import app_commands
-from discord.ext import commands
+from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
 
@@ -33,6 +33,9 @@ class ExampleModule(commands.Cog):
         self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
         self.db: aiosqlite.Connection | None = None
 
+        # tasks
+        self.example_task.start()
+
     async def on_cleanup(self):
         """
         Gets called when the bot is exiting
@@ -50,6 +53,12 @@ class ExampleModule(commands.Cog):
         # connect to database
         self.db = await self.db_handle.connect()
 
+    @tasks.loop(minutes=5)
+    async def example_task(self) -> None:
+        """
+        Performs some kind of task
+        """
+
     @app_commands.command(name="example", description="does some things")
     @app_commands.describe(
         message="Some kind of message")
@@ -61,8 +70,6 @@ class ExampleModule(commands.Cog):
         """
         This is an example slash command
         """
-
-        pass
 
 
 async def setup(client: commands.Bot) -> None:
