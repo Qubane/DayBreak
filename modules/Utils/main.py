@@ -7,7 +7,7 @@ Commands such as: latency; reload_cog; etc
 import asyncio
 import discord
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 from discord import app_commands
 from discord.ext import commands
 from source.configs import *
@@ -104,7 +104,8 @@ class UtilsModule(commands.Cog):
             await create_table_if_not_exists(cur, guild_ids, """
                 CREATE TABLE IF NOT EXISTS {table_name}(
                     UserId INTEGER PRIMARY KEY,
-                    WarnCount INTEGER DEFAULT 0
+                    WarnCount INTEGER DEFAULT 0,
+                    LastWarn INTEGER DEFAULt 0
                 );""")
 
         # commit database changes
@@ -347,16 +348,21 @@ class UtilsModule(commands.Cog):
             query = await cur.execute(f"SELECT WarnCount FROM {table_name} WHERE UserId = ?", (user_id,))
             warn_count = (await query.fetchone())[0] + 1
 
+            # get config warn limit
+            max_warn_count = self.guilds_config.get(interaction.guild_id, self.module_config).max_warn_count
+
             # check if user is to be banned
             is_user_banned = False
-            if warn_count >= 3:
+            if warn_count >= max_warn_count:
                 is_user_banned = True
-                warn_count = 0
+
+            # last warn timestamp
+            last_warn = int(datetime.now().timestamp())
 
             # update warn counter
             await cur.execute(
-                f"UPDATE {table_name} SET WarnCount = ? WHERE UserId = ?",
-                (warn_count, user_id,))
+                f"UPDATE {table_name} SET WarnCount = ?, LastWarn = ? WHERE UserId = ?",
+                (warn_count, last_warn, user_id,))
 
             # if user is to be banned
             if is_user_banned:
