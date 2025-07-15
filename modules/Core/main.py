@@ -36,6 +36,18 @@ async def is_bot_owner(client: commands.Bot, interaction: discord.Interaction) -
     return await client.is_owner(interaction.user)
 
 
+async def check_bot_ownership(client: commands.Bot, interaction: discord.Interaction) -> None:
+    """
+    Same as 'is_bot_owner' except it raises an error instead
+    :param client: bot client
+    :param interaction: app commands interaction
+    """
+
+    if not (await is_bot_owner(client, interaction)):
+        raise commands.MissingPermissions(
+            ["bot_owner"], "You must be a host of this bot to run this command")
+
+
 class CoreModule(commands.Cog):
     """
     Core module
@@ -381,7 +393,7 @@ class CoreModule(commands.Cog):
         Syncs up the command tree.
         """
 
-        if not (await self.client.is_owner(interaction.user)):
+        if not (await is_bot_owner(self.client, interaction)):
             raise commands.MissingPermissions(
                 ["bot_owner"], "You must be a host of this bot to run this command")
 
