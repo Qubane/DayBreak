@@ -474,6 +474,22 @@ class UtilsModule(commands.Cog):
         Lifts warns from user
         """
 
+        async with self.warns_db.cursor() as cur:
+            cur: aiosqlite.Cursor
+
+            # user parameters
+            user_id = user.id
+            table_name = f"g{interaction.guild_id}"
+
+            # insert or ignore
+            await insert_or_ignore_user(cur, table_name, user_id)
+
+            # reset users warns
+            await cur.execute(f"UPDATE {table_name} SET WarnCount = 0 WHERE UserId = ?", (user_id,))
+
+        # commit changes
+        await self.warns_db.commit()
+
         # make success message to command caller
         author_embed = discord.Embed(title="Success!",
                                      description=f"User {user.mention} had their warns lifted!",
