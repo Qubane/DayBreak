@@ -3,7 +3,6 @@ This module adds simple utils commands.
 Commands such as: latency; reload_cog; etc
 """
 
-
 import asyncio
 import discord
 import logging
@@ -22,14 +21,14 @@ def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
     :return: True when 'caller' > 'user'; otherwise False
     """
 
-    hierarchy_check = caller.top_role > user.top_role   # if the caller's top role is above user's top role
-    owner_check = caller.guild.owner == caller          # if caller is an owner
+    hierarchy_check = caller.top_role > user.top_role  # if the caller's top role is above user's top role
+    owner_check = caller.guild.owner == caller  # if caller is an owner
 
     # if either one is these are True
     positive_checks = any([hierarchy_check, owner_check])
 
     # if either one of these are True then the entire statement is False
-    negative_checks = user.guild.owner == user          # if the user is an owner
+    negative_checks = user.guild.owner == user  # if the user is an owner
 
     return positive_checks and not negative_checks
 
@@ -116,8 +115,8 @@ class UtilsModule(commands.Cog):
 
     @app_commands.command(name="latency", description="shows bots latency")
     async def latency(
-        self,
-        interaction: discord.Interaction
+            self,
+            interaction: discord.Interaction
     ) -> None:
         """
         This is a simple command, that shows bot latency
@@ -187,17 +186,19 @@ class UtilsModule(commands.Cog):
                 "Bot is missing permissions")
 
         # make timeout success message to command caller
-        author_embed = discord.Embed(title="Success!",
-                                     description=f"User {user.mention} was put on a timeout",
-                                     color=discord.Color.green())
+        author_embed = discord.Embed(
+            title="Success!",
+            description=f"User {user.mention} was put on a timeout",
+            color=discord.Color.green())
 
         # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
 
         # make timeout message to user who was put on a timeout
-        user_embed = discord.Embed(title="Timeout!",
-                                   description="You were put on a timeout",
-                                   color=discord.Color.red())
+        user_embed = discord.Embed(
+            title="Timeout!",
+            description="You were put on a timeout",
+            color=discord.Color.red())
         user_embed.add_field(name="Reason", value=reason, inline=True)
         user_embed.add_field(name="Duration", value=duration.__str__())
         user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
@@ -235,8 +236,9 @@ class UtilsModule(commands.Cog):
                 f"User {user.mention} has higher or equal privilege")
 
         # make message for the user who is going to be kicked out
-        user_embed = discord.Embed(title="You were kicked from the server",
-                                   color=discord.Color.red())
+        user_embed = discord.Embed(
+            title="You were kicked from the server",
+            color=discord.Color.red())
         user_embed.add_field(name="Reason", value=reason, inline=True)
         user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
@@ -247,9 +249,10 @@ class UtilsModule(commands.Cog):
         await user.kick(reason=reason)
 
         # make success message to command caller
-        author_embed = discord.Embed(title="Success!",
-                                     description=f"User {user.mention} was kicked from the server",
-                                     color=discord.Color.green())
+        author_embed = discord.Embed(
+            title="Success!",
+            description=f"User {user.mention} was kicked from the server",
+            color=discord.Color.green())
 
         # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
@@ -286,8 +289,9 @@ class UtilsModule(commands.Cog):
                 f"User {user.mention} has higher or equal privilege")
 
         # make message for the user who is going to be kicked out
-        user_embed = discord.Embed(title="You were banned from the server",
-                                   color=discord.Color.red())
+        user_embed = discord.Embed(
+            title="You were banned from the server",
+            color=discord.Color.red())
         user_embed.add_field(name="Reason", value=reason, inline=True)
         user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
@@ -298,9 +302,10 @@ class UtilsModule(commands.Cog):
         await user.ban(delete_message_days=days, reason=reason)
 
         # make success message to command caller
-        author_embed = discord.Embed(title="Success!",
-                                     description=f"User {user.mention} was banned from the server",
-                                     color=discord.Color.green())
+        author_embed = discord.Embed(
+            title="Success!",
+            description=f"User {user.mention} was banned from the server",
+            color=discord.Color.green())
 
         # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
@@ -415,8 +420,9 @@ class UtilsModule(commands.Cog):
             # if user is to be banned
             if is_user_banned:
                 # make message for the user who is going to be kicked out
-                user_embed = discord.Embed(title="You exceeded the number of warns; You have been banned",
-                                           color=discord.Color.red())
+                user_embed = discord.Embed(
+                    title="You exceeded the number of warns; You have been banned",
+                    color=discord.Color.red())
                 user_embed.add_field(name="Reason", value=reason, inline=True)
                 user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
@@ -429,8 +435,9 @@ class UtilsModule(commands.Cog):
             # if user is not banned, and silent flag is off
             elif not silent:
                 # make message for the user who is going to be kicked out
-                user_embed = discord.Embed(title=f"You have been given a warning. Current warn count: {warn_count}",
-                                           color=discord.Color.red())
+                user_embed = discord.Embed(
+                    title=f"You have been given a warning. Current warn count: {warn_count}",
+                    color=discord.Color.red())
                 user_embed.add_field(name="Reason", value=reason, inline=True)
                 user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
 
@@ -443,19 +450,21 @@ class UtilsModule(commands.Cog):
         # send notification to author
         if is_user_banned:
             # make success message to command caller
-            author_embed = discord.Embed(title="Success!",
-                                         description=f"User {user.mention} had exceeded the number of warns, "
-                                                     f"and was banned from the server",
-                                         color=discord.Color.green())
+            author_embed = discord.Embed(
+                title="Success!",
+                description=f"User {user.mention} had exceeded the number of warns, "
+                            f"and was banned from the server",
+                color=discord.Color.green())
 
             # send the message
             await interaction.response.send_message(embed=author_embed, ephemeral=True)
         else:
             # make success message to command caller
-            author_embed = discord.Embed(title="Success!",
-                                         description=f"User {user.mention} was given a warning. "
-                                                     f"Current warn count: {warn_count}",
-                                         color=discord.Color.green())
+            author_embed = discord.Embed(
+                title="Success!",
+                description=f"User {user.mention} was given a warning. "
+                            f"Current warn count: {warn_count}",
+                color=discord.Color.green())
 
             # send the message
             await interaction.response.send_message(embed=author_embed, ephemeral=True)
@@ -491,12 +500,76 @@ class UtilsModule(commands.Cog):
         await self.warns_db.commit()
 
         # make success message to command caller
-        author_embed = discord.Embed(title="Success!",
-                                     description=f"User {user.mention} had their warns lifted!",
-                                     color=discord.Color.green())
+        author_embed = discord.Embed(
+            title="Success!",
+            description=f"User {user.mention} had their warns lifted!",
+            color=discord.Color.green())
 
         # send the message
         await interaction.response.send_message(embed=author_embed, ephemeral=True)
+
+    @app_commands.command(name="warn-status", description="shows you warn status of user")
+    @app_commands.guild_only()
+    @app_commands.describe(
+        user="user you want to get warn status for")
+    async def command_warn_status(
+            self,
+            interaction: discord.Interaction,
+            user: discord.Member | None = None,
+    ) -> None:
+        """
+        Shows the warn status of user
+        """
+
+        # if user was not mentioned, return status for the caller
+        if user is None:
+            user = interaction.user
+
+        async with self.warns_db.cursor() as cur:
+            cur: aiosqlite.Cursor
+
+            # user parameters
+            user_id = user.id
+            table_name = f"g{interaction.guild_id}"
+
+            # insert or ignore
+            await insert_or_ignore_user(cur, table_name, user_id)
+
+            # fetch user
+            query = await cur.execute(
+                f"SELECT WarnCount, LastWarn FROM {table_name} WHERE UserId = ?",
+                (user_id,))
+            query_user = await query.fetchone()
+
+            # warn count and last warn
+            warn_count, last_warn = query_user
+
+        # make color
+        # get config warn limit
+        max_warn_count = self.guilds_config.get(interaction.guild_id, self.module_config).max_warn_count
+
+        if warn_count / max_warn_count < 0.1:
+            color = discord.Color.green()
+        elif warn_count / max_warn_count < 0.6:
+            color = discord.Color.orange()
+        else:
+            color = discord.Color.red()
+
+        # make description
+        description = f"User {user.mention} has {warn_count} warns;"
+        if last_warn != 0:
+            description += f"\nLast warn date <t:{last_warn}:D>"
+
+        # send message
+        embed = discord.Embed(
+            title="Warn status of user",
+            description=description,
+            color=color)
+        embed.set_author(name=user.display_name)
+        embed.set_thumbnail(url=user.display_avatar.url)
+
+        # send the message
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(client: commands.Bot) -> None:
