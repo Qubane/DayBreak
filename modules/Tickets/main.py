@@ -84,6 +84,10 @@ class TicketsModule(commands.Cog):
         Creates a report ticket
         """
 
+        # ignore user reporting themselves
+        if interaction.user == user:
+            raise commands.UserInputError("Cannot report yourself")
+
         user_id = interaction.user.id
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
