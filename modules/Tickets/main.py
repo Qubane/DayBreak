@@ -160,6 +160,16 @@ class TicketsModule(commands.Cog):
         # send response
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
+    @app_commands.command(name="report-close", description="closes the report")
+    async def report_command(
+            self,
+            interaction: discord.Interaction
+    ) -> None:
+        """
+        Closes the report.
+        Only the user who created the report, or the administration are able to do that
+        """
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(TicketsModule(client))
