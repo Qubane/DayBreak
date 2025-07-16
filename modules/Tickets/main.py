@@ -71,6 +71,7 @@ class TicketsModule(commands.Cog):
         await self.db.commit()
 
     @app_commands.command(name="report", description="reports user")
+    @app_commands.checks.cooldown(3, 300)
     @app_commands.describe(
         reason="reason for the report",
         user="user that will be reported")
