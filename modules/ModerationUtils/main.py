@@ -1,7 +1,8 @@
 """
-This module adds simple utils commands.
-Commands such as: latency; reload_cog; etc
+This module adds moderation utilities, like
+/btimeout, /bkick, /bban, /warn, /warn-reset, /warn-status
 """
+
 
 import asyncio
 import discord
@@ -58,9 +59,9 @@ async def try_notify(user: discord.Member, embed: discord.Embed, logger: logging
         logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
 
 
-class UtilsModule(commands.Cog):
+class ModerationUtilsModule(commands.Cog):
     """
-    This is an example module
+    Adds moderation utilities
     """
 
     def __init__(self, client: commands.Bot) -> None:
@@ -101,7 +102,7 @@ class UtilsModule(commands.Cog):
             cur: aiosqlite.Cursor  # help with type hinting
             guild_ids = [guild.id for guild in self.client.guilds]
             await create_table_if_not_exists(cur, guild_ids, """
-                CREATE TABLE IF NOT EXISTS {table_name}(
+                CREATE TABLE IF NOT EXISTS {table_name} (
                     UserId INTEGER PRIMARY KEY,
                     WarnCount INTEGER DEFAULT 0,
                     LastWarn INTEGER DEFAULt 0
@@ -112,22 +113,6 @@ class UtilsModule(commands.Cog):
 
         # start task
         self.check_warn_resets.start()
-
-    @app_commands.command(name="latency", description="shows bots latency")
-    async def latency(
-            self,
-            interaction: discord.Interaction
-    ) -> None:
-        """
-        This is a simple command, that shows bot latency
-        """
-
-        embed = discord.Embed(
-            title="Latency",
-            description=f"Bots latency is {self.client.latency * 1000:.4f} ms",
-            color=discord.Color.brand_green())
-
-        await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(name="btimeout", description="timeouts a user")
     @app_commands.checks.has_permissions(moderate_members=True)
@@ -573,4 +558,4 @@ class UtilsModule(commands.Cog):
 
 
 async def setup(client: commands.Bot) -> None:
-    await client.add_cog(UtilsModule(client))
+    await client.add_cog(ModerationUtilsModule(client))

@@ -1,12 +1,12 @@
 {
   "active_modules": [
+    "ModerationUtils",
     "YouTubeNotifs",
     "TwitchNotifs",
     "Memberships",
     "Sentiments",
     "HostUtils",
     "MathUtils",
-    "Utils",
     "Misc"
   ]
 }
