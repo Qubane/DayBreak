@@ -169,7 +169,7 @@ class TicketsModule(commands.Cog):
             description=f"Ticket ID: {ticket_thread_id}\n"
                         f"Ticket Creator: {interaction.user.mention}\n"
                         f"Reported User: {user.mention}\n"
-                        f"Report Reason: {reason}\n"
+                        f"Report Reason: {reason[:512]}\n"
                         f"Ticket Creation Date: <t:{ticket_creation_date}:D>",
             color=discord.Color.orange())
         await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
