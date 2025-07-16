@@ -6,6 +6,7 @@ This is Tickets module that adds a ticket reporting system
 import discord
 import logging
 import aiosqlite
+from datetime import datetime
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.configs import *
@@ -103,6 +104,41 @@ class TicketsModule(commands.Cog):
             # if max ticket number reached
             if ticket_count >= max_ticket_number:
                 raise commands.CommandError("Maximum number of tickets reached")
+
+            # get guild config
+            guild_config = self.guild_configs.get(interaction.guild_id)
+            if guild_config is None:
+                raise commands.CommandError("Please contact your server administrator to enable `/report` feature")
+
+            # fetch channel
+            channel = interaction.guild.get_channel(guild_config.tickets_channel)
+            if channel is None:
+                raise commands.CommandError("Please contact your server administrator to enable `/report` feature")
+
+            # post private thread
+            thread = await channel.create_thread(
+                name=f"Report on '{user.display_name}/{user.id}' for '{reason}'",
+                reason=f"Report of '{user.display_name}' by '{interaction.user.display_name}'",
+                type=discord.ChannelType.private_thread)
+
+            # create ticket data
+            ticket_thread_id = thread.id
+            ticket_creator_id = interaction.user.id
+            ticket_reported_id = user.id
+            ticket_creation_date = int(datetime.now().timestamp())
+
+            # add reporting user
+            await thread.add_user(interaction.user)
+
+            # post message with info
+            embed = discord.Embed(
+                title=f"Ticket #{ticket_thread_id}",
+                description=f"Ticket ID: {ticket_thread_id}\n"
+                            f"Ticket Creator: {interaction.user.mention}\n"
+                            f"Reported User: {user.mention}\n"
+                            f"Report Reason: {reason}\n"
+                            f"Ticket Creation Date: <t:{ticket_creation_date}:D>")
+            await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
 
 async def setup(client: commands.Bot) -> None:
