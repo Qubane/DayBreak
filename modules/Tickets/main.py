@@ -40,6 +40,7 @@ class TicketsModule(commands.Cog):
 
         # close the database on clean up
         await self.db_handle.close()
+        self.logger.info("Database closed")
 
     async def on_ready(self):
         """
@@ -48,6 +49,7 @@ class TicketsModule(commands.Cog):
 
         # connect to database
         self.db = await self.db_handle.connect()
+        self.logger.info("Database connected")
 
         # create table for database
         async with self.db.cursor() as cur:
@@ -78,6 +80,11 @@ class TicketsModule(commands.Cog):
         """
         Creates a report ticket
         """
+
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor
+
+            query = cur.execute("SELECT TicketThreadId FROM reports WHERE TicketCreatorId")
 
 
 async def setup(client: commands.Bot) -> None:
