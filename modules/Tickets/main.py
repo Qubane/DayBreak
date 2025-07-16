@@ -215,11 +215,12 @@ class TicketsModule(commands.Cog):
         # create response
         embed = discord.Embed(
             title="Success!",
-            description=f"Ticket #{thread_id} closed successfully;",
+            description=f"Ticket #{thread_id} closed;\n"
+                        f"Reason: '{reason}'",
             color=discord.Color.green())
 
         # send response
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.response.send_message(embed=embed)
 
 
 async def setup(client: commands.Bot) -> None:
