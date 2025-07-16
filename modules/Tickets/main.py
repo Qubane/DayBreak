@@ -123,7 +123,8 @@ class TicketsModule(commands.Cog):
 
             # post private thread
             thread = await channel.create_thread(
-                name=f"Report on '{user.display_name}/{user.id}' for '{reason}'",
+                name=f"Report on '{user.display_name}/{user.id}' for "
+                     f"'{reason[:16]}{'...' if len(reason) >= 16 else ''}'",
                 reason=f"Report of '{user.display_name}' by '{interaction.user.display_name}'",
                 type=discord.ChannelType.private_thread)
 
