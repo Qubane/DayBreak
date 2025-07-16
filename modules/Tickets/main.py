@@ -140,6 +140,13 @@ class TicketsModule(commands.Cog):
             # add reporting user
             await thread.add_user(interaction.user)
 
+            # fetch ping roles
+            ping_roles = []
+            for role_id in guild_config.moderation_roles:
+                if (role := interaction.guild.get_role(int(role_id))) is not None:
+                    ping_roles.append(role)
+            ping_message = "; ".join(role.mention for role in ping_roles)
+
             # post message with info
             embed = discord.Embed(
                 title=f"Ticket #{ticket_thread_id}",
@@ -150,6 +157,8 @@ class TicketsModule(commands.Cog):
                             f"Ticket Creation Date: <t:{ticket_creation_date}:D>",
                 color=discord.Color.orange())
             await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+            if ping_message:
+                await thread.send(f"Moderation team: {ping_message}")
 
         # create response
         embed = discord.Embed(
