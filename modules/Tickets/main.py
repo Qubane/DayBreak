@@ -26,8 +26,8 @@ class TicketsModule(commands.Cog):
         self.logger.info("Module loaded")
 
         # configs
-        # self.module_config: ModuleConfig = ModuleConfig(self.module_name)  # per module config
-        # self.guild_configs: GuildConfigCollection = GuildConfigCollection(self.module_name)  # per guild config
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)  # per module config
+        self.guild_configs: GuildConfigCollection = GuildConfigCollection(self.module_name)  # per guild config
 
         # databases
         self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
@@ -81,10 +81,28 @@ class TicketsModule(commands.Cog):
         Creates a report ticket
         """
 
+        user_id = interaction.user.id
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
 
-            query = cur.execute("SELECT TicketThreadId FROM reports WHERE TicketCreatorId")
+            # fetch number of tickets from user
+            query = await cur.execute("""
+                SELECT
+                    (SELECT COUNT(*) FROM reports WHERE TicketCreatorId = ?) AS TicketCount
+                FROM reports
+                WHERE TicketCreatorId = ?
+                """, (user_id, user_id,))
+
+            # make number
+            ticket_query = await query.fetchone()
+            ticket_count = ticket_query[0] if ticket_query is not None else 0
+
+            # get max ticket number
+            max_ticket_number = self.module_config.max_ticket_count
+
+            # if max ticket number reached
+            if ticket_count >= max_ticket_number:
+                raise commands.CommandError("Maximum number of tickets reached")
 
 
 async def setup(client: commands.Bot) -> None:
