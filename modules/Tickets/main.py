@@ -3,6 +3,7 @@ This is Tickets module that adds a ticket reporting system
 """
 
 
+import asyncio
 import discord
 import logging
 import aiosqlite
@@ -173,6 +174,9 @@ class TicketsModule(commands.Cog):
         # db variables
         thread_id = interaction.channel_id
 
+        # closing reason
+        reason = ""
+
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
 
@@ -190,12 +194,20 @@ class TicketsModule(commands.Cog):
                 if not interaction.user.guild_permissions.moderate_members:
                     raise commands.MissingPermissions(["moderate_members"])
 
+                reason = "Closed by administrator"
+            else:
+                reason = "Closed by user"
+
             # user either has privilege or is the creator of the ticket
             await cur.execute("""
             UPDATE reports SET
                 TicketStatus = 1
             WHERE TicketThreadId = ?
             """, (thread_id,))
+
+        # lock the thread
+        thread = interaction.guild.get_thread(thread_id)
+        await thread.edit(locked=True, reason=reason)
 
         # commit db changes
         await self.db.commit()
