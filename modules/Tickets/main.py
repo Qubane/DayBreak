@@ -207,9 +207,9 @@ class TicketsModule(commands.Cog):
 
             # if TicketCreatorId is not equal to id of the user calling the command
             if ticket[1] != interaction.user.id:
-                # if the calling user doesn't have 'moderate_members' permissions
-                if not interaction.user.guild_permissions.moderate_members:
-                    raise commands.MissingPermissions(["moderate_members"])
+                # if the calling user doesn't have 'manage_threads' permissions
+                if not interaction.user.guild_permissions.manage_threads:
+                    raise commands.MissingPermissions(["manage_threads"])
 
                 reason = "Closed by administrator"
             else:
