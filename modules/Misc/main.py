@@ -26,6 +26,22 @@ class MiscModule(commands.Cog):
         Gets called when the bot is exiting
         """
 
+    @app_commands.command(name="latency", description="shows bots latency")
+    async def latency(
+            self,
+            interaction: discord.Interaction
+    ) -> None:
+        """
+        This is a simple command, that shows bot latency
+        """
+
+        embed = discord.Embed(
+            title="Latency",
+            description=f"Bots latency is {self.client.latency * 1000:.4f} ms",
+            color=discord.Color.brand_green())
+
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
     @app_commands.command(name="bk", description="boykisser")
     async def boy_kisser(self, interaction: discord.Interaction):
         await interaction.response.send_message(
