@@ -199,11 +199,11 @@ class SentimentsModule(commands.Cog):
 
                 # update user entry
                 await cur.execute(f"""
-                    UPDATE {table_name} SET
+                UPDATE {table_name} SET
                     MessageCount = ?,
                     PValue = ?,
                     MagicNumber = ?
-                    WHERE UserId = ?
+                WHERE UserId = ?
                 """, (message_count, p_value, magic_number, user_id))
 
         # commit changes
