@@ -95,7 +95,7 @@ class TicketsModule(commands.Cog):
             # fetch number of tickets from user
             query = await cur.execute("""
                 SELECT
-                    (SELECT COUNT(*) FROM reports WHERE TicketCreatorId = ?) AS TicketCount
+                    (SELECT COUNT(*) FROM reports WHERE TicketCreatorId = ? AND TicketStatus = 0) AS TicketCount
                 FROM reports
                 WHERE TicketCreatorId = ?
                 """, (user_id, user_id,))
@@ -139,31 +139,8 @@ class TicketsModule(commands.Cog):
                 "INSERT INTO reports VALUES (?, ?, ?, ?, 0)",
                 (ticket_thread_id, ticket_creator_id, ticket_reported_id, ticket_creation_date,))
 
-            # commit changes in DB
-            await self.db.commit()
-
-            # add reporting user
-            await thread.add_user(interaction.user)
-
-            # fetch ping roles
-            ping_roles = []
-            for role_id in guild_config.moderation_roles:
-                if (role := interaction.guild.get_role(int(role_id))) is not None:
-                    ping_roles.append(role)
-            ping_message = "; ".join(role.mention for role in ping_roles)
-
-            # post message with info
-            embed = discord.Embed(
-                title=f"Ticket #{ticket_thread_id}",
-                description=f"Ticket ID: {ticket_thread_id}\n"
-                            f"Ticket Creator: {interaction.user.mention}\n"
-                            f"Reported User: {user.mention}\n"
-                            f"Report Reason: {reason}\n"
-                            f"Ticket Creation Date: <t:{ticket_creation_date}:D>",
-                color=discord.Color.orange())
-            await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
-            if ping_message:
-                await thread.send(f"Moderation team: {ping_message}")
+        # commit changes in DB
+        await self.db.commit()
 
         # create response
         embed = discord.Embed(
@@ -174,6 +151,31 @@ class TicketsModule(commands.Cog):
 
         # send response
         await interaction.response.send_message(embed=embed, ephemeral=True)
+
+        # add reporting user
+        await thread.add_user(interaction.user)
+
+        # fetch ping roles
+        ping_roles = []
+        for role_id in guild_config.moderation_roles:
+            if (role := interaction.guild.get_role(int(role_id))) is not None:
+                ping_roles.append(role)
+        ping_message = "; ".join(role.mention for role in ping_roles)
+
+        # post message with info
+        embed = discord.Embed(
+            title=f"Ticket #{ticket_thread_id}",
+            description=f"Ticket ID: {ticket_thread_id}\n"
+                        f"Ticket Creator: {interaction.user.mention}\n"
+                        f"Reported User: {user.mention}\n"
+                        f"Report Reason: {reason}\n"
+                        f"Ticket Creation Date: <t:{ticket_creation_date}:D>",
+            color=discord.Color.orange())
+        await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
+        # ping moderation team
+        if ping_message:
+            await thread.send(f"Moderation team: {ping_message}")
 
     @app_commands.command(name="report-close", description="closes the report")
     async def report_close_command(
