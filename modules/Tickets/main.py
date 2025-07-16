@@ -162,7 +162,7 @@ class TicketsModule(commands.Cog):
         await interaction.response.send_message(embed=embed, ephemeral=True)
 
     @app_commands.command(name="report-close", description="closes the report")
-    async def report_command(
+    async def report_close_command(
             self,
             interaction: discord.Interaction
     ) -> None:
