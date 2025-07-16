@@ -61,7 +61,8 @@ class TicketsModule(commands.Cog):
                 TicketThreadId INTEGER PRIMARY KEY,
                 TicketCreatorId INTEGER,
                 TicketReportedId INTEGER,
-                TicketCreationDate INTEGER
+                TicketCreationDate INTEGER,
+                TicketStatus INTEGER DEFAULT 0
             );
             """)
 
@@ -127,6 +128,14 @@ class TicketsModule(commands.Cog):
             ticket_reported_id = user.id
             ticket_creation_date = int(datetime.now().timestamp())
 
+            # create ticket in database
+            await cur.execute(
+                "INSERT INTO reports VALUES (?, ?, ?, ?, 0)",
+                (ticket_thread_id, ticket_creator_id, ticket_reported_id, ticket_creation_date,))
+
+            # commit changes in DB
+            await self.db.commit()
+
             # add reporting user
             await thread.add_user(interaction.user)
 
@@ -137,8 +146,19 @@ class TicketsModule(commands.Cog):
                             f"Ticket Creator: {interaction.user.mention}\n"
                             f"Reported User: {user.mention}\n"
                             f"Report Reason: {reason}\n"
-                            f"Ticket Creation Date: <t:{ticket_creation_date}:D>")
+                            f"Ticket Creation Date: <t:{ticket_creation_date}:D>",
+                color=discord.Color.orange())
             await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
+
+        # create response
+        embed = discord.Embed(
+            title="Success!",
+            description=f"Your ticket was successfully created;\n"
+                        f"You can add any additional information about the report in {thread.mention}",
+            color=discord.Color.green())
+
+        # send response
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
