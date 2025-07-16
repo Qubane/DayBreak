@@ -198,7 +198,16 @@ class TicketsModule(commands.Cog):
             """, (thread_id,))
 
         # commit db changes
-        self.db.commit()
+        await self.db.commit()
+
+        # create response
+        embed = discord.Embed(
+            title="Success!",
+            description=f"Ticket #{thread_id} closed successfully;",
+            color=discord.Color.green())
+
+        # send response
+        await interaction.response.send_message(embed=embed, ephemeral=True)
 
 
 async def setup(client: commands.Bot) -> None:
