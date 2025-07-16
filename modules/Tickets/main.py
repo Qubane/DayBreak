@@ -224,7 +224,7 @@ class TicketsModule(commands.Cog):
 
         # lock the thread
         thread = interaction.guild.get_thread(thread_id)
-        await thread.edit(locked=True, reason=reason)
+        await thread.edit(locked=True, archived=True, reason=reason)
 
         # commit db changes
         await self.db.commit()
