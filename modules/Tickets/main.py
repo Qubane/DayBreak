@@ -177,7 +177,7 @@ class TicketsModule(commands.Cog):
             cur: aiosqlite.Cursor
 
             # fetch ticket
-            query = await cur.execute("SELECT * FROM reports WHERE TicketCreatorId = ?", (thread_id,))
+            query = await cur.execute("SELECT * FROM reports WHERE TicketThreadId = ?", (thread_id,))
             ticket = await query.fetchone()
 
             # if ticket is none -> raise wrong channel error
