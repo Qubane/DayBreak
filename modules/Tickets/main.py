@@ -49,6 +49,22 @@ class TicketsModule(commands.Cog):
         # connect to database
         self.db = await self.db_handle.connect()
 
+        # create table for database
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor
+
+            await cur.execute("""
+            CREATE TABLE IF NOT EXISTS reports (
+                TicketThreadId INTEGER PRIMARY KEY,
+                TicketCreatorId INTEGER,
+                TicketReportedId INTEGER,
+                TicketCreationDate INTEGER
+            );
+            """)
+
+        # commit changes
+        await self.db.commit()
+
     @app_commands.command(name="report", description="reports user")
     @app_commands.describe(
         reason="reason for the report",
