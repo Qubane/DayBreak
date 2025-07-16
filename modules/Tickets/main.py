@@ -170,6 +170,36 @@ class TicketsModule(commands.Cog):
         Only the user who created the report, or the administration are able to do that
         """
 
+        # db variables
+        thread_id = interaction.channel_id
+
+        async with self.db.cursor() as cur:
+            cur: aiosqlite.Cursor
+
+            # fetch ticket
+            query = await cur.execute("SELECT * FROM reports WHERE TicketCreatorId = ?", (thread_id,))
+            ticket = await query.fetchone()
+
+            # if ticket is none -> raise wrong channel error
+            if ticket is None:
+                raise commands.UserInputError("Wrong channel")
+
+            # if TicketCreatorId is not equal to id of the user calling the command
+            if ticket[1] != interaction.user.id:
+                # if the calling user doesn't have 'moderate_members' permissions
+                if not interaction.user.guild_permissions.moderate_members:
+                    raise commands.MissingPermissions(["moderate_members"])
+
+            # user either has privilege or is the creator of the ticket
+            await cur.execute("""
+            UPDATE reports SET
+                TicketStatus = 1
+            WHERE TicketThreadId = ?
+            """, (thread_id,))
+
+        # commit db changes
+        self.db.commit()
+
 
 async def setup(client: commands.Bot) -> None:
     await client.add_cog(TicketsModule(client))
