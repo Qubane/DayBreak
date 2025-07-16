@@ -43,6 +43,7 @@ class ExampleModule(commands.Cog):
 
         # close the database on clean up
         await self.db_handle.close()
+        self.logger.info("Database closed")
 
     async def on_ready(self):
         """
@@ -51,6 +52,7 @@ class ExampleModule(commands.Cog):
 
         # connect to database
         self.db = await self.db_handle.connect()
+        self.logger.info("Database connected")
 
     @tasks.loop(minutes=5)
     async def example_task(self) -> None:
