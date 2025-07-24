@@ -365,28 +365,3 @@ class Fetcher:
             f"key={KeyChain.YOUTUBE_API_KEY}")
 
         return await asyncio.gather(*[Media.from_response(x["snippet"]) for x in playlist["items"]])
-
-
-async def test():
-    """
-    Very cool test thingy. runs only when file is run as main
-    """
-
-    for _ in range(1):
-        response = await Fetcher.fetch_videos(r"UCL-8FVaefmqox59LpOJxnOQ", 3)
-        # response = await Fetcher.fetch_channel_info(r"UCL-8FVaefmqox59LpOJxnOQ")
-        # response = json.dumps(response, indent=2)
-        print('\n'.join([str(x) for x in response]))
-
-    # channels = [
-    #     "UCL-8FVaefmqox59LpOJxnOQ",
-    #     "UCXuqSBlHAE6Xw-yeJA0Tunw",
-    #     "UCiER8p540j2SosO7OX7E0VA",
-    # ]
-    #
-    # responses = await asyncio.gather(*[Fetcher.fetch_videos(x, 2) for x in channels])
-    # print(responses)
-
-
-if __name__ == '__main__':
-    asyncio.run(test())
