@@ -88,8 +88,11 @@ class YouTubeNotifsModule(commands.Cog):
 
         # if channels list is not init, initialize it
         if not self.channels_init:
+            try:
+                self.channels_videos = await self.retrieve_channel_videos()
+            except NotImplementedError:  # in case of error
+                return
             self.channels_init = True
-            self.channels_videos = await self.retrieve_channel_videos()
 
             sem = asyncio.Semaphore(self.module_config.threads)
 
@@ -104,7 +107,10 @@ class YouTubeNotifsModule(commands.Cog):
             return
 
         # new channels dictionary
-        new_channels = await self.retrieve_channel_videos()
+        try:
+            new_channels = await self.retrieve_channel_videos()
+        except NotImplementedError:  # in case of error
+            return
 
         # check every guild
         for guild_config in self.guild_config:

@@ -192,7 +192,7 @@ class Fetcher:
                     cls.update_cache(url, response["etag"], response)
                     return response
                 else:  # error
-                    return None
+                    raise NotImplementedError
 
     @classmethod
     async def fetch_channel_info(cls, channel_id: str) -> Channel:
