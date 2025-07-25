@@ -1,0 +1,27 @@
+{
+  "guild_id": 1031161207291392000,
+  "notifications_channel_id": 1394638478662303784,
+  "video_role_id": 1190415930086395974,
+  "stream_role_id": 1190415930086395974,
+  "format": {
+    "text": "{role_mention}",
+    "embed": {
+      "thumbnail": "{video_thumbnail_url}",
+      "body": {
+        "title": "{video_title}",
+        "description": "{video_description}",
+        "url": "{video_url}",
+        "color": "#ff0000"
+      },
+      "author": {
+        "name": "{channel_name}",
+        "url": "{channel_url}",
+        "icon_url": "{channel_thumbnail_url}"
+      },
+      "fields": []
+    }
+  },
+  "channels": [
+    "UCL-8FVaefmqox59LpOJxnOQ"
+  ]
+}
