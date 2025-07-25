@@ -34,7 +34,6 @@ class TwitchNotifsModule(commands.Cog):
         # channels
         # 'channel_name': Stream
         self.channels_live: dict[str, Stream | None] = dict()
-        self.channels_init: bool = False
 
         # start routines
         self.check_routine.change_interval(seconds=self.module_config.update_interval)
@@ -45,6 +44,13 @@ class TwitchNotifsModule(commands.Cog):
         """
         Gets called when the bot is exiting
         """
+
+    async def on_ready(self):
+        """
+        Fetch current states of streams
+        """
+
+        self.channels_live = await self.fetch_streams()
 
     async def fetch_streams(self) -> dict[str, Stream | None]:
         """
@@ -83,12 +89,6 @@ class TwitchNotifsModule(commands.Cog):
         """
         Check every 'update_interval' for a new stream
         """
-
-        # check if we initialized current state of channels
-        if not self.channels_init:
-            self.channels_init = True
-            self.channels_live = await self.fetch_streams()
-            return
 
         # fetch current state
         channels_live = await self.fetch_streams()
