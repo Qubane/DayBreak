@@ -38,7 +38,6 @@ class YouTubeNotifsModule(commands.Cog):
 
         # "channel_id": Channel(...)
         self.channels: dict[str, Channel] = dict()
-        self.channels_init: bool = False
 
         self.check.change_interval(seconds=self.module_config.update_interval)
         self.check.start()
@@ -47,6 +46,28 @@ class YouTubeNotifsModule(commands.Cog):
         """
         Gets called when the bot is exiting
         """
+
+    async def on_ready(self):
+        """
+        Fetch latest uploaded videos
+        """
+
+        # try to fetch videos
+        try:
+            self.channels_videos = await self.retrieve_channel_videos()
+        except NotImplementedError:  # in case of error
+            return
+
+        # thread semaphore
+        sem = asyncio.Semaphore(self.module_config.threads)
+
+        async def coro(_channel_id):
+            async with sem:
+                return await Fetcher.fetch_channel_info(_channel_id)
+
+        # fetch and write results
+        results = await asyncio.gather(*[coro(x) for x in self.channels_videos.keys()])
+        self.channels = {channel_id: channel for channel_id, channel in zip(self.channels_videos.keys(), results)}
 
     async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Media]]:
         """
@@ -85,26 +106,6 @@ class YouTubeNotifsModule(commands.Cog):
         """
         Checks every 'update_interval' for a new video/stream
         """
-
-        # if channels list is not init, initialize it
-        if not self.channels_init:
-            try:
-                self.channels_videos = await self.retrieve_channel_videos()
-            except NotImplementedError:  # in case of error
-                return
-            self.channels_init = True
-
-            sem = asyncio.Semaphore(self.module_config.threads)
-
-            async def coro(_channel_id):
-                async with sem:
-                    return await Fetcher.fetch_channel_info(_channel_id)
-
-            results = await asyncio.gather(*[coro(x) for x in self.channels_videos.keys()])
-            self.channels = {channel_id: channel for channel_id, channel in zip(self.channels_videos.keys(), results)}
-
-            # no need to continue, because we just fetched 'the newest' videos
-            return
 
         # new channels dictionary
         try:
