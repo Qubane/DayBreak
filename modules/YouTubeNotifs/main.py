@@ -53,10 +53,12 @@ class YouTubeNotifsModule(commands.Cog):
         """
 
         # try to fetch videos
-        try:
-            self.channels_videos = await self.retrieve_channel_videos()
-        except NotImplementedError:  # in case of error
-            return
+        while True:
+            try:
+                self.channels_videos = await self.retrieve_channel_videos()
+                break
+            except NotImplementedError:  # in case of error
+                await asyncio.sleep(5)
 
         # thread semaphore
         sem = asyncio.Semaphore(self.module_config.threads)
