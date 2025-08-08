@@ -115,9 +115,6 @@ class CoreModule(commands.Cog):
                 # load module
                 await self.load_module(module)
 
-                # append to running modules
-                self.modules_running.append(module)
-
             # in case of exception
             except commands.ExtensionError as e:
                 self.logger.warning(f"Module '{module}' failure", exc_info=e)
@@ -189,7 +186,7 @@ class CoreModule(commands.Cog):
 
         # unload all running modules (except Core)
         await asyncio.gather(
-            *[self.unload_module(module) for module in self.modules_running if module not in self.modules_static])
+            *[self.unload_module(module) for module in self.modules_running if module != self.module_name])
 
         # load configs
         self.load_config()
