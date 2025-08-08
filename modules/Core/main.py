@@ -316,23 +316,30 @@ class CoreModule(commands.Cog):
         await check_bot_ownership(self.client, interaction)
 
         # modules
-        # [(name, status), (name, status), (name, status), ...]
-        modules_status: list[tuple[str, str]] = list()
-        self.modules_running.sort(key=lambda x: len(x))
-        self.modules_present.sort(key=lambda x: len(x))
-        for module in self.modules_running:
-            modules_status.append((f"{module}{' [STATIC]' if module in self.modules_static else ''}", "✅ active"))
+        module_status = {}
         for module in self.modules_present:
-            # skip already appended modules
-            if module in self.modules_running:
-                continue
-            modules_status.append((f"{module}", "❌ inactive"))
+            module_status[module] = {
+                "running": module in self.modules_running,
+                "static": module in self.modules_static}
 
-        embed = discord.Embed(title="Module list", color=discord.Color.green())
-        for status in modules_status:
-            embed.add_field(name=status[0], value=status[1], inline=False)
+        # magic numbers
+        max_module_name_length = max(len(x) for x in self.modules_present)
+        column_1 = "running"
+        column_2 = "static"
 
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        # make message
+        out = (f"# Module activity:\n```\n"
+               f"{'module': <{max_module_name_length}} | {column_1} | {column_2}\n")
+        for module in sorted(module_status.keys(), key=lambda x: len(x)):
+            is_running_string = '✅' if module_status[module]['running'] else '❌'
+            is_static_string = '✅' if module_status[module]['static'] else '❌'
+            out += (f"{module: <{max_module_name_length}} | "
+                    f"{is_running_string: ^{len(column_1) - 1}} | "
+                    f"{is_static_string: ^{len(column_2) - 1}}\n")
+        out += "```"
+
+        # send message
+        await interaction.response.send_message(out, ephemeral=True)
 
     @app_commands.command(name="bot-upgrade", description="upgrade bot")
     async def upgrade_bot_command(
