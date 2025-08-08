@@ -40,7 +40,6 @@ class YouTubeNotifsModule(commands.Cog):
         self.channels: dict[str, Channel] = dict()
 
         self.check.change_interval(seconds=self.module_config.update_interval)
-        self.check.start()
 
     async def on_cleanup(self):
         """
@@ -70,6 +69,9 @@ class YouTubeNotifsModule(commands.Cog):
         # fetch and write results
         results = await asyncio.gather(*[coro(x) for x in self.channels_videos.keys()])
         self.channels = {channel_id: channel for channel_id, channel in zip(self.channels_videos.keys(), results)}
+
+        # start check
+        self.check.start()
 
     async def retrieve_channel_videos(self, amount: int | None = None) -> dict[str, list[Media]]:
         """
