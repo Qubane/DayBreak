@@ -189,7 +189,7 @@ class CoreModule(commands.Cog):
 
         # unload all running modules (except Core)
         await asyncio.gather(
-            *[self.unload_module(module) for module in self.modules_running if module != self.module_name])
+            *[self.unload_module(module) for module in self.modules_running if module not in self.modules_static])
 
         # load configs
         self.load_config()
