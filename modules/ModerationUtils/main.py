@@ -141,6 +141,9 @@ class ModerationUtilsModule(commands.Cog):
         Code taken from 'UltraQbik/MightyOmegaBot'
         """
 
+        # defer response
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
         # check if the bot has privileges to time out the other user
         self_member = interaction.guild.get_member(self.client.user.id)
         if not has_privilege(self_member, user):
@@ -177,7 +180,7 @@ class ModerationUtilsModule(commands.Cog):
             color=discord.Color.green())
 
         # send the message
-        await interaction.response.send_message(embed=author_embed, ephemeral=True)
+        await interaction.followup.send(embed=author_embed)
 
         # make timeout message to user who was put on a timeout
         user_embed = discord.Embed(
@@ -206,6 +209,9 @@ class ModerationUtilsModule(commands.Cog):
         """
         Command that will kick users
         """
+
+        # defer response
+        await interaction.response.defer(thinking=True, ephemeral=True)
 
         # check if the bot has privileges to time out the other user
         self_member = interaction.guild.get_member(self.client.user.id)
@@ -240,7 +246,7 @@ class ModerationUtilsModule(commands.Cog):
             color=discord.Color.green())
 
         # send the message
-        await interaction.response.send_message(embed=author_embed, ephemeral=True)
+        await interaction.followup.send(embed=author_embed)
 
     @app_commands.command(name="bban", description="bans a user")
     @app_commands.checks.has_permissions(ban_members=True)
@@ -259,6 +265,9 @@ class ModerationUtilsModule(commands.Cog):
         """
         Command that will ban users
         """
+
+        # defer response
+        await interaction.response.defer(thinking=True, ephemeral=True)
 
         # check if the bot has privileges to ban the other user
         self_member = interaction.guild.get_member(self.client.user.id)
@@ -293,7 +302,7 @@ class ModerationUtilsModule(commands.Cog):
             color=discord.Color.green())
 
         # send the message
-        await interaction.response.send_message(embed=author_embed, ephemeral=True)
+        await interaction.followup.send(embed=author_embed)
 
     @tasks.loop(minutes=2)
     async def check_warn_resets(self) -> None:
