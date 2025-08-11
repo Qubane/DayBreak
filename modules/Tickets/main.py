@@ -89,6 +89,9 @@ class TicketsModule(commands.Cog):
         if interaction.user == user:
             raise commands.UserInputError("Cannot report yourself")
 
+        # defer response
+        await interaction.response.defer(thinking=True, ephemeral=True)
+
         user_id = interaction.user.id
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
@@ -151,7 +154,7 @@ class TicketsModule(commands.Cog):
             color=discord.Color.green())
 
         # send response
-        await interaction.response.send_message(embed=embed, ephemeral=True)
+        await interaction.followup.send(embed=embed)
 
         # add reporting user
         await thread.add_user(interaction.user)
@@ -176,7 +179,7 @@ class TicketsModule(commands.Cog):
 
         # ping moderation team
         if ping_message:
-            await thread.send(f"Moderation team: {ping_message}")
+            await thread.send(f"Report reviewed by: {ping_message}")
 
     @app_commands.command(name="report-close", description="closes the report")
     async def report_close_command(
@@ -187,6 +190,9 @@ class TicketsModule(commands.Cog):
         Closes the report.
         Only the user who created the report, or the administration are able to do that
         """
+
+        # defer response
+        await interaction.response.defer(thinking=True)
 
         # db variables
         thread_id = interaction.channel_id
@@ -237,7 +243,7 @@ class TicketsModule(commands.Cog):
             color=discord.Color.green())
 
         # send response
-        await interaction.response.send_message(embed=embed)
+        await interaction.followup.send(embed=embed)
 
 
 async def setup(client: commands.Bot) -> None:
