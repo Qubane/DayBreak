@@ -7,11 +7,21 @@ import asyncio
 import discord
 import logging
 import aiosqlite
+from enum import IntEnum, auto
 from datetime import datetime
 from discord import app_commands
 from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
+
+
+class ReportStatus(IntEnum):
+    """
+    Report ticket status
+    """
+
+    OPEN = auto()
+    CLOSED = auto()
 
 
 class TicketsModule(commands.Cog):
