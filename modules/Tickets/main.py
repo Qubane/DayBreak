@@ -24,6 +24,19 @@ class ReportStatus(IntEnum):
     CLOSED = auto()
 
 
+class TicketColumns(IntEnum):
+    """
+    Ticket column indexes
+    """
+
+    THREAD_ID = 0
+    GUILD_ID = 1
+    CREATOR_ID = 2
+    REPORTED_ID = 3
+    CREATION_DATE = 4
+    TICKET_STATUS = 5
+
+
 class TicketsModule(commands.Cog):
     """
     Tickets module
@@ -70,6 +83,7 @@ class TicketsModule(commands.Cog):
             await cur.execute(f"""
             CREATE TABLE IF NOT EXISTS reports (
                 TicketThreadId INTEGER PRIMARY KEY,
+                TicketGuildId INTEGER,
                 TicketCreatorId INTEGER,
                 TicketReportedId INTEGER,
                 TicketCreationDate INTEGER,
@@ -107,12 +121,16 @@ class TicketsModule(commands.Cog):
             cur: aiosqlite.Cursor
 
             # fetch number of tickets from user
-            query = await cur.execute("""
+            query = await cur.execute(f"""
                 SELECT
-                    (SELECT COUNT(*) FROM reports WHERE TicketCreatorId = ? AND TicketStatus = 0) AS TicketCount
+                    (SELECT COUNT(*)
+                    FROM reports
+                    WHERE TicketCreatorId = {user_id}
+                    AND TicketGuildId = {interaction.guild_id}
+                    AND TicketStatus = {ReportStatus.OPEN}) AS TicketCount
                 FROM reports
-                WHERE TicketCreatorId = ?
-                """, (user_id, user_id,))
+                WHERE TicketCreatorId = {user_id}
+                """)
 
             # make number
             ticket_query = await query.fetchone()
@@ -144,14 +162,20 @@ class TicketsModule(commands.Cog):
 
             # create ticket data
             ticket_thread_id = thread.id
+            ticket_guild_id = interaction.guild_id
             ticket_creator_id = interaction.user.id
             ticket_reported_id = user.id
             ticket_creation_date = int(datetime.now().timestamp())
 
             # create ticket in database
             await cur.execute(
-                "INSERT INTO reports VALUES (?, ?, ?, ?, ?)",
-                (ticket_thread_id, ticket_creator_id, ticket_reported_id, ticket_creation_date, ReportStatus.OPEN))
+                f"INSERT INTO reports VALUES ("
+                f"{ticket_thread_id},"
+                f"{ticket_guild_id},"
+                f"{ticket_creator_id},"
+                f"{ticket_reported_id},"
+                f"{ticket_creation_date},"
+                f"{ReportStatus.OPEN})")
 
         # commit changes in DB
         await self.db.commit()
@@ -215,7 +239,7 @@ class TicketsModule(commands.Cog):
             cur: aiosqlite.Cursor
 
             # fetch ticket
-            query = await cur.execute("SELECT * FROM reports WHERE TicketThreadId = ?", (thread_id,))
+            query = await cur.execute(f"SELECT * FROM reports WHERE TicketThreadId = {thread_id}")
             ticket = await query.fetchone()
 
             # if ticket is none -> raise wrong channel error
@@ -223,7 +247,7 @@ class TicketsModule(commands.Cog):
                 raise commands.UserInputError("Wrong channel")
 
             # if TicketCreatorId is not equal to id of the user calling the command
-            if ticket[1] != interaction.user.id:
+            if ticket[TicketColumns.CREATOR_ID] != interaction.user.id:
                 # if the calling user doesn't have 'manage_threads' permissions
                 if not interaction.user.guild_permissions.manage_threads:
                     raise commands.MissingPermissions(["manage_threads"])
@@ -234,11 +258,11 @@ class TicketsModule(commands.Cog):
                 reason = "Closed by user"
 
             # user either has privilege or is the creator of the ticket
-            await cur.execute("""
+            await cur.execute(f"""
             UPDATE reports SET
-                TicketStatus = ?
-            WHERE TicketThreadId = ?
-            """, (ReportStatus.CLOSED, thread_id,))
+                TicketStatus = {ReportStatus.CLOSED}
+            WHERE TicketThreadId = {thread_id}
+            """)
 
         # lock the thread
         thread = interaction.guild.get_thread(thread_id)
