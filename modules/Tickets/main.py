@@ -182,9 +182,13 @@ class TicketsModule(commands.Cog):
             await thread.send(f"Report reviewed by: {ping_message}")
 
     @app_commands.command(name="report-close", description="closes the report")
+    @app_commands.describe(
+        reason="reason for closing the ticket")
+    @app_commands.checks.cooldown(1, 120)
     async def report_close_command(
             self,
-            interaction: discord.Interaction
+            interaction: discord.Interaction,
+            reason: str = ""
     ) -> None:
         """
         Closes the report.
@@ -196,9 +200,6 @@ class TicketsModule(commands.Cog):
 
         # db variables
         thread_id = interaction.channel_id
-
-        # closing reason
-        reason = ""
 
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
@@ -217,8 +218,9 @@ class TicketsModule(commands.Cog):
                 if not interaction.user.guild_permissions.manage_threads:
                     raise commands.MissingPermissions(["manage_threads"])
 
-                reason = "Closed by administrator"
-            else:
+                if reason == "":
+                    reason = "Closed by administrator"
+            elif reason == "":
                 reason = "Closed by user"
 
             # user either has privilege or is the creator of the ticket
