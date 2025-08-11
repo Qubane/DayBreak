@@ -17,7 +17,7 @@ from source.configs import *
 from source.databases import *
 
 
-class ReportStatus(IntEnum):
+class TicketStatus(IntEnum):
     """
     Report ticket status
     """
@@ -89,7 +89,7 @@ class TicketsModule(commands.Cog):
                 TicketCreatorId INTEGER,
                 TicketReportedId INTEGER,
                 TicketCreationDate INTEGER,
-                TicketStatus INTEGER DEFAULT {ReportStatus.CLOSED}
+                TicketStatus INTEGER DEFAULT {TicketStatus.CLOSED}
             );
             """)
 
@@ -129,7 +129,7 @@ class TicketsModule(commands.Cog):
                     FROM reports
                     WHERE TicketCreatorId = {user_id}
                     AND TicketGuildId = {interaction.guild_id}
-                    AND TicketStatus = {ReportStatus.OPEN}) AS TicketCount
+                    AND TicketStatus = {TicketStatus.OPEN}) AS TicketCount
                 FROM reports
                 WHERE TicketCreatorId = {user_id}
                 """)
@@ -177,7 +177,7 @@ class TicketsModule(commands.Cog):
                 f"{ticket_creator_id},"
                 f"{ticket_reported_id},"
                 f"{ticket_creation_date},"
-                f"{ReportStatus.OPEN})")
+                f"{TicketStatus.OPEN})")
 
         # commit changes in DB
         await self.db.commit()
@@ -260,7 +260,7 @@ class TicketsModule(commands.Cog):
                 raise commands.UserInputError("Wrong channel")
 
             # if ticket is already closed
-            if ticket[TicketColumns.TICKET_STATUS] == ReportStatus.CLOSED:
+            if ticket[TicketColumns.TICKET_STATUS] == TicketStatus.CLOSED:
                 raise commands.UserInputError("Thread already closed")
 
             # if TicketCreatorId is not equal to id of the user calling the command
@@ -277,7 +277,7 @@ class TicketsModule(commands.Cog):
             # user either has privilege or is the creator of the ticket
             await cur.execute(f"""
             UPDATE reports SET
-                TicketStatus = {ReportStatus.CLOSED}
+                TicketStatus = {TicketStatus.CLOSED}
             WHERE TicketThreadId = {thread_id}
             """)
 
