@@ -259,6 +259,10 @@ class TicketsModule(commands.Cog):
             if ticket is None:
                 raise commands.UserInputError("Wrong channel")
 
+            # if ticket is already closed
+            if ticket[TicketColumns.TICKET_STATUS] == ReportStatus.CLOSED:
+                raise commands.UserInputError("Thread already closed")
+
             # if TicketCreatorId is not equal to id of the user calling the command
             if ticket[TicketColumns.CREATOR_ID] != interaction.user.id:
                 # if the calling user doesn't have 'manage_threads' permissions
