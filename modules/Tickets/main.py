@@ -4,6 +4,8 @@ This is Tickets module that adds a ticket reporting system
 
 
 import asyncio
+from typing import Optional
+
 import discord
 import logging
 import aiosqlite
@@ -215,10 +217,21 @@ class TicketsModule(commands.Cog):
         if ping_message:
             await thread.send(f"Report reviewed by: {ping_message}")
 
+    @staticmethod
+    def report_close_command_cooldown(interaction: discord.Interaction) -> Optional[app_commands.Cooldown]:
+        """
+        Cooldown for everyone, except users with "manage threads" permissions
+        (permission that allows to see private threads)
+        """
+
+        if interaction.user.guild_permissions.manage_threads:
+            return None
+        return app_commands.Cooldown(1, 120)
+
     @app_commands.command(name="report-close", description="closes the report")
     @app_commands.describe(
         reason="reason for closing the ticket")
-    @app_commands.checks.cooldown(1, 120)
+    @app_commands.checks.dynamic_cooldown(report_close_command_cooldown)
     async def report_close_command(
             self,
             interaction: discord.Interaction,
