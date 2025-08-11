@@ -67,13 +67,13 @@ class TicketsModule(commands.Cog):
         async with self.db.cursor() as cur:
             cur: aiosqlite.Cursor
 
-            await cur.execute("""
+            await cur.execute(f"""
             CREATE TABLE IF NOT EXISTS reports (
                 TicketThreadId INTEGER PRIMARY KEY,
                 TicketCreatorId INTEGER,
                 TicketReportedId INTEGER,
                 TicketCreationDate INTEGER,
-                TicketStatus INTEGER DEFAULT 0
+                TicketStatus INTEGER DEFAULT {ReportStatus.CLOSED}
             );
             """)
 
@@ -150,8 +150,8 @@ class TicketsModule(commands.Cog):
 
             # create ticket in database
             await cur.execute(
-                "INSERT INTO reports VALUES (?, ?, ?, ?, 0)",
-                (ticket_thread_id, ticket_creator_id, ticket_reported_id, ticket_creation_date,))
+                "INSERT INTO reports VALUES (?, ?, ?, ?, ?)",
+                (ticket_thread_id, ticket_creator_id, ticket_reported_id, ticket_creation_date, ReportStatus.OPEN))
 
         # commit changes in DB
         await self.db.commit()
@@ -236,9 +236,9 @@ class TicketsModule(commands.Cog):
             # user either has privilege or is the creator of the ticket
             await cur.execute("""
             UPDATE reports SET
-                TicketStatus = 1
+                TicketStatus = ?
             WHERE TicketThreadId = ?
-            """, (thread_id,))
+            """, (ReportStatus.CLOSED, thread_id,))
 
         # lock the thread
         thread = interaction.guild.get_thread(thread_id)
