@@ -235,11 +235,11 @@ class TicketsModule(commands.Cog):
     async def report_close_command(
             self,
             interaction: discord.Interaction,
-            reason: str = ""
+            reason: str = "Closed by administrator"
     ) -> None:
         """
         Closes the report.
-        Only the user who created the report, or the administration are able to do that
+        Only the administration will be able to close the ticket
         """
 
         # defer response
@@ -263,16 +263,9 @@ class TicketsModule(commands.Cog):
             if ticket[TicketColumns.TICKET_STATUS] == TicketStatus.CLOSED:
                 raise commands.UserInputError("Thread already closed")
 
-            # if TicketCreatorId is not equal to id of the user calling the command
-            if ticket[TicketColumns.CREATOR_ID] != interaction.user.id:
-                # if the calling user doesn't have 'manage_threads' permissions
-                if not interaction.user.guild_permissions.manage_threads:
-                    raise commands.MissingPermissions(["manage_threads"])
-
-                if reason == "":
-                    reason = "Closed by administrator"
-            elif reason == "":
-                reason = "Closed by user"
+            # if the calling user doesn't have 'manage_threads' permissions
+            if not interaction.user.guild_permissions.manage_threads:
+                raise commands.MissingPermissions(["manage_threads"])
 
             # user either has privilege or is the creator of the ticket
             await cur.execute(f"""
