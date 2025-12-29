@@ -19,39 +19,6 @@ from source.configs import *
 from source.databases import *
 
 
-def cast_result_to_numeric(label: str) -> int:
-    """
-    Casts string label to numeric
-    :param label: result label
-    :return: int 1 - 5
-    """
-
-    match label:
-        case "Very Positive":
-            return 5
-        case "Positive":
-            return 4
-        case "Neutral":
-            return 3
-        case "Negative":
-            return 2
-        case "Very Negative":
-            return 1
-        case _:
-            raise ValueError(f"Unknown label '{label}'")
-
-
-def magic_number_formula(positivity_score: float, message_count: int) -> float:
-    """
-    Does the magic to calculate the magic number
-    :param positivity_score: database value of user
-    :param message_count: database value of user
-    :return: magic number
-    """
-
-    return (positivity_score / message_count) + math.log(message_count, 10)
-
-
 class SentimentsModule(commands.Cog):
     """
     Sentiments module
@@ -125,7 +92,7 @@ class SentimentsModule(commands.Cog):
         def task():
             self.pipeline = pipeline(
                 "text-classification",
-                model="tabularisai/multilingual-sentiment-analysis",
+                model="papluca/xlm-roberta-base-language-detection",
                 truncation=True)
 
         loop = asyncio.get_event_loop()
@@ -172,7 +139,7 @@ class SentimentsModule(commands.Cog):
         self.message_processing_queue.clear()
 
         # process messages
-        results = [cast_result_to_numeric(x["label"]) / 5 for x in self.pipeline(messages)]
+        results = [x["score"] for x in self.pipeline(messages)]
 
         # update database according to where the message was sent
         async with self.db.cursor() as cur:
@@ -189,22 +156,21 @@ class SentimentsModule(commands.Cog):
 
                 # fetch user
                 query = await cur.execute(
-                    f"SELECT MessageCount, PValue FROM {table_name} WHERE UserId = ?", (user_id,))
+                    f"SELECT MessageCount, PValue FROM {table_name} WHERE UserId = {user_id}")
                 user = await query.fetchone()
 
                 # compute user values
                 message_count = user[0] + 1
                 p_value = user[1] + result
-                magic_number = magic_number_formula(p_value, message_count)
 
                 # update user entry
                 await cur.execute(f"""
                 UPDATE {table_name} SET
-                    MessageCount = ?,
-                    PValue = ?,
-                    MagicNumber = ?
-                WHERE UserId = ?
-                """, (message_count, p_value, magic_number, user_id))
+                    MessageCount = {message_count},
+                    PValue = {p_value},
+                    MagicNumber = {p_value / message_count * 100}
+                WHERE UserId = {user_id}
+                """)
 
         # commit changes
         await self.db.commit()
@@ -245,7 +211,7 @@ class SentimentsModule(commands.Cog):
             # else add them to embed
             embed.add_field(
                 name=interaction.guild.get_member(user_row[0]).display_name,
-                value=f"Positivity score is {user_row[1] * 100:.0f}",
+                value=f"Positivity score is {user_row[1]:.0f}",
                 inline=False)
 
             # decrement the limit
@@ -275,15 +241,15 @@ class SentimentsModule(commands.Cog):
             # make query for user's MagicNumber and UserPosition
             query = await cur.execute(f"""
             SELECT
-                (SELECT MagicNumber FROM {table_name} WHERE UserId = ?) as MagicNumber,
+                (SELECT MagicNumber FROM {table_name} WHERE UserId = {user_id}) as MagicNumber,
                 (
                     SELECT COUNT(*)
                     FROM {table_name}
-                    WHERE MagicNumber >= (SELECT MagicNumber FROM {table_name} WHERE UserId = ?)
+                    WHERE MagicNumber >= (SELECT MagicNumber FROM {table_name} WHERE UserId = {user_id})
                 ) AS UserPosition
             FROM {table_name}
-            WHERE UserId = ?
-            """, (user_id, user_id, user_id))
+            WHERE UserId = {user_id}
+            """)
 
             # fetch one from query
             magic_number, leaderboard_place = await query.fetchone()
@@ -308,7 +274,7 @@ class SentimentsModule(commands.Cog):
         embed.set_thumbnail(url=interaction.user.display_avatar.url)
         embed.add_field(
             name=f"Positivity score",
-            value=f"{magic_number * 100:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
+            value=f"{magic_number:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
         embed.add_field(
             name=f"Place on the posiboard", value=f"You are in the {leaderboard_place}{postfix} place!", inline=False)
         embed.set_footer(
