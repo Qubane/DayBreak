@@ -1,4 +1,5 @@
 {
   "queue_process_interval": 300,
+  "minimum_message_count": 100,
   "queue_max_size": 256
 }
