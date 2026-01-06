@@ -191,7 +191,10 @@ class SentimentsModule(commands.Cog):
 
             # fetch users, ordered from highest to lowest
             query = await cur.execute(
-                f"SELECT UserId, MagicNumber FROM {table_name} ORDER BY MagicNumber DESC")
+                f"SELECT UserId, MagicNumber "
+                f"FROM {table_name} "
+                f"WHERE MessageCount > {self.module_config.minimum_message_count} "
+                f"ORDER BY MagicNumber DESC")
             leaderboard = await query.fetchall()
 
         # make embed
@@ -242,6 +245,7 @@ class SentimentsModule(commands.Cog):
             query = await cur.execute(f"""
             SELECT
                 (SELECT MagicNumber FROM {table_name} WHERE UserId = {user_id}) as MagicNumber,
+                (SELECT MessageCount FROM {table_name} WHERE UserId = {user_id}) as MessageCount,
                 (
                     SELECT COUNT(*)
                     FROM {table_name}
@@ -252,7 +256,7 @@ class SentimentsModule(commands.Cog):
             """)
 
             # fetch one from query
-            magic_number, leaderboard_place = await query.fetchone()
+            magic_number, message_count, leaderboard_place = await query.fetchone()
 
         # number postfix
         # Outputs `10st` (tenst), `20nd` (twentynd), `30rd` (thirtyrd)
@@ -268,6 +272,12 @@ class SentimentsModule(commands.Cog):
         else:
             postfix = "th"
 
+        # qualification status
+        if message_count > self.module_config.minimum_message_count:
+            leaderboard_qualification = "✅"
+        else:
+            leaderboard_qualification = "❌"
+
         # make embed
         embed = discord.Embed(title=f"Posiself of {interaction.user.display_name}", color=discord.Color.green())
         embed.set_author(name=interaction.user.display_name)
@@ -277,6 +287,8 @@ class SentimentsModule(commands.Cog):
             value=f"{magic_number:.0f} magic number{'s' if magic_number > 1 else ''}!", inline=False)
         embed.add_field(
             name=f"Place on the posiboard", value=f"You are in the {leaderboard_place}{postfix} place!", inline=False)
+        embed.add_field(
+            name="Qualified for leaderboard", value=f"{message_count} messages - {leaderboard_qualification}")
         embed.set_footer(
             text="don't take this score at face value, it's just a magic number")
 
