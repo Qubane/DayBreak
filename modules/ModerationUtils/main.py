@@ -12,6 +12,7 @@ from discord import app_commands
 from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
+from source.notifications import *
 
 
 def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
@@ -32,31 +33,6 @@ def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
     negative_checks = user.guild.owner == user  # if the user is an owner
 
     return positive_checks and not negative_checks
-
-
-async def try_notify(user: discord.Member, embed: discord.Embed, logger: logging.Logger | None = None):
-    """
-    Try to notify user about something
-    :param user: guild member
-    :param embed: pretty embed
-    :param logger: logger
-    """
-
-    # if logger was not defined
-    if logger is None:
-        logger = logging.getLogger(__name__)
-
-    # try to send user a dm
-    try:
-        await user.send(embed=embed)
-
-    # if it failed for these reasons, just ignore
-    except (discord.HTTPException, discord.Forbidden):
-        pass
-
-    # if something else failed, print a message
-    except Exception as e:
-        logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
 
 
 class ModerationUtilsModule(commands.Cog):
@@ -165,13 +141,12 @@ class ModerationUtilsModule(commands.Cog):
             duration = timedelta(seconds=60)
 
         # give timeout
-        # either discord.py is being silly or discord, but "moderate_members" doesn't get computed correctly
-        try:
-            await user.timeout(duration, reason=reason)
-        except discord.Forbidden:
-            raise commands.MissingPermissions(
-                ["moderate_members"],
-                "Bot is missing permissions")
+        await member_timeout(
+            member=user,
+            duration=duration,
+            reason=reason,
+            author=interaction.user,
+            logger=self.logger)
 
         # make timeout success message to command caller
         author_embed = discord.Embed(
@@ -181,18 +156,6 @@ class ModerationUtilsModule(commands.Cog):
 
         # send the message
         await interaction.followup.send(embed=author_embed)
-
-        # make timeout message to user who was put on a timeout
-        user_embed = discord.Embed(
-            title="Timeout!",
-            description="You were put on a timeout",
-            color=discord.Color.red())
-        user_embed.add_field(name="Reason", value=reason, inline=True)
-        user_embed.add_field(name="Duration", value=duration.__str__())
-        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
-
-        # try to notify user
-        await try_notify(user, user_embed, self.logger)
 
     @app_commands.command(name="bkick", description="kicks a user")
     @app_commands.checks.has_permissions(kick_members=True)
@@ -226,18 +189,12 @@ class ModerationUtilsModule(commands.Cog):
                 ["kick_members"],
                 f"User {user.mention} has higher or equal privilege")
 
-        # make message for the user who is going to be kicked out
-        user_embed = discord.Embed(
-            title="You were kicked from the server",
-            color=discord.Color.red())
-        user_embed.add_field(name="Reason", value=reason, inline=True)
-        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
-
-        # try to notify user
-        await try_notify(user, user_embed, self.logger)
-
-        # kick the user
-        await user.kick(reason=reason)
+        # kick user
+        await member_kick(
+            member=user,
+            reason=reason,
+            author=interaction.user,
+            logger=self.logger)
 
         # make success message to command caller
         author_embed = discord.Embed(
@@ -282,18 +239,13 @@ class ModerationUtilsModule(commands.Cog):
                 ["ban_members"],
                 f"User {user.mention} has higher or equal privilege")
 
-        # make message for the user who is going to be kicked out
-        user_embed = discord.Embed(
-            title="You were banned from the server",
-            color=discord.Color.red())
-        user_embed.add_field(name="Reason", value=reason, inline=True)
-        user_embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
-
-        # try to notify user
-        await try_notify(user, user_embed, self.logger)
-
-        # ban the user
-        await user.ban(delete_message_days=days, reason=reason)
+        # ban user
+        await member_ban(
+            member=user,
+            delete_within_days=days,
+            reason=reason,
+            author=interaction.user,
+            logger=self.logger)
 
         # make success message to command caller
         author_embed = discord.Embed(
