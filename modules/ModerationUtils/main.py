@@ -13,26 +13,7 @@ from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
 from source.notifications import *
-
-
-def has_privilege(caller: discord.Member, user: discord.Member) -> bool:
-    """
-    Compares privileges of 2 users. If 'caller' has higher privilege, returns True
-    :param caller: first user
-    :param user: second user
-    :return: True when 'caller' > 'user'; otherwise False
-    """
-
-    hierarchy_check = caller.top_role > user.top_role  # if the caller's top role is above user's top role
-    owner_check = caller.guild.owner == caller  # if caller is an owner
-
-    # if either one is these are True
-    positive_checks = any([hierarchy_check, owner_check])
-
-    # if either one of these are True then the entire statement is False
-    negative_checks = user.guild.owner == user  # if the user is an owner
-
-    return positive_checks and not negative_checks
+from source.utils import has_privilege
 
 
 class ModerationUtilsModule(commands.Cog):
