@@ -144,6 +144,7 @@ class CoreModule(commands.Cog):
             pass
         except Exception as e:
             self.logger.warning("Error occurred during module load", exc_info=e)
+            return
 
         # append to running modules
         self.modules_running.append(module)
