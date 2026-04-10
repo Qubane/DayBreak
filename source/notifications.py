@@ -1,4 +1,7 @@
 import discord
+import logging
+from datetime import timedelta
+from discord.ext import commands
 from source.configs import *
 
 
@@ -55,3 +58,120 @@ async def make_announcement(
 
     if publish and channel.is_news():
         await message_context.publish()
+
+
+async def try_notify(user: discord.Member, embed: discord.Embed, logger: logging.Logger | None = None):
+    """
+    Try to notify user about something
+    :param user: guild member
+    :param embed: pretty embed
+    :param logger: logger
+    """
+
+    # if logger was not defined
+    if logger is None:
+        logger = logging.getLogger(__name__)
+
+    # try to send user a dm
+    try:
+        await user.send(embed=embed)
+
+    # if it failed for these reasons, just ignore
+    except (discord.HTTPException, discord.Forbidden):
+        pass
+
+    # if something else failed, print a message
+    except Exception as e:
+        logger.warning("An error had occurred while sending timeout message to user", exc_info=e)
+
+
+async def member_timeout(
+        member: discord.Member,
+        duration: timedelta,
+        reason: str,
+        author: discord.Member,
+        logger: logging.Logger | None = None):
+    """
+    Timeout and notify member
+    :param member: member to timeout
+    :param duration: timeout until
+    :param reason: reason for timeout
+    :param author: punishment author
+    :param logger: logger
+    """
+
+    # try timeout
+    try:
+        await member.timeout(duration, reason=reason)
+    except discord.Forbidden:
+        raise commands.MissingPermissions(
+            ["moderate_members"],
+            "Bot is missing permissions")
+
+    # embed that will be sent to punished user
+    punished_embed = discord.Embed(
+        title="Timeout!",
+        description="You were put on a timeout",
+        color=discord.Color.red())
+    punished_embed.add_field(name="Reason", value=reason, inline=True)
+    punished_embed.add_field(name="Duration", value=duration.__str__())
+    punished_embed.set_author(name=author.name, icon_url=author.display_avatar.url)
+
+    # try notify user
+    await try_notify(member, punished_embed, logger)
+
+
+async def member_kick(
+        member: discord.Member,
+        reason: str,
+        author: discord.Member,
+        logger: logging.Logger | None = None):
+    """
+    Kick and notify member
+    :param member: member to kick
+    :param reason: reason for kick
+    :param author: punishment author
+    :param logger: logger
+    """
+
+    # embed that will be sent to punished user
+    punished_embed = discord.Embed(
+        title=f"You were kicked from {author.guild.name}",
+        color=discord.Color.red())
+    punished_embed.add_field(name="Reason", value=reason, inline=True)
+    punished_embed.set_author(name=author.name, icon_url=author.display_avatar.url)
+
+    # try notify user
+    await try_notify(member, punished_embed, logger)
+
+    # try kick
+    await member.kick(reason=reason)
+
+
+async def member_ban(
+        member: discord.Member,
+        delete_within_days: int,
+        reason: str,
+        author: discord.Member,
+        logger: logging.Logger | None = None):
+    """
+    Ban and notify member
+    :param member: member to ban
+    :param delete_within_days: delete messages within given number of days
+    :param reason: reason for ban
+    :param author: punishment author
+    :param logger: logger
+    """
+
+    # embed that will be sent to punished user
+    punished_embed = discord.Embed(
+        title=f"You were banned from {author.guild.name}",
+        color=discord.Color.red())
+    punished_embed.add_field(name="Reason", value=reason, inline=True)
+    punished_embed.set_author(name=author.name, icon_url=author.display_avatar.url)
+
+    # try notify user
+    await try_notify(member, punished_embed, logger)
+
+    # try kick
+    await member.ban(delete_message_days=delete_within_days, reason=reason)
