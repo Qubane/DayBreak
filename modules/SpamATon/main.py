@@ -28,21 +28,43 @@ class TimeoutUserAction(discord.ui.View):
 
     @discord.ui.button(label="Ban", style=discord.ButtonStyle.red)
     async def ban_button(self, interaction: discord.Interaction, button: discord.Button):
+        # check permission
+        if not has_privilege(interaction.user, self.timeout_member):
+            raise commands.MissingPermissions(
+                ["ban_members"],
+                f"User {self.timeout_member.mention} has higher or equal privilege")
+
+        # ban user
         await member_ban(
             member=self.timeout_member,
             delete_within_days=1,
             reason="Spam",
             author=interaction.user,
             logger=self.logger)
+
+        # disable buttons
         for child in self.children:
             child.disabled = True
+
+        # update interaction
         await interaction.response.edit_message(view=self)
 
     @discord.ui.button(label="Remove timeout", style=discord.ButtonStyle.green)
     async def remove_timeout_button(self, interaction: discord.Interaction, button: discord.Button):
+        # check permission
+        if not has_privilege(interaction.user, self.timeout_member):
+            raise commands.MissingPermissions(
+                ["moderate_members"],
+                f"User {self.timeout_member.mention} has higher or equal privilege")
+
+        # remove timeout
         await self.timeout_member.edit(timed_out_until=None)
+
+        # disable buttons
         for child in self.children:
             child.disabled = True
+
+        # update interaction
         await interaction.response.edit_message(view=self)
 
 
@@ -127,7 +149,10 @@ class SpamATonModule(commands.Cog):
             # create notification
             if message.guild.id in self.guild_config:
                 # fetch channel id
-                channel_id = self.guild_config[message.guild.id].notification_channel_id
+                channel = self.client.get_channel(self.guild_config[message.guild.id].notification_channel_id)
+
+                # forward questionable message
+                await message.forward(channel, fail_if_not_exists=False)
 
                 # create embed
                 embed = discord.Embed(
@@ -142,7 +167,7 @@ class SpamATonModule(commands.Cog):
                     logger=self.logger)
 
                 # send message
-                await self.client.get_channel(channel_id).send(embed=embed, view=action)
+                await channel.send(embed=embed, view=action)
 
             # timeout user and delete past messages
             if has_privilege(self_member, message.author):
@@ -152,6 +177,8 @@ class SpamATonModule(commands.Cog):
                     reason="spam",
                     author=self_member,
                     logger=self.logger)
+
+                # delete spam messages
                 for old_message in user_statistic:
                     await old_message.delete()
 
