@@ -142,6 +142,8 @@ class CoreModule(commands.Cog):
             await self.client.cogs[module + "Module"].on_ready()
         except (KeyError, AttributeError):
             pass
+        except Exception as e:
+            self.logger.warning("Error occurred during module load", exc_info=e)
 
         # append to running modules
         self.modules_running.append(module)
