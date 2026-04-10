@@ -7,12 +7,12 @@ import hashlib
 import discord
 import logging
 import aiosqlite
-from datetime import datetime
+from datetime import datetime, timezone
 from dataclasses import dataclass
-from discord import app_commands
 from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
+from source.notifications import *
 
 
 @dataclass
@@ -36,9 +36,6 @@ class SpamATonModule(commands.Cog):
         # processing queue
         self.user_statistics: dict[int, list[discord.Message]] = {}
 
-        # start task
-        self.delete_abandoned.start()
-
     async def on_cleanup(self):
         """
         Gets called when the bot is exiting
@@ -47,12 +44,6 @@ class SpamATonModule(commands.Cog):
     async def on_ready(self):
         """
         When the module is loaded
-        """
-
-    @tasks.loop(minutes=5)
-    async def delete_abandoned(self) -> None:
-        """
-        Delete old messages
         """
 
     @staticmethod
@@ -75,8 +66,17 @@ class SpamATonModule(commands.Cog):
         if message.author.id not in self.user_statistics:
             self.user_statistics[message.author.id] = []
 
+        # get user stat list
+        user_statistic = self.user_statistics[message.author.id]
+
+        # delete outdated messages
+        for old_message in user_statistic[::]:
+            delta = datetime.now(timezone.utc).replace(tzinfo=timezone.utc) - old_message.created_at
+            if delta.seconds > 60:
+                user_statistic.remove(old_message)
+
         # append new message
-        self.user_statistics[message.author.id].append(message)
+        user_statistic.append(message)
 
         # compute message hash
         original_message_hash = self.compute_message_content_hash(message)
@@ -84,15 +84,23 @@ class SpamATonModule(commands.Cog):
         # compare to other messages
         repeats = 0
         channels = set()
-        for old_message in self.user_statistics[message.author.id]:
+        for old_message in user_statistic:
             message_hash = self.compute_message_content_hash(old_message)
             if original_message_hash == message_hash:
                 repeats += 1
                 channels.add(old_message.channel.id)
 
-        # if repeat count and channel count is more than or equal to 4
-        if repeats >= 4 and len(channels) >= 4:
-            await message.author.timeout()
+        # if repeat count and channel count is more than or equal to 3
+        if repeats >= 3 and len(channels) >= 3:
+            self_member = self.client.get_guild(message.guild.id).get_member(self.client.user.id)
+            await member_timeout(
+                member=message.author,
+                duration=timedelta(minutes=30),
+                reason="spam",
+                author=self_member,
+                logger=self.logger)
+            for old_message in user_statistic:
+                await old_message.delete()
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message) -> None:
