@@ -6,18 +6,44 @@ Module for preventing spam bots
 import hashlib
 import discord
 import logging
-import aiosqlite
+import discord.ui
 from datetime import datetime, timezone
-from dataclasses import dataclass
-from discord.ext import commands, tasks
 from source.configs import *
 from source.databases import *
 from source.notifications import *
+from source.utils import has_privilege
 
 
-@dataclass
-class UserStatistic:
-    last_messages: list[discord.Message]
+class TimeoutUserAction(discord.ui.View):
+    def __init__(
+            self,
+            timeout_member: discord.Member,
+            self_user: discord.Member,
+            logger: logging.Logger | None = None):
+        super().__init__()
+
+        self.logger = logger
+        self.self_user = self_user
+        self.timeout_member = timeout_member
+
+    @discord.ui.button(label="Ban", style=discord.ButtonStyle.red)
+    async def ban_button(self, interaction: discord.Interaction, button: discord.Button):
+        await member_ban(
+            member=self.timeout_member,
+            delete_within_days=1,
+            reason="Spam",
+            author=interaction.user,
+            logger=self.logger)
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
+
+    @discord.ui.button(label="Remove timeout", style=discord.ButtonStyle.green)
+    async def remove_timeout_button(self, interaction: discord.Interaction, button: discord.Button):
+        await self.timeout_member.edit(timed_out_until=None)
+        for child in self.children:
+            child.disabled = True
+        await interaction.response.edit_message(view=self)
 
 
 class SpamATonModule(commands.Cog):
@@ -27,11 +53,15 @@ class SpamATonModule(commands.Cog):
 
     def __init__(self, client: commands.Bot) -> None:
         self.client: commands.Bot = client
-        self.module_name: str = "Example"
+        self.module_name: str = "SpamATon"
 
         # logging
         self.logger: logging.Logger = logging.getLogger(__name__)
         self.logger.info("Module loaded")
+
+        # configs
+        self.module_config: ModuleConfig = ModuleConfig(self.module_name)
+        self.guild_config: GuildConfigCollection = GuildConfigCollection(self.module_name)
 
         # processing queue
         self.user_statistics: dict[int, list[discord.Message]] = {}
@@ -72,7 +102,7 @@ class SpamATonModule(commands.Cog):
         # delete outdated messages
         for old_message in user_statistic[::]:
             delta = datetime.now(timezone.utc).replace(tzinfo=timezone.utc) - old_message.created_at
-            if delta.seconds > 60:
+            if delta.seconds > self.module_config.message_window:
                 user_statistic.remove(old_message)
 
         # append new message
@@ -90,17 +120,43 @@ class SpamATonModule(commands.Cog):
                 repeats += 1
                 channels.add(old_message.channel.id)
 
-        # if repeat count and channel count is more than or equal to 3
-        if repeats >= 3 and len(channels) >= 3:
+        # if repeat count and channel count is more than allowed
+        if repeats >= self.module_config.repeat_limit and len(channels) >= self.module_config.repeat_limit:
             self_member = self.client.get_guild(message.guild.id).get_member(self.client.user.id)
-            await member_timeout(
-                member=message.author,
-                duration=timedelta(minutes=30),
-                reason="spam",
-                author=self_member,
-                logger=self.logger)
-            for old_message in user_statistic:
-                await old_message.delete()
+
+            # create notification
+            if message.guild.id in self.guild_config:
+                # fetch channel id
+                channel_id = self.guild_config[message.guild.id].notification_channel_id
+
+                # create embed
+                embed = discord.Embed(
+                    title="Spam bot detected",
+                    description=f"Possible spam account {message.author.mention}",
+                    color=discord.Color.orange())
+
+                # create 2 buttons
+                action = TimeoutUserAction(
+                    timeout_member=message.author,
+                    self_user=self_member,
+                    logger=self.logger)
+
+                # send message
+                await self.client.get_channel(channel_id).send(embed=embed, view=action)
+
+            # timeout user and delete past messages
+            if has_privilege(self_member, message.author):
+                await member_timeout(
+                    member=message.author,
+                    duration=timedelta(minutes=self.module_config.timeout_duration),
+                    reason="spam",
+                    author=self_member,
+                    logger=self.logger)
+                for old_message in user_statistic:
+                    await old_message.delete()
+
+            # clear messages
+            user_statistic.clear()
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message) -> None:
