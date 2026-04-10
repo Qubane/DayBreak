@@ -147,27 +147,30 @@ class SpamATonModule(commands.Cog):
             self_member = self.client.get_guild(message.guild.id).get_member(self.client.user.id)
 
             # create notification
-            if message.guild.id in self.guild_config:
-                # fetch channel id
-                channel = self.client.get_channel(self.guild_config[message.guild.id].notification_channel_id)
+            # fetch channel id
+            channel = self.client.get_channel(self.guild_config[message.guild.id].notification_channel_id)
 
-                # forward questionable message
-                await message.forward(channel, fail_if_not_exists=False)
+            # forward questionable message
+            await message.forward(channel, fail_if_not_exists=False)
 
-                # create embed
-                embed = discord.Embed(
-                    title="Spam bot detected",
-                    description=f"Possible spam account {message.author.mention}",
-                    color=discord.Color.orange())
+            # create embed
+            embed = discord.Embed(
+                title="Spam bot detected",
+                description=f"Possible spam account {message.author.mention}",
+                color=discord.Color.orange())
 
-                # create 2 buttons
+            # create 2 buttons action
+            if has_privilege(self_member, message.author):
                 action = TimeoutUserAction(
                     timeout_member=message.author,
                     self_user=self_member,
                     logger=self.logger)
+            else:
+                action = None
+                embed.description += "; Manual action required, bot lacks permissions"
 
-                # send message
-                await channel.send(embed=embed, view=action)
+            # send message
+            await channel.send(embed=embed, view=action)
 
             # timeout user and delete past messages
             if has_privilege(self_member, message.author):
@@ -197,6 +200,10 @@ class SpamATonModule(commands.Cog):
 
         # skip messages in DM's
         if isinstance(message.channel, discord.DMChannel):
+            return
+
+        # skip not configured guilds
+        if message.guild.id not in self.guild_config:
             return
 
         # process user message
