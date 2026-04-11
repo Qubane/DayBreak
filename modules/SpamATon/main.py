@@ -150,14 +150,16 @@ class SpamATonModule(commands.Cog):
             # fetch channel id
             channel = self.client.get_channel(self.guild_config[message.guild.id].notification_channel_id)
 
-            # forward questionable message
-            await message.forward(channel, fail_if_not_exists=False)
+            # get questionable content
+            message_content = message.content + "\n" + "\n".join(x.url for x in message.attachments)
+            message_content = message_content[:1000]
 
             # create embed
             embed = discord.Embed(
                 title="Spam bot detected",
                 description=f"Possible spam account {message.author.mention}",
                 color=discord.Color.orange())
+            embed.add_field(name="Message content", value=message_content, inline=False)
 
             # create 2 buttons action
             if has_privilege(self_member, message.author):
