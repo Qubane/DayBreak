@@ -1,5 +1,5 @@
 {
   "message_window": 120,
-  "timeout_duration": 15,
+  "timeout_duration": 45,
   "repeat_limit": 3
 }
