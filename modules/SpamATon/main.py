@@ -3,8 +3,9 @@ Module for preventing spam bots
 """
 
 
-import hashlib
+import asyncio
 import discord
+import hashlib
 import logging
 import discord.ui
 from datetime import datetime, timezone
@@ -37,7 +38,7 @@ class TimeoutUserAction(discord.ui.View):
         # ban user
         await member_ban(
             member=self.timeout_member,
-            delete_within_days=1,
+            delete_within_days=2,
             reason="Spam",
             author=interaction.user,
             logger=self.logger)
@@ -101,94 +102,101 @@ class SpamATonModule(commands.Cog):
     @staticmethod
     def compute_message_content_hash(message: discord.Message) -> bytes:
         """
-        Computes message content hash
-        :param message: user message
+        Computes repeated_message content hash
+        :param repeated_message: user repeated_message
         :return: md5 bytes hash
         """
 
         content = message.content + "".join(f"{x.size}{x.filename}" for x in message.attachments)
         return hashlib.md5(content.encode("utf-8")).digest()
 
-    async def process_message(self, message: discord.Message):
+    async def timeout_member(self, member: discord.Member, repeated_message: discord.Message):
+        """
+        Timeout the member
+        """
+
+        # get self member
+        self_member = self.client.get_guild(repeated_message.guild.id).get_member(self.client.user.id)
+
+        # timeout user and delete past messages
+        if has_privilege(self_member, member):
+            await member_timeout(
+                member=member,
+                duration=timedelta(minutes=self.module_config.timeout_duration),
+                reason="possible spam",
+                author=self_member,
+                logger=self.logger)
+
+            # delete spam messages
+            for message in self.user_statistics[member.id]:
+                await message.delete()
+
+        # clear messages
+        self.user_statistics[member.id].clear()
+
+        # create notification
+        # fetch channel id
+        channel = self.client.get_channel(self.guild_config[repeated_message.guild.id].notification_channel_id)
+
+        # get questionable content
+        message_content = repeated_message.content + "\n" + "\n".join(x.url for x in repeated_message.attachments)
+        message_content = message_content[:1000]
+
+        # create embed
+        embed = discord.Embed(
+            title="Spam bot detected",
+            description=f"Possible spam account {member.mention}",
+            color=discord.Color.orange())
+        embed.add_field(name="Message content", value=message_content, inline=False)
+
+        # create 2 buttons action
+        if has_privilege(self_member, member):
+            action = TimeoutUserAction(
+                timeout_member=member,
+                self_user=self_member,
+                logger=self.logger)
+        else:
+            action = None
+            embed.description += "; Manual action required, bot lacks permissions"
+
+        # send message
+        await channel.send(embed=embed, view=action)
+
+    async def process_message(self, repeated_message: discord.Message):
         """
         Processes the users message
         """
 
         # if the user wasn't in statistics
-        if message.author.id not in self.user_statistics:
-            self.user_statistics[message.author.id] = []
+        if repeated_message.author.id not in self.user_statistics:
+            self.user_statistics[repeated_message.author.id] = []
 
         # get user stat list
-        user_statistic = self.user_statistics[message.author.id]
+        user_statistic = self.user_statistics[repeated_message.author.id]
 
         # delete outdated messages
-        for old_message in user_statistic[::]:
-            delta = datetime.now(timezone.utc).replace(tzinfo=timezone.utc) - old_message.created_at
-            if delta.seconds > self.module_config.message_window:
-                user_statistic.remove(old_message)
+        for message in user_statistic[::]:
+            if (datetime.now(timezone.utc) - message.created_at).seconds > self.module_config.message_window:
+                user_statistic.remove(message)
 
-        # append new message
-        user_statistic.append(message)
+        # append new repeated_message
+        user_statistic.append(repeated_message)
 
-        # compute message hash
-        original_message_hash = self.compute_message_content_hash(message)
+        # compute repeated_message hash
+        original_message_hash = self.compute_message_content_hash(repeated_message)
 
         # compare to other messages
         repeats = 0
         channels = set()
-        for old_message in user_statistic:
-            message_hash = self.compute_message_content_hash(old_message)
+        for message in user_statistic:
+            message_hash = self.compute_message_content_hash(message)
             if original_message_hash == message_hash:
                 repeats += 1
-                channels.add(old_message.channel.id)
+                channels.add(message.channel.id)
 
-        # if repeat count and channel count is more than allowed
+        # if repeat count and channel count is more than allowed => timeout user
         if repeats >= self.module_config.repeat_limit and len(channels) >= self.module_config.repeat_limit:
-            self_member = self.client.get_guild(message.guild.id).get_member(self.client.user.id)
-
-            # create notification
-            # fetch channel id
-            channel = self.client.get_channel(self.guild_config[message.guild.id].notification_channel_id)
-
-            # get questionable content
-            message_content = message.content + "\n" + "\n".join(x.url for x in message.attachments)
-            message_content = message_content[:1000]
-
-            # create embed
-            embed = discord.Embed(
-                title="Spam bot detected",
-                description=f"Possible spam account {message.author.mention}",
-                color=discord.Color.orange())
-            embed.add_field(name="Message content", value=message_content, inline=False)
-
-            # create 2 buttons action
-            if has_privilege(self_member, message.author):
-                action = TimeoutUserAction(
-                    timeout_member=message.author,
-                    self_user=self_member,
-                    logger=self.logger)
-            else:
-                action = None
-                embed.description += "; Manual action required, bot lacks permissions"
-
-            # send message
-            await channel.send(embed=embed, view=action)
-
-            # timeout user and delete past messages
-            if has_privilege(self_member, message.author):
-                await member_timeout(
-                    member=message.author,
-                    duration=timedelta(minutes=self.module_config.timeout_duration),
-                    reason="spam",
-                    author=self_member,
-                    logger=self.logger)
-
-                # delete spam messages
-                for old_message in user_statistic:
-                    await old_message.delete()
-
-            # clear messages
-            user_statistic.clear()
+            await self.timeout_member(repeated_message.author, repeated_message)
 
     @commands.Cog.listener("on_message")
     async def on_message(self, message: discord.Message) -> None:
