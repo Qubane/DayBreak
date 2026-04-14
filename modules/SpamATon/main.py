@@ -21,7 +21,7 @@ class TimeoutUserAction(discord.ui.View):
             timeout_member: discord.Member,
             self_user: discord.Member,
             logger: logging.Logger | None = None):
-        super().__init__()
+        super().__init__(timeout=None)
 
         self.logger = logger
         self.self_user = self_user
