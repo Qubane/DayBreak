@@ -4,39 +4,50 @@ This is Tickets module that adds a ticket reporting system
 
 
 import asyncio
-from typing import Optional
-
 import discord
 import logging
-import aiosqlite
-from enum import IntEnum, auto
-from datetime import datetime
-from discord import app_commands
-from discord.ext import commands, tasks
+import discord.ui
+from datetime import datetime, timezone
+from discord import app_commands, Interaction
+from discord.ext import commands
 from source.configs import *
 from source.databases import *
 
 
-class TicketStatus(IntEnum):
-    """
-    Report ticket status
-    """
+class ReportModal(discord.ui.Modal, title="Report information"):
+    description = discord.ui.TextInput(
+        label="Report description",
+        style=discord.TextStyle.long,
+        placeholder="Short description of your problem...",
+        required=True)
 
-    OPEN = auto()
-    CLOSED = auto()
+    def __init__(self, cog: "TicketsModule"):
+        super().__init__()
+
+        self.cog = cog
+
+    async def on_submit(self, interaction: Interaction) -> None:
+        await interaction.response.send_message("Your ticket will appear shortly", ephemeral=True)
+        await self.cog.create_ticket(interaction, self.description.value)
+
+    async def on_error(self, interaction: discord.Interaction, error: Exception) -> None:
+        await interaction.response.send_message('Oops! Something went wrong.', ephemeral=True)
+
+        self.cog.logger.warning("Error occurred during modal submission", exc_info=error)
 
 
-class TicketColumns(IntEnum):
-    """
-    Ticket column indexes
-    """
+class ReportButton(discord.ui.View):
+    def __init__(self, cog: "TicketsModule"):
+        super().__init__(timeout=None)
 
-    THREAD_ID = 0
-    GUILD_ID = 1
-    CREATOR_ID = 2
-    REPORTED_ID = 3
-    CREATION_DATE = 4
-    TICKET_STATUS = 5
+        self.cog = cog
+
+    @discord.ui.button(
+        label="Create ticket",
+        style=discord.ButtonStyle.blurple,
+        custom_id="persistent_button:report_button")
+    async def report_button(self, interaction: discord.Interaction, button: discord.Button):
+        await interaction.response.send_modal(ReportModal(self.cog))
 
 
 class TicketsModule(commands.Cog):
@@ -56,141 +67,48 @@ class TicketsModule(commands.Cog):
         self.module_config: ModuleConfig = ModuleConfig(self.module_name)  # per module config
         self.guild_configs: GuildConfigCollection = GuildConfigCollection(self.module_name)  # per guild config
 
-        # databases
-        self.db_handle: DatabaseHandle = DatabaseHandle(self.module_name)
-        self.db: aiosqlite.Connection | None = None
-
     async def on_cleanup(self):
         """
         Gets called when the bot is exiting
         """
-
-        # close the database on clean up
-        await self.db_handle.close()
-        self.logger.info("Database closed")
 
     async def on_ready(self):
         """
         When the module is loaded
         """
 
-        # connect to database
-        self.db = await self.db_handle.connect()
-        self.logger.info("Database connected")
+        self.client.add_view(ReportButton(self))
 
-        # create table for database
-        async with self.db.cursor() as cur:
-            cur: aiosqlite.Cursor
-
-            await cur.execute(f"""
-            CREATE TABLE IF NOT EXISTS reports (
-                TicketThreadId INTEGER PRIMARY KEY,
-                TicketGuildId INTEGER,
-                TicketCreatorId INTEGER,
-                TicketReportedId INTEGER,
-                TicketCreationDate INTEGER,
-                TicketStatus INTEGER DEFAULT {TicketStatus.CLOSED}
-            );
-            """)
-
-        # commit changes
-        await self.db.commit()
-
-    @app_commands.command(name="report", description="reports user")
-    @app_commands.checks.cooldown(3, 300)
-    @app_commands.describe(
-        reason="reason for the report",
-        user="user that will be reported")
-    async def report_command(
-        self,
-        interaction: discord.Interaction,
-        reason: str,
-        user: discord.Member
+    @commands.command("ticket-test")
+    @commands.is_owner()
+    async def command_make_announce(
+            self,
+            ctx: commands.Context
     ) -> None:
         """
-        Creates a report ticket
+        Temporary command for creating a ticket button
         """
 
-        # ignore user reporting themselves
-        if interaction.user == user:
-            raise commands.UserInputError("Cannot report yourself")
+        await ctx.message.delete()
+        await ctx.send(view=ReportButton(self))
 
-        # defer response
-        await interaction.response.defer(thinking=True, ephemeral=True)
+    async def create_ticket(self, interaction: discord.Interaction, description: str):
+        """
+        Creates a ticket from interaction
+        """
 
-        user_id = interaction.user.id
-        async with self.db.cursor() as cur:
-            cur: aiosqlite.Cursor
+        # fetch guild config
+        guild_config = self.guild_configs.get(interaction.guild_id)
+        if guild_config is None:
+            return
 
-            # fetch number of tickets from user
-            query = await cur.execute(f"""
-                SELECT
-                    (SELECT COUNT(*)
-                    FROM reports
-                    WHERE TicketCreatorId = {user_id}
-                    AND TicketGuildId = {interaction.guild_id}
-                    AND TicketStatus = {TicketStatus.OPEN}) AS TicketCount
-                FROM reports
-                WHERE TicketCreatorId = {user_id}
-                """)
+        # fetch channel
+        channel = interaction.guild.get_channel(guild_config.tickets_channel)
 
-            # make number
-            ticket_query = await query.fetchone()
-            ticket_count = ticket_query[0] if ticket_query is not None else 0
-
-            # get max ticket number
-            max_ticket_number = self.module_config.max_ticket_count
-
-            # if max ticket number reached
-            if ticket_count >= max_ticket_number:
-                raise commands.CommandError("Maximum number of tickets reached")
-
-            # get guild config
-            guild_config = self.guild_configs.get(interaction.guild_id)
-            if guild_config is None:
-                raise commands.CommandError("Please contact your server administrator to enable `/report` feature")
-
-            # fetch channel
-            channel = interaction.guild.get_channel(guild_config.tickets_channel)
-            if channel is None:
-                raise commands.CommandError("Please contact your server administrator to enable `/report` feature")
-
-            # post private thread
-            thread = await channel.create_thread(
-                name=f"Report on '{user.display_name}/{user.id}' for "
-                     f"'{reason[:16]}{'...' if len(reason) >= 16 else ''}'",
-                reason=f"Report of '{user.display_name}' by '{interaction.user.display_name}'",
-                type=discord.ChannelType.private_thread)
-
-            # create ticket data
-            ticket_thread_id = thread.id
-            ticket_guild_id = interaction.guild_id
-            ticket_creator_id = interaction.user.id
-            ticket_reported_id = user.id
-            ticket_creation_date = int(datetime.now().timestamp())
-
-            # create ticket in database
-            await cur.execute(
-                f"INSERT INTO reports VALUES ("
-                f"{ticket_thread_id},"
-                f"{ticket_guild_id},"
-                f"{ticket_creator_id},"
-                f"{ticket_reported_id},"
-                f"{ticket_creation_date},"
-                f"{TicketStatus.OPEN})")
-
-        # commit changes in DB
-        await self.db.commit()
-
-        # create response
-        embed = discord.Embed(
-            title="Success!",
-            description=f"Your ticket was successfully created;\n"
-                        f"You can add any additional information about the report in {thread.mention}",
-            color=discord.Color.green())
-
-        # send response
-        await interaction.followup.send(embed=embed)
+        # post private thread
+        thread = await channel.create_thread(
+            name=f"Report from {interaction.user.display_name}",
+            type=discord.ChannelType.private_thread)
 
         # add reporting user
         await thread.add_user(interaction.user)
@@ -204,92 +122,17 @@ class TicketsModule(commands.Cog):
 
         # post message with info
         embed = discord.Embed(
-            title=f"Ticket #{ticket_thread_id}",
-            description=f"Ticket ID: {ticket_thread_id}\n"
+            title=f"Ticket made by {interaction.user.display_name}",
+            description=f"Ticket ID: {thread.id}\n"
                         f"Ticket Creator: {interaction.user.mention}\n"
-                        f"Reported User: {user.mention}\n"
-                        f"Report Reason: {reason[:512]}\n"
-                        f"Ticket Creation Date: <t:{ticket_creation_date}:D>",
+                        f"Report Reason: {description[:512]}\n"
+                        f"Ticket Creation Date: <t:{datetime.now(tz=timezone.utc).timestamp():.0f}:D>",
             color=discord.Color.orange())
         await thread.send(embed=embed, allowed_mentions=discord.AllowedMentions.none())
 
         # ping moderation team
         if ping_message:
             await thread.send(f"Report reviewed by: {ping_message}")
-
-    @staticmethod
-    def report_close_command_cooldown(interaction: discord.Interaction) -> Optional[app_commands.Cooldown]:
-        """
-        Cooldown for everyone, except users with "manage threads" permissions
-        (permission that allows to see private threads)
-        """
-
-        if interaction.user.guild_permissions.manage_threads:
-            return None
-        return app_commands.Cooldown(1, 120)
-
-    @app_commands.command(name="report-close", description="closes the report")
-    @app_commands.describe(
-        reason="reason for closing the ticket")
-    @app_commands.checks.dynamic_cooldown(report_close_command_cooldown)
-    async def report_close_command(
-            self,
-            interaction: discord.Interaction,
-            reason: str = "Closed by administrator"
-    ) -> None:
-        """
-        Closes the report.
-        Only the administration will be able to close the ticket
-        """
-
-        # defer response
-        await interaction.response.defer(thinking=True)
-
-        # db variables
-        thread_id = interaction.channel_id
-
-        async with self.db.cursor() as cur:
-            cur: aiosqlite.Cursor
-
-            # fetch ticket
-            query = await cur.execute(f"SELECT * FROM reports WHERE TicketThreadId = {thread_id}")
-            ticket = await query.fetchone()
-
-            # if ticket is none -> raise wrong channel error
-            if ticket is None:
-                raise commands.UserInputError("Wrong channel")
-
-            # if ticket is already closed
-            if ticket[TicketColumns.TICKET_STATUS] == TicketStatus.CLOSED:
-                raise commands.UserInputError("Thread already closed")
-
-            # if the calling user doesn't have 'manage_threads' permissions
-            if not interaction.user.guild_permissions.manage_threads:
-                raise commands.MissingPermissions(["manage_threads"])
-
-            # user either has privilege or is the creator of the ticket
-            await cur.execute(f"""
-            UPDATE reports SET
-                TicketStatus = {TicketStatus.CLOSED}
-            WHERE TicketThreadId = {thread_id}
-            """)
-
-        # lock the thread
-        thread = interaction.guild.get_thread(thread_id)
-        await thread.edit(locked=True, archived=True, reason=reason)
-
-        # commit db changes
-        await self.db.commit()
-
-        # create response
-        embed = discord.Embed(
-            title="Success!",
-            description=f"Ticket #{thread_id} closed;\n"
-                        f"Reason: '{reason}'",
-            color=discord.Color.green())
-
-        # send response
-        await interaction.followup.send(embed=embed)
 
 
 async def setup(client: commands.Bot) -> None:
