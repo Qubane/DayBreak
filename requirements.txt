@@ -2,7 +2,7 @@ transformers==5.0.0rc3
 discord.py==2.6.4
 aiosqlite==0.22.1
 aiohttp==3.13.4
-Pillow==12.1.1
+Pillow==12.3.0
 torch==2.9.1
 sympy==1.13.3
 --extra-index-url https://download.pytorch.org/whl/cu118
